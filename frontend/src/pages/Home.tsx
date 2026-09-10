@@ -55,7 +55,7 @@ const allCampaigns: Campaign[] = [
     currency: "AED",
     entryFrom: 75,
     drawDate: "2026-09-15",
-    lastRegistration: null,
+    lastRegistration: "2026-09-11T18:00:00Z",
     entriesMultiplier: null,
     image:
       "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dw7ce2676d/images/campaignSliderImage/DC-01078-dashboard-image-2.png",
@@ -70,7 +70,7 @@ const allCampaigns: Campaign[] = [
     currency: "AED",
     entryFrom: 30,
     drawDate: "2026-10-15",
-    lastRegistration: null,
+    lastRegistration: "2026-10-13T20:30:00Z",
     entriesMultiplier: null,
     image:
       "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dw8037f828/images/campaignSliderImage/DC-01105-dashboard-image.png",
@@ -85,7 +85,7 @@ const allCampaigns: Campaign[] = [
     currency: "AED",
     entryFrom: 20,
     drawDate: "2026-09-17",
-    lastRegistration: null,
+    lastRegistration: "2026-09-13T16:00:00Z",
     entriesMultiplier: null,
     image:
       "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dw888f85b6/images/campaignSliderImage/DC-01119-dashboard-image.png",
@@ -100,7 +100,7 @@ const allCampaigns: Campaign[] = [
     currency: "AED",
     entryFrom: 7.5,
     drawDate: "2026-09-17",
-    lastRegistration: null,
+    lastRegistration: "2026-09-12T19:15:00Z",
     entriesMultiplier: "Offer Available",
     image:
       "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dw19a67e88/images/campaignSliderImage/DC-00992-dashboard-image.jpg",
@@ -115,7 +115,7 @@ const allCampaigns: Campaign[] = [
     currency: "AED",
     entryFrom: 200,
     drawDate: "2026-12-03",
-    lastRegistration: null,
+    lastRegistration: "2026-12-01T12:00:00Z",
     entriesMultiplier: null,
     image:
       "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dwa5f92efc/images/campaignSliderImage/DC-00961-dashboard-image8.png",
@@ -130,7 +130,7 @@ const allCampaigns: Campaign[] = [
     currency: "AED",
     entryFrom: 100,
     drawDate: "2026-12-03",
-    lastRegistration: null,
+    lastRegistration: "2026-12-01T13:30:00Z",
     entriesMultiplier: "Offer Available",
     image:
       "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dw231fd485/images/campaignSliderImage/DA-00061-dashboard-image6.jpg",
@@ -145,7 +145,7 @@ const allCampaigns: Campaign[] = [
     currency: "AED",
     entryFrom: 10,
     drawDate: "2026-09-15",
-    lastRegistration: null,
+    lastRegistration: "2026-09-11T22:45:00Z",
     entriesMultiplier: null,
     image:
       "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dw67c0ee1f/images/campaignSliderImage/DC-00986-dashboard-image.jpg",
@@ -160,7 +160,7 @@ const allCampaigns: Campaign[] = [
     currency: "AED",
     entryFrom: 5,
     drawDate: "2026-09-17",
-    lastRegistration: null,
+    lastRegistration: "2026-09-13T21:00:00Z",
     entriesMultiplier: null,
     image:
       "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dwb7331206/images/campaignSliderImage/DE-00456-dashboard-image.jpg",
@@ -169,8 +169,62 @@ const allCampaigns: Campaign[] = [
   },
 ];
 
+const tabs = ["All campaigns", "Daily", "Weekly", "Monthly"] as const;
+type CampaignTab = (typeof tabs)[number];
+
+const formatPrize = (campaign: Campaign) => {
+  if (campaign.prizeType === "Cash" && campaign.cashPrizeValue !== null) {
+    return `${campaign.currency} ${campaign.cashPrizeValue.toLocaleString("en-AE")}`;
+  }
+
+  if (campaign.prizeType === "Car") {
+    return "Car prize";
+  }
+
+  if (campaign.prizeType === "Electronics") {
+    return "Electronics prize";
+  }
+
+  return campaign.title;
+};
+
+const getCampaignDeadline = (campaign: Campaign) => {
+  if (campaign.lastRegistration) {
+    return new Date(campaign.lastRegistration);
+  }
+
+  const drawDate = new Date(campaign.drawDate);
+  return new Date(drawDate.getTime() - 36 * 60 * 60 * 1000);
+};
+
+const formatCountdown = (deadline: Date, now: Date) => {
+  const leftMs = Math.max(deadline.getTime() - now.getTime(), 0);
+  if (leftMs <= 0) {
+    return "00:00:00";
+  }
+
+  const totalSeconds = Math.floor(leftMs / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  return [hours, minutes, seconds]
+    .map((value) => String(value).padStart(2, "0"))
+    .join(":");
+};
+
+const getCampaignWindow = (campaign: Campaign) => {
+  const drawDate = new Date(campaign.drawDate);
+  const now = new Date();
+  const diffDays = (drawDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+
+  return diffDays;
+};
+
 function Home() {
   const [activeSlide, setActiveSlide] = useState(0);
+  const [activeTab, setActiveTab] = useState<CampaignTab>("All campaigns");
+  const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -179,6 +233,32 @@ function Home() {
 
     return () => window.clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+    const clock = window.setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+
+    return () => window.clearInterval(clock);
+  }, []);
+
+  const filteredCampaigns = allCampaigns.filter((campaign) => {
+    const daysLeft = getCampaignWindow(campaign);
+
+    if (activeTab === "All campaigns") {
+      return true;
+    }
+
+    if (activeTab === "Daily") {
+      return daysLeft <= 1;
+    }
+
+    if (activeTab === "Weekly") {
+      return daysLeft <= 7;
+    }
+
+    return daysLeft <= 30;
+  });
 
   return (
     <main className="min-h-screen bg-paper text-ink">
@@ -272,6 +352,154 @@ function Home() {
                 onClick={() => setActiveSlide(index)}
               />
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="draw" className="bg-paper py-14 sm:py-16">
+        <div className="page-wrap">
+          <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[0.12em] text-pink">
+                Draws
+              </p>
+              <h2 className="font-display text-[2.2rem] leading-none uppercase text-ink sm:text-[2.8rem]">
+                Campaigns
+              </h2>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              {tabs.map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setActiveTab(tab)}
+                  className={`border-[3px] border-ink px-4 py-2 text-sm font-bold transition-all duration-150 ${
+                    activeTab === tab
+                      ? "bg-red text-white shadow-[3px_3px_0_var(--color-ink)]"
+                      : "bg-paper text-ink shadow-[3px_3px_0_var(--color-ink)] hover:-translate-y-0.5"
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-5">
+            {filteredCampaigns.map((campaign) => {
+              const deadline = getCampaignDeadline(campaign);
+              const remainingMs = Math.max(
+                deadline.getTime() - now.getTime(),
+                0,
+              );
+              const dayMs = 24 * 60 * 60 * 1000;
+              const showCountdown = remainingMs > 0 && remainingMs <= 2 * dayMs;
+              const isJustLaunched =
+                remainingMs > 0 &&
+                remainingMs > 2 * dayMs &&
+                remainingMs <= 7 * dayMs;
+              const productTone = showCountdown
+                ? "bg-red text-white"
+                : "bg-[#3ACF7E] text-[#0d2a20]";
+
+              return (
+                <article
+                  key={campaign.id}
+                  className="overflow-hidden rounded-[28px] border-[3px] border-ink bg-[#f5f5f5] shadow-[6px_6px_0_var(--color-ink)] transition-transform duration-150 hover:-translate-y-1"
+                >
+                  <div
+                    className={`flex items-center justify-center px-4 py-3 ${productTone}`}
+                  >
+                    {showCountdown ? (
+                      <div className="flex items-center gap-3">
+                        <span className="text-[0.7rem] font-black uppercase tracking-[0.12em]">
+                          closing in
+                        </span>
+                        <span className="text-[1.55rem] font-black leading-none sm:text-[2rem]">
+                          {formatCountdown(deadline, now)}
+                        </span>
+                      </div>
+                    ) : isJustLaunched ? (
+                      <span className="text-[0.7rem] font-black uppercase tracking-[0.12em]">
+                        just launched
+                      </span>
+                    ) : (
+                      <span className="text-[0.72rem] font-black uppercase tracking-[0.12em]">
+                        registration open
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid gap-4 p-3 md:grid-cols-[0.95fr_1.35fr] md:p-4">
+                    <div className="relative overflow-hidden rounded-[24px] border-[3px] border-ink bg-paper p-3">
+                      <div className="absolute left-3 top-3 z-10 flex items-center gap-2">
+                        {campaign.entriesMultiplier ? (
+                          <span className="border-[3px] border-ink bg-yellow px-2 py-1 text-[0.62rem] font-black uppercase text-ink">
+                            {campaign.entriesMultiplier}
+                          </span>
+                        ) : null}
+                      </div>
+
+                      <img
+                        src={campaign.image}
+                        alt={campaign.title}
+                        className="h-[220px] w-full rounded-[18px] object-cover md:h-[240px]"
+                      />
+                    </div>
+
+                    <div className="flex flex-col justify-center rounded-[24px] bg-[#f7f7f7] p-4 md:p-5">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex flex-col">
+                          <span className="font-display text-[2rem] leading-none uppercase text-red">
+                            Win
+                          </span>
+                          <span className="mt-2 font-display text-[1.75rem] leading-none uppercase text-ink sm:text-[2.1rem]">
+                            {formatPrize(campaign)}
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          className="inline-flex items-center justify-center border-[3px] border-ink bg-[#4b5bdc] px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.08em] text-white shadow-[3px_3px_0_var(--color-ink)] transition-transform duration-150 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0_var(--color-ink)]"
+                        >
+                          Entry from {campaign.entryFrom}
+                        </button>
+                      </div>
+
+                      <div className="mt-4 flex items-center justify-between gap-3 border-t-[3px] border-dashed border-ink pt-3 text-[0.78rem] font-bold text-ink/80">
+                        <span>
+                          Draw date:{" "}
+                          {new Date(campaign.drawDate).toLocaleDateString(
+                            "en-GB",
+                            { day: "2-digit", month: "short", year: "numeric" },
+                          )}
+                        </span>
+                        <span className="text-[0.68rem] uppercase tracking-[0.08em] text-red">
+                          {campaign.id}
+                        </span>
+                      </div>
+
+                      <div className="mt-4 flex items-center justify-between gap-3 text-[0.8rem] font-bold text-ink">
+                        <span>
+                          {showCountdown ? (
+                            <span className="inline-flex items-center border-[3px] border-ink bg-red px-3 py-2 text-[1.05rem] font-black leading-none text-white shadow-[2px_2px_0_var(--color-ink)]">
+                              {formatCountdown(deadline, now)}
+                            </span>
+                          ) : (
+                            <span className="text-ink/70">
+                              Open registration
+                            </span>
+                          )}
+                        </span>
+
+                        <span className="text-ink/70">{campaign.currency}</span>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </div>
       </section>
