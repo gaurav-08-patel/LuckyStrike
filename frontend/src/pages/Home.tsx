@@ -28,7 +28,145 @@ const heroSlides: HeroSlide[] = [
     src: "/Carousel/image2.png",
     alt: "Lucky Strike prize posterss",
     tag: "Now live",
-  }
+  },
+];
+
+interface Campaign {
+  id: string;
+  title: string;
+  prizeType: "Cash" | "Car" | "Electronics" | string;
+  cashPrizeValue: number | null;
+  currency: string;
+  entryFrom: number;
+  drawDate: string;
+  lastRegistration: string | null;
+  entriesMultiplier: string | null;
+  image: string;
+  soldCount: number | null;
+  soldTotal: number | null;
+}
+
+const allCampaigns: Campaign[] = [
+  {
+    id: "DC-01078",
+    title: "1,000,000 Cash",
+    prizeType: "Cash",
+    cashPrizeValue: 1000000,
+    currency: "AED",
+    entryFrom: 75,
+    drawDate: "2026-09-15",
+    lastRegistration: null,
+    entriesMultiplier: null,
+    image:
+      "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dw7ce2676d/images/campaignSliderImage/DC-01078-dashboard-image-2.png",
+    soldCount: null,
+    soldTotal: null,
+  },
+  {
+    id: "DC-01133",
+    title: "300,000 Cash",
+    prizeType: "Cash",
+    cashPrizeValue: 300000,
+    currency: "AED",
+    entryFrom: 30,
+    drawDate: "2026-10-15",
+    lastRegistration: null,
+    entriesMultiplier: null,
+    image:
+      "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dw8037f828/images/campaignSliderImage/DC-01105-dashboard-image.png",
+    soldCount: null,
+    soldTotal: null,
+  },
+  {
+    id: "DC-01128",
+    title: "100,000 Cash",
+    prizeType: "Cash",
+    cashPrizeValue: 100000,
+    currency: "AED",
+    entryFrom: 20,
+    drawDate: "2026-09-17",
+    lastRegistration: null,
+    entriesMultiplier: null,
+    image:
+      "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dw888f85b6/images/campaignSliderImage/DC-01119-dashboard-image.png",
+    soldCount: null,
+    soldTotal: null,
+  },
+  {
+    id: "DC-01131",
+    title: "25,000 Cash",
+    prizeType: "Cash",
+    cashPrizeValue: 25000,
+    currency: "AED",
+    entryFrom: 7.5,
+    drawDate: "2026-09-17",
+    lastRegistration: null,
+    entriesMultiplier: "Offer Available",
+    image:
+      "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dw19a67e88/images/campaignSliderImage/DC-00992-dashboard-image.jpg",
+    soldCount: null,
+    soldTotal: null,
+  },
+  {
+    id: "DC-00961",
+    title: "5,000,000 Cash",
+    prizeType: "Cash",
+    cashPrizeValue: 5000000,
+    currency: "AED",
+    entryFrom: 200,
+    drawDate: "2026-12-03",
+    lastRegistration: null,
+    entriesMultiplier: null,
+    image:
+      "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dwa5f92efc/images/campaignSliderImage/DC-00961-dashboard-image8.png",
+    soldCount: null,
+    soldTotal: null,
+  },
+  {
+    id: "DA-00061",
+    title: "The Mercedes-AMG G 63",
+    prizeType: "Car",
+    cashPrizeValue: null,
+    currency: "AED",
+    entryFrom: 100,
+    drawDate: "2026-12-03",
+    lastRegistration: null,
+    entriesMultiplier: "Offer Available",
+    image:
+      "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dw231fd485/images/campaignSliderImage/DA-00061-dashboard-image6.jpg",
+    soldCount: null,
+    soldTotal: null,
+  },
+  {
+    id: "DC-01113",
+    title: "50,000 Cash",
+    prizeType: "Cash",
+    cashPrizeValue: 50000,
+    currency: "AED",
+    entryFrom: 10,
+    drawDate: "2026-09-15",
+    lastRegistration: null,
+    entriesMultiplier: null,
+    image:
+      "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dw67c0ee1f/images/campaignSliderImage/DC-00986-dashboard-image.jpg",
+    soldCount: null,
+    soldTotal: null,
+  },
+  {
+    id: "DE-00456",
+    title: "Samsung Galaxy Z Fold8",
+    prizeType: "Electronics",
+    cashPrizeValue: null,
+    currency: "AED",
+    entryFrom: 5,
+    drawDate: "2026-09-17",
+    lastRegistration: null,
+    entriesMultiplier: null,
+    image:
+      "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dwb7331206/images/campaignSliderImage/DE-00456-dashboard-image.jpg",
+    soldCount: null,
+    soldTotal: null,
+  },
 ];
 
 function Home() {
