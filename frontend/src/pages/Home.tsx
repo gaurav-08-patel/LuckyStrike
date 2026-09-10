@@ -26,7 +26,7 @@ const heroSlides: HeroSlide[] = [
   },
   {
     src: "/Carousel/image2.png",
-    alt: "Lucky Strike prize poster",
+    alt: "Lucky Strike prize posterss",
     tag: "Now live",
   }
 ];
