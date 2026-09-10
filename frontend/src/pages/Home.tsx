@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import HowItWorks from "../components/HowItWorks";
 import SiteHeader from "../components/SiteHeader";
 
 type HeroSlide = {
@@ -371,6 +372,7 @@ function Home() {
         </div>
       </section>
 
+
       <section id="draw" className="bg-paper py-14 sm:py-16">
         <div className="page-wrap">
           <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -518,6 +520,8 @@ function Home() {
           </div>
         </div>
       </section>
+      <HowItWorks />
+
     </main>
   );
 }
