@@ -40,6 +40,7 @@ interface Campaign {
   entryFrom: number;
   drawDate: string;
   lastRegistration: string | null;
+  campaignType: "daily" | "weekly" | "monthly";
   entriesMultiplier: string | null;
   image: string;
   soldCount: number | null;
@@ -56,6 +57,7 @@ const allCampaigns: Campaign[] = [
     entryFrom: 75,
     drawDate: "2026-09-15",
     lastRegistration: "2026-09-11T18:00:00Z",
+    campaignType: "daily",
     entriesMultiplier: null,
     image:
       "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dw7ce2676d/images/campaignSliderImage/DC-01078-dashboard-image-2.png",
@@ -71,6 +73,7 @@ const allCampaigns: Campaign[] = [
     entryFrom: 30,
     drawDate: "2026-10-15",
     lastRegistration: "2026-10-13T20:30:00Z",
+    campaignType: "monthly",
     entriesMultiplier: null,
     image:
       "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dw8037f828/images/campaignSliderImage/DC-01105-dashboard-image.png",
@@ -86,6 +89,7 @@ const allCampaigns: Campaign[] = [
     entryFrom: 20,
     drawDate: "2026-09-17",
     lastRegistration: "2026-09-13T16:00:00Z",
+    campaignType: "weekly",
     entriesMultiplier: null,
     image:
       "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dw888f85b6/images/campaignSliderImage/DC-01119-dashboard-image.png",
@@ -101,6 +105,7 @@ const allCampaigns: Campaign[] = [
     entryFrom: 7.5,
     drawDate: "2026-09-17",
     lastRegistration: "2026-09-12T19:15:00Z",
+    campaignType: "daily",
     entriesMultiplier: "Offer Available",
     image:
       "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dw19a67e88/images/campaignSliderImage/DC-00992-dashboard-image.jpg",
@@ -116,6 +121,7 @@ const allCampaigns: Campaign[] = [
     entryFrom: 200,
     drawDate: "2026-12-03",
     lastRegistration: "2026-12-01T12:00:00Z",
+    campaignType: "monthly",
     entriesMultiplier: null,
     image:
       "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dwa5f92efc/images/campaignSliderImage/DC-00961-dashboard-image8.png",
@@ -131,6 +137,7 @@ const allCampaigns: Campaign[] = [
     entryFrom: 100,
     drawDate: "2026-12-03",
     lastRegistration: "2026-12-01T13:30:00Z",
+    campaignType: "monthly",
     entriesMultiplier: "Offer Available",
     image:
       "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dw231fd485/images/campaignSliderImage/DA-00061-dashboard-image6.jpg",
@@ -146,6 +153,7 @@ const allCampaigns: Campaign[] = [
     entryFrom: 10,
     drawDate: "2026-09-15",
     lastRegistration: "2026-09-11T22:45:00Z",
+    campaignType: "daily",
     entriesMultiplier: null,
     image:
       "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dw67c0ee1f/images/campaignSliderImage/DC-00986-dashboard-image.jpg",
@@ -161,6 +169,7 @@ const allCampaigns: Campaign[] = [
     entryFrom: 5,
     drawDate: "2026-09-17",
     lastRegistration: "2026-09-13T21:00:00Z",
+    campaignType: "weekly",
     entriesMultiplier: null,
     image:
       "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dwb7331206/images/campaignSliderImage/DE-00456-dashboard-image.jpg",
@@ -243,21 +252,21 @@ function Home() {
   }, []);
 
   const filteredCampaigns = allCampaigns.filter((campaign) => {
-    const daysLeft = getCampaignWindow(campaign);
-
     if (activeTab === "All campaigns") {
       return true;
     }
 
-    if (activeTab === "Daily") {
-      return daysLeft <= 1;
+    // Keep these tabs visible for future enum-based campaignType grouping,
+    // but leave them empty until the campaign data is updated with the new type field.
+    if (
+      activeTab === "Daily" ||
+      activeTab === "Weekly" ||
+      activeTab === "Monthly"
+    ) {
+      return false;
     }
 
-    if (activeTab === "Weekly") {
-      return daysLeft <= 7;
-    }
-
-    return daysLeft <= 30;
+    return false;
   });
 
   return (
@@ -323,10 +332,16 @@ function Home() {
               </p>
 
               <div className="mt-8 flex flex-wrap gap-4">
-                <a className="ticket-button ticket-button--red" href="#draw">
+                <a
+                  className="ticket-button ticket-button--red cursor-pointer"
+                  href="#draw"
+                >
                   Get your entry
                 </a>
-                <a className="ticket-button ticket-button--outline" href="#how">
+                <a
+                  className="ticket-button ticket-button--outline cursor-pointer"
+                  href="#how"
+                >
                   See how it works
                 </a>
               </div>
@@ -346,7 +361,7 @@ function Home() {
                 key={slide.alt}
                 type="button"
                 aria-label={`View slide ${index + 1}`}
-                className={`h-2.5 rounded-full border-[2px] border-ink transition-all duration-300 ${
+                className={`cursor-pointer h-2.5 rounded-full border-[2px] border-ink transition-all duration-300 ${
                   index === activeSlide ? "w-12 bg-red" : "w-3 bg-yellow"
                 }`}
                 onClick={() => setActiveSlide(index)}
@@ -358,7 +373,7 @@ function Home() {
 
       <section id="draw" className="bg-paper py-14 sm:py-16">
         <div className="page-wrap">
-          <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.12em] text-pink">
                 Draws
@@ -374,7 +389,7 @@ function Home() {
                   key={tab}
                   type="button"
                   onClick={() => setActiveTab(tab)}
-                  className={`border-[3px] border-ink px-4 py-2 text-sm font-bold transition-all duration-150 ${
+                  className={`cursor-pointer border-[3px] border-ink px-4 py-2 text-sm font-bold transition-all duration-150 ${
                     activeTab === tab
                       ? "bg-red text-white shadow-[3px_3px_0_var(--color-ink)]"
                       : "bg-paper text-ink shadow-[3px_3px_0_var(--color-ink)] hover:-translate-y-0.5"
@@ -449,7 +464,7 @@ function Home() {
                     </div>
 
                     <div className="flex flex-col justify-center rounded-[24px] bg-[#f7f7f7] p-4 md:p-5">
-                      <div className="flex items-center justify-between gap-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex flex-col">
                           <span className="font-display text-[2rem] leading-none uppercase text-red">
                             Win
@@ -461,7 +476,7 @@ function Home() {
 
                         <button
                           type="button"
-                          className="inline-flex items-center justify-center border-[3px] border-ink bg-[#4b5bdc] px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.08em] text-white shadow-[3px_3px_0_var(--color-ink)] transition-transform duration-150 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0_var(--color-ink)]"
+                          className="cursor-pointer inline-flex items-center justify-center border-[3px] border-ink bg-[#4b5bdc] px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.08em] text-white shadow-[3px_3px_0_var(--color-ink)] transition-transform duration-150 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0_var(--color-ink)]"
                         >
                           Entry from {campaign.entryFrom}
                         </button>
