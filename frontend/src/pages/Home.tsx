@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import HowItWorks from "../components/HowItWorks";
 import SiteHeader from "../components/SiteHeader";
+import WinnersCarousel from "../components/WinnersCarousel";
 
 type HeroSlide = {
   src: string;
@@ -514,6 +515,7 @@ function Home() {
         </div>
       </section>
       <HowItWorks />
+      <WinnersCarousel />
     </main>
   );
 }
