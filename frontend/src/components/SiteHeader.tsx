@@ -49,7 +49,7 @@ function SiteHeader({
 
   return (
     <header
-      className="sticky top-0 z-50 border-b-[3px] border-b-transparent"
+      className="sticky top-0 z-50 border-b-4 border-b-transparent"
       style={{
         backgroundColor: `rgba(255, 255, 255, ${progress})`,
         borderBottomColor: `rgba(23, 19, 16, ${progress})`,
