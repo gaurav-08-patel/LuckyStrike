@@ -223,14 +223,6 @@ const formatCountdown = (deadline: Date, now: Date) => {
     .join(":");
 };
 
-const getCampaignWindow = (campaign: Campaign) => {
-  const drawDate = new Date(campaign.drawDate);
-  const now = new Date();
-  const diffDays = (drawDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-
-  return diffDays;
-};
-
 function Home() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [activeTab, setActiveTab] = useState<CampaignTab>("All campaigns");
@@ -252,7 +244,7 @@ function Home() {
     return () => window.clearInterval(clock);
   }, []);
 
-  const filteredCampaigns = allCampaigns.filter((campaign) => {
+  const filteredCampaigns = allCampaigns.filter((_campaign) => {
     if (activeTab === "All campaigns") {
       return true;
     }
@@ -356,13 +348,13 @@ function Home() {
         </div>
 
         <div className="absolute bottom-6 left-1/2 z-20 -translate-x-1/2">
-          <div className="flex items-center gap-3 rounded-full border-[3px] border-ink bg-paper/90 px-3 py-2 shadow-[3px_3px_0_var(--color-ink)] backdrop-blur-[1px]">
+          <div className="flex items-center gap-3 rounded-full border-4 border-ink bg-paper/90 px-3 py-2 shadow-[3px_3px_0_var(--color-ink)] backdrop-blur-[1px]">
             {heroSlides.map((slide, index) => (
               <button
                 key={slide.alt}
                 type="button"
                 aria-label={`View slide ${index + 1}`}
-                className={`cursor-pointer h-2.5 rounded-full border-[2px] border-ink transition-all duration-300 ${
+                className={`cursor-pointer h-2.5 rounded-full border-2 border-ink transition-all duration-300 ${
                   index === activeSlide ? "w-12 bg-red" : "w-3 bg-yellow"
                 }`}
                 onClick={() => setActiveSlide(index)}
@@ -371,7 +363,6 @@ function Home() {
           </div>
         </div>
       </section>
-
 
       <section id="draw" className="bg-paper py-14 sm:py-16">
         <div className="page-wrap">
@@ -391,7 +382,7 @@ function Home() {
                   key={tab}
                   type="button"
                   onClick={() => setActiveTab(tab)}
-                  className={`cursor-pointer border-[3px] border-ink px-4 py-2 text-sm font-bold transition-all duration-150 ${
+                  className={`cursor-pointer border-4 border-ink px-4 py-2 text-sm font-bold transition-all duration-150 ${
                     activeTab === tab
                       ? "bg-red text-white shadow-[3px_3px_0_var(--color-ink)]"
                       : "bg-paper text-ink shadow-[3px_3px_0_var(--color-ink)] hover:-translate-y-0.5"
@@ -423,36 +414,38 @@ function Home() {
               return (
                 <article
                   key={campaign.id}
-                  className="overflow-hidden rounded-[28px] border-[3px] border-ink bg-[#f5f5f5] shadow-[6px_6px_0_var(--color-ink)] transition-transform duration-150 hover:-translate-y-1"
+                  className="relative mt-16 overflow-visible rounded-3xl border-4 border-ink bg-[#f5f5f5] shadow-[6px_6px_0_var(--color-ink)] transition-transform duration-150 hover:-translate-y-1"
                 >
-                  <div
-                    className={`flex items-center justify-center px-4 py-3 ${productTone}`}
-                  >
-                    {showCountdown ? (
-                      <div className="flex items-center gap-3">
-                        <span className="text-[0.7rem] font-black uppercase tracking-[0.12em]">
-                          closing in
+                  <div className="absolute left-5 -top-7 z-10 -translate-y-1/2 max-sm:-top-6">
+                    <div
+                      className={`inline-flex h-14 w-56 max-w-full items-center justify-center gap-2 rounded-t-2xl border-4 border-ink border-b-0 px-3 py-2 shadow-[3px_3px_0_var(--color-ink)] max-sm:h-10 max-sm:w-48 ${productTone}`}
+                    >
+                      {showCountdown ? (
+                        <>
+                          <span className="text-[0.8rem] max-sm:text-[0.6rem] font-black uppercase tracking-[0.12em]">
+                            closing in
+                          </span>
+                          <span className="text-[1.2rem] font-black leading-none sm:text-[1.6rem]">
+                            {formatCountdown(deadline, now)}
+                          </span>
+                        </>
+                      ) : isJustLaunched ? (
+                        <span className="text-[0.8rem] max-sm:text-[0.6rem] font-black uppercase tracking-[0.12em]">
+                          just launched
                         </span>
-                        <span className="text-[1.55rem] font-black leading-none sm:text-[2rem]">
-                          {formatCountdown(deadline, now)}
+                      ) : (
+                        <span className="text-[0.8rem] max-sm:text-[0.6rem] font-black uppercase tracking-[0.12em]">
+                          registration open
                         </span>
-                      </div>
-                    ) : isJustLaunched ? (
-                      <span className="text-[0.7rem] font-black uppercase tracking-[0.12em]">
-                        just launched
-                      </span>
-                    ) : (
-                      <span className="text-[0.72rem] font-black uppercase tracking-[0.12em]">
-                        registration open
-                      </span>
-                    )}
+                      )}
+                    </div>
                   </div>
 
-                  <div className="grid gap-4 p-3 md:grid-cols-[0.95fr_1.35fr] md:p-4">
-                    <div className="relative overflow-hidden rounded-[24px] border-[3px] border-ink bg-paper p-3">
+                  <div className="grid gap-4 p-3 pt-7 md:grid-cols-[0.95fr_1.35fr] md:p-4 md:pt-8">
+                    <div className="relative overflow-hidden rounded-3xl border-4 border-ink bg-paper p-3">
                       <div className="absolute left-3 top-3 z-10 flex items-center gap-2">
                         {campaign.entriesMultiplier ? (
-                          <span className="border-[3px] border-ink bg-yellow px-2 py-1 text-[0.62rem] font-black uppercase text-ink">
+                          <span className="border-4 border-ink bg-yellow px-2 py-1 text-[0.62rem] font-black uppercase text-ink">
                             {campaign.entriesMultiplier}
                           </span>
                         ) : null}
@@ -461,11 +454,11 @@ function Home() {
                       <img
                         src={campaign.image}
                         alt={campaign.title}
-                        className="h-[220px] w-full rounded-[18px] object-cover md:h-[240px]"
+                        className="h-56 w-full rounded-2xl object-cover md:h-60"
                       />
                     </div>
 
-                    <div className="flex flex-col justify-center rounded-[24px] bg-[#f7f7f7] p-4 md:p-5">
+                    <div className="flex flex-col justify-center rounded-3xl bg-[#f7f7f7] p-4 md:p-5">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex flex-col">
                           <span className="font-display text-[2rem] leading-none uppercase text-red">
@@ -478,13 +471,13 @@ function Home() {
 
                         <button
                           type="button"
-                          className="cursor-pointer inline-flex items-center justify-center border-[3px] border-ink bg-[#4b5bdc] px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.08em] text-white shadow-[3px_3px_0_var(--color-ink)] transition-transform duration-150 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0_var(--color-ink)]"
+                          className="cursor-pointer inline-flex items-center justify-center border-4 border-ink bg-[#4b5bdc] px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.08em] text-white shadow-[3px_3px_0_var(--color-ink)] transition-transform duration-150 hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[1px_1px_0_var(--color-ink)]"
                         >
                           Entry from {campaign.entryFrom}
                         </button>
                       </div>
 
-                      <div className="mt-4 flex items-center justify-between gap-3 border-t-[3px] border-dashed border-ink pt-3 text-[0.78rem] font-bold text-ink/80">
+                      <div className="mt-4 flex items-center justify-between gap-3 border-t-4 border-dashed border-ink pt-3 text-[0.78rem] font-bold text-ink/80">
                         <span>
                           Draw date:{" "}
                           {new Date(campaign.drawDate).toLocaleDateString(
@@ -500,7 +493,7 @@ function Home() {
                       <div className="mt-4 flex items-center justify-between gap-3 text-[0.8rem] font-bold text-ink">
                         <span>
                           {showCountdown ? (
-                            <span className="inline-flex items-center border-[3px] border-ink bg-red px-3 py-2 text-[1.05rem] font-black leading-none text-white shadow-[2px_2px_0_var(--color-ink)]">
+                            <span className="inline-flex items-center border-4 border-ink bg-red px-3 py-2 text-[1.05rem] font-black leading-none text-white shadow-[2px_2px_0_var(--color-ink)]">
                               {formatCountdown(deadline, now)}
                             </span>
                           ) : (
@@ -521,7 +514,6 @@ function Home() {
         </div>
       </section>
       <HowItWorks />
-
     </main>
   );
 }
