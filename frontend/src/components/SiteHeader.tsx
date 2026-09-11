@@ -1,13 +1,7 @@
 import { useEffect, useState } from "react";
 
-type HeaderLink = {
-  label: string;
-  href: string;
-};
-
 type SiteHeaderProps = {
   brand: React.ReactNode;
-  links: HeaderLink[];
   actionLabel?: string;
   actionHref?: string;
 };
@@ -41,11 +35,12 @@ function useScrollProgress(fadeDistance = 120) {
 
 function SiteHeader({
   brand,
-  links,
   actionLabel,
-  actionHref = "#hero",
 }: SiteHeaderProps) {
   const progress = useScrollProgress(120);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [cartCount, setCartCount] = useState(4);
+  const accountLabel = "Account";
 
   return (
     <header
@@ -64,25 +59,72 @@ function SiteHeader({
         </a>
 
         <nav className="hidden min-[900px]:flex items-center gap-8">
-          {links.map((link) => (
-            <a
-              key={link.label}
-              className="text-sm font-bold text-ink transition-colors duration-150 hover:text-pink"
-              href={link.href}
-            >
-              {link.label}
-            </a>
-          ))}
+          <a
+            className="text-sm font-bold text-ink transition-colors duration-150 hover:text-pink"
+            href="#how"
+          >
+            How it works
+          </a>
+          <a
+            className="text-sm font-bold text-ink transition-colors duration-150 hover:text-pink"
+            href="#wallet"
+          >
+            Wallet
+          </a>
+          <a
+            className="text-sm font-bold text-ink transition-colors duration-150 hover:text-pink"
+            href="#draw"
+          >
+            Prize line-up
+          </a>
+          <a
+            className="text-sm font-bold text-ink transition-colors duration-150 hover:text-pink"
+            href="#winners"
+          >
+            Winners
+          </a>
         </nav>
 
-        {actionLabel ? (
-          <a
-            className="ticket-button ticket-button--yellow ticket-button--nav text-sm"
-            href={actionHref}
-          >
-            {actionLabel}
-          </a>
-        ) : null}
+        <div className="flex items-center gap-3">
+          {isLoggedIn ? (
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                className="flex items-center gap-3 rounded-full border-[3px] border-ink bg-[#ececec] px-4 py-2 text-left shadow-[3px_3px_0_#171310] transition-transform duration-150 hover:-translate-y-0.5"
+                onClick={() => setIsLoggedIn((current) => !current)}
+              >
+                <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-[3px] border-ink bg-[#1d1d1d] text-xs font-black uppercase text-white">
+                  A
+                </span>
+                <span className="text-base font-black uppercase text-ink">
+                  {accountLabel}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                className="relative flex items-center justify-center rounded-[22px] border-[3px] border-ink bg-red px-3 py-2 shadow-[4px_4px_0_#171310] transition-transform duration-150 hover:-translate-y-0.5"
+                aria-label="Cart"
+                onClick={() => setCartCount((current) => (current > 0 ? current - 1 : 0))}
+              >
+                <span className="text-lg font-black text-white">🛒</span>
+                {cartCount > 0 ? (
+                  <span className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full border-[3px] border-ink bg-[#f7f7f7] text-[0.8rem] font-black text-ink">
+                    {cartCount}
+                  </span>
+                ) : null}
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-full border-[3px] border-ink bg-[#f7f7f7] px-5 py-2.5 text-sm font-black uppercase tracking-[0.08em] text-ink shadow-[4px_4px_0_#171310] transition-transform duration-150 hover:-translate-y-0.5"
+              onClick={() => setIsLoggedIn(true)}
+            >
+              {actionLabel || "Login / Signup"}
+            </button>
+          )}
+        </div>
       </div>
     </header>
   );

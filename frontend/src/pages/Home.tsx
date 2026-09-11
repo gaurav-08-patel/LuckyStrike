@@ -9,12 +9,6 @@ type HeroSlide = {
   tag: string;
 };
 
-const headerLinks = [
-  { label: "How it works", href: "#hero" },
-  { label: "Prize line-up", href: "#draw" },
-  { label: "Winners", href: "#winners" },
-];
-
 const heroSlides: HeroSlide[] = [
   {
     src: "/Carousel/Web_5mRefresh_retro.webp",
@@ -271,7 +265,6 @@ function Home() {
             Lucky<span className="text-red">Strike</span>
           </>
         }
-        links={headerLinks}
         actionLabel="Enter now"
       />
 
