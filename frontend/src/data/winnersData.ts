@@ -183,7 +183,7 @@ const winnersData: WinnerData[] = [
     name: "Noah Carter",
     entry_no: "DC-13983-248151941",
     cash: 11500,
-    id: "DC-01133",
+    id: "DC-0113344",
     announced_on: new Date("2026-08-08"),
     image:
       "https://www.dreamdubai.com/on/demandware.static/-/Sites-dreamdubai-master-catalog/default/dw19a67e88/images/campaignSliderImage/DC-00992-dashboard-image.jpg",
