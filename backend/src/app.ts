@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import authRoutes from "./routes/auth";
+import userRoutes from "./routes/users";
 
 dotenv.config();
 
@@ -15,5 +17,8 @@ app.get("/api/health", (_req, res) => {
     message: "Lucky Strike backend is running",
   });
 });
+
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 
 export default app;
