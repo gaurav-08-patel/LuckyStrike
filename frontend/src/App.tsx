@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import UserAgreement from "./pages/UserAgreement";
 import WhatsAppVerifyPage from "./pages/WhatsAppVerifyPage";
+import WinnersPage from "./pages/WinnersPage";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
             />
             <Route path="/user-agreement" element={<UserAgreement />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/winners" element={<WinnersPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
