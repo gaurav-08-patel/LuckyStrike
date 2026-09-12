@@ -88,10 +88,10 @@ function SiteHeader({ brand, actionLabel }: SiteHeaderProps) {
       />
 
       <header
-        className="sticky top-0 z-50 border-b-4 border-b-transparent"
+        className="sticky top-0 z-50 border-b-[2px] border-b-[#171310]/15 bg-white/80 backdrop-blur-[2px]"
         style={{
           backgroundColor: `rgba(255, 255, 255, ${progress})`,
-          borderBottomColor: `rgba(23, 19, 16, ${progress})`,
+          borderBottomColor: `rgba(23, 19, 16, ${Math.max(progress, 0.25)})`,
         }}
       >
         <div className="page-wrap flex items-center justify-between gap-4 py-4 sm:py-5">
@@ -131,8 +131,12 @@ function SiteHeader({ brand, actionLabel }: SiteHeaderProps) {
             </a>
             <a
               className="text-sm font-bold text-ink transition-colors duration-150 hover:text-pink"
-              href="/#winners"
-              onClick={(event) => handleSectionClick(event, "winners")}
+              href="/winners"
+              onClick={(event) => {
+                event.preventDefault();
+                navigate("/winners");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
             >
               Winners
             </a>

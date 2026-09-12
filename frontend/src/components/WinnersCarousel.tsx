@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import WinnerCard from "./WinnerCard/WinnerCard";
 import winnersData from "../data/winnersData";
+import { useNavigate } from "react-router-dom";
 
 function WinnersCarousel() {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -10,6 +11,8 @@ function WinnersCarousel() {
   const winners = winnersData;
   const cardWidth = 320;
   const gapWidth = 20;
+
+  const navigate = useNavigate();
 
   const maxIndex = Math.max(0, winners.length - 4);
 
@@ -135,6 +138,9 @@ function WinnersCarousel() {
         <button
           type="button"
           className="inline-flex items-center justify-center rounded-full border-[3px] border-ink bg-[#f7f7f7] px-8 py-4 text-[1.05rem] font-black uppercase tracking-[0.06em] text-ink shadow-[4px_4px_0_#171310] transition-transform duration-150 hover:-translate-y-0.5"
+          onClick={() => {
+            navigate("/winners");
+          }}
         >
           See all winners
         </button>
