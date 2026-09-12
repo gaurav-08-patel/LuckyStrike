@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
 
 type SiteHeaderProps = {
   brand: React.ReactNode;
@@ -33,14 +34,11 @@ function useScrollProgress(fadeDistance = 120) {
   return progress;
 }
 
-function SiteHeader({
-  brand,
-  actionLabel,
-}: SiteHeaderProps) {
+function SiteHeader({ brand, actionLabel }: SiteHeaderProps) {
   const progress = useScrollProgress(120);
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const { isLoggedIn, user, logoutUser, setUser } = useAuth();
   const [cartCount, setCartCount] = useState(4);
-  const accountLabel = "Account";
+  const accountLabel = user?.firstName ? user.firstName : "Account";
 
   return (
     <header
@@ -91,7 +89,7 @@ function SiteHeader({
               <button
                 type="button"
                 className="flex items-center gap-3 rounded-full border-[3px] border-ink bg-[#ececec] px-4 py-2 text-left shadow-[3px_3px_0_#171310] transition-transform duration-150 hover:-translate-y-0.5"
-                onClick={() => setIsLoggedIn((current) => !current)}
+                onClick={logoutUser}
               >
                 <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-[3px] border-ink bg-[#1d1d1d] text-xs font-black uppercase text-white">
                   A
@@ -105,7 +103,9 @@ function SiteHeader({
                 type="button"
                 className="relative flex items-center justify-center rounded-[22px] border-[3px] border-ink bg-red px-3 py-2 shadow-[4px_4px_0_#171310] transition-transform duration-150 hover:-translate-y-0.5"
                 aria-label="Cart"
-                onClick={() => setCartCount((current) => (current > 0 ? current - 1 : 0))}
+                onClick={() =>
+                  setCartCount((current) => (current > 0 ? current - 1 : 0))
+                }
               >
                 <span className="text-lg font-black text-white">🛒</span>
                 {cartCount > 0 ? (
@@ -119,7 +119,15 @@ function SiteHeader({
             <button
               type="button"
               className="inline-flex items-center justify-center rounded-full border-[3px] border-ink bg-[#f7f7f7] px-5 py-2.5 text-sm font-black uppercase tracking-[0.08em] text-ink shadow-[4px_4px_0_#171310] transition-transform duration-150 hover:-translate-y-0.5"
-              onClick={() => setIsLoggedIn(true)}
+              onClick={() => {
+                setUser({
+                  _id: "demo-user",
+                  firstName: "John",
+                  lastName: "Doe",
+                  phoneNumber: "+91 91234 56789",
+                  walletBalance: 250,
+                });
+              }}
             >
               {actionLabel || "Login / Signup"}
             </button>
