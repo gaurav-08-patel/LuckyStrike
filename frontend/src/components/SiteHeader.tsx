@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import AuthModal from "./AuthModal";
 import { useAuth } from "../context/AuthContext";
 
@@ -38,11 +39,46 @@ function useScrollProgress(fadeDistance = 120) {
 function SiteHeader({ brand, actionLabel }: SiteHeaderProps) {
   const progress = useScrollProgress(120);
   const { isLoggedIn, user, logoutUser } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [cartCount, setCartCount] = useState(4);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const accountLabel = user?.firstName ? user.firstName : "Account";
 
   const openAuthModal = () => setIsAuthModalOpen(true);
+
+  const handleSectionClick = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    sectionId: string,
+  ) => {
+    event.preventDefault();
+
+    const destination = `/#${sectionId}`;
+    if (location.pathname === "/") {
+      if (location.hash === `#${sectionId}`) {
+        const element = document.getElementById(sectionId);
+        element?.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      navigate(destination, { replace: false });
+      return;
+    }
+
+    navigate(destination);
+  };
+
+  useEffect(() => {
+    if (!location.hash) {
+      return;
+    }
+
+    const element = document.getElementById(location.hash.replace("#", ""));
+    if (element) {
+      requestAnimationFrame(() => {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  }, [location.hash, location.pathname]);
 
   return (
     <>
@@ -61,7 +97,12 @@ function SiteHeader({ brand, actionLabel }: SiteHeaderProps) {
         <div className="page-wrap flex items-center justify-between gap-4 py-4 sm:py-5">
           <a
             className="font-display text-2xl leading-none uppercase text-ink sm:text-3xl"
-            href="#hero"
+            href="/"
+            onClick={(event) => {
+              event.preventDefault();
+              navigate("/");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
           >
             {brand}
           </a>
@@ -69,25 +110,29 @@ function SiteHeader({ brand, actionLabel }: SiteHeaderProps) {
           <nav className="hidden min-[900px]:flex items-center gap-8">
             <a
               className="text-sm font-bold text-ink transition-colors duration-150 hover:text-pink"
-              href="#how"
+              href="/#how"
+              onClick={(event) => handleSectionClick(event, "how")}
             >
               How it works
             </a>
             <a
               className="text-sm font-bold text-ink transition-colors duration-150 hover:text-pink"
-              href="#wallet"
+              href="/#wallet"
+              onClick={(event) => handleSectionClick(event, "wallet")}
             >
               Wallet
             </a>
             <a
               className="text-sm font-bold text-ink transition-colors duration-150 hover:text-pink"
-              href="#draw"
+              href="/#draw"
+              onClick={(event) => handleSectionClick(event, "draw")}
             >
               Prize line-up
             </a>
             <a
               className="text-sm font-bold text-ink transition-colors duration-150 hover:text-pink"
-              href="#winners"
+              href="/#winners"
+              onClick={(event) => handleSectionClick(event, "winners")}
             >
               Winners
             </a>
