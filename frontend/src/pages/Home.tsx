@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import HowItWorks from "../components/HowItWorks";
 import SiteHeader from "../components/SiteHeader";
 import WinnersCarousel from "../components/WinnersCarousel";
+import Footer from "../components/Footer";
 
 type HeroSlide = {
   src: string;
@@ -265,7 +266,7 @@ function Home() {
             Lucky<span className="text-red">Strike</span>
           </>
         }
-        actionLabel="Enter now"
+        actionLabel="Login / Signup"
       />
 
       <section
@@ -509,6 +510,8 @@ function Home() {
       </section>
       <HowItWorks />
       <WinnersCarousel />
+      <div  className="mt-10" />
+      <Footer />
     </main>
   );
 }
