@@ -3,6 +3,7 @@ import HowItWorks from "../components/HowItWorks";
 import SiteHeader from "../components/SiteHeader";
 import WinnersCarousel from "../components/WinnersCarousel";
 import Footer from "../components/Footer";
+import { Link } from "react-router-dom";
 
 type HeroSlide = {
   src: string;
@@ -28,7 +29,7 @@ const heroSlides: HeroSlide[] = [
   },
 ];
 
-interface Campaign {
+export interface Campaign {
   id: string;
   title: string;
   prizeType: "Cash" | "Car" | "Electronics" | string;
@@ -44,7 +45,7 @@ interface Campaign {
   soldTotal: number | null;
 }
 
-const allCampaigns: Campaign[] = [
+export const allCampaigns: Campaign[] = [
   {
     id: "DC-01078",
     title: "1,000,000 Cash",
@@ -178,7 +179,7 @@ const allCampaigns: Campaign[] = [
 const tabs = ["All campaigns", "Daily", "Weekly", "Monthly"] as const;
 type CampaignTab = (typeof tabs)[number];
 
-const formatPrize = (campaign: Campaign) => {
+export const formatPrize = (campaign: Campaign) => {
   if (campaign.prizeType === "Cash" && campaign.cashPrizeValue !== null) {
     return `${campaign.currency} ${campaign.cashPrizeValue.toLocaleString("en-AE")}`;
   }
@@ -194,7 +195,7 @@ const formatPrize = (campaign: Campaign) => {
   return campaign.title;
 };
 
-const getCampaignDeadline = (campaign: Campaign) => {
+export const getCampaignDeadline = (campaign: Campaign) => {
   if (campaign.lastRegistration) {
     return new Date(campaign.lastRegistration);
   }
@@ -203,7 +204,7 @@ const getCampaignDeadline = (campaign: Campaign) => {
   return new Date(drawDate.getTime() - 36 * 60 * 60 * 1000);
 };
 
-const formatCountdown = (deadline: Date, now: Date) => {
+export const formatCountdown = (deadline: Date, now: Date) => {
   const leftMs = Math.max(deadline.getTime() - now.getTime(), 0);
   if (leftMs <= 0) {
     return "00:00:00";
@@ -407,102 +408,110 @@ function Home() {
                 : "bg-[#3ACF7E] text-[#0d2a20]";
 
               return (
-                <article
-                  key={campaign.id}
-                  className="relative mt-16 overflow-visible rounded-3xl border-4 border-ink bg-[#f5f5f5] shadow-[6px_6px_0_var(--color-ink)] transition-transform duration-150 hover:-translate-y-1"
-                >
-                  <div className="absolute left-5 -top-7 z-10 -translate-y-1/2 max-sm:-top-6">
-                    <div
-                      className={`inline-flex h-14 w-56 max-w-full items-center justify-center gap-2 rounded-t-2xl border-4 border-ink border-b-0 px-3 py-2 shadow-[3px_3px_0_var(--color-ink)] max-sm:h-10 max-sm:w-48 ${productTone}`}
-                    >
-                      {showCountdown ? (
-                        <>
+                <Link to={`/${campaign.id}`}>
+                  <article
+                    key={campaign.id}
+                    className="relative mt-16 overflow-visible rounded-3xl border-4 border-ink bg-[#f5f5f5] shadow-[6px_6px_0_var(--color-ink)] transition-transform duration-150 hover:-translate-y-1"
+                  >
+                    <div className="absolute left-5 -top-7 z-10 -translate-y-1/2 max-sm:-top-6">
+                      <div
+                        className={`inline-flex h-14 w-56 max-w-full items-center justify-center gap-2 rounded-t-2xl border-4 border-ink border-b-0 px-3 py-2 shadow-[3px_3px_0_var(--color-ink)] max-sm:h-10 max-sm:w-48 ${productTone}`}
+                      >
+                        {showCountdown ? (
+                          <>
+                            <span className="text-[0.8rem] max-sm:text-[0.6rem] font-black uppercase tracking-[0.12em]">
+                              closing in
+                            </span>
+                            <span className="text-[1.2rem] font-black leading-none sm:text-[1.6rem]">
+                              {formatCountdown(deadline, now)}
+                            </span>
+                          </>
+                        ) : isJustLaunched ? (
                           <span className="text-[0.8rem] max-sm:text-[0.6rem] font-black uppercase tracking-[0.12em]">
-                            closing in
+                            just launched
                           </span>
-                          <span className="text-[1.2rem] font-black leading-none sm:text-[1.6rem]">
-                            {formatCountdown(deadline, now)}
+                        ) : (
+                          <span className="text-[0.8rem] max-sm:text-[0.6rem] font-black uppercase tracking-[0.12em]">
+                            registration open
                           </span>
-                        </>
-                      ) : isJustLaunched ? (
-                        <span className="text-[0.8rem] max-sm:text-[0.6rem] font-black uppercase tracking-[0.12em]">
-                          just launched
-                        </span>
-                      ) : (
-                        <span className="text-[0.8rem] max-sm:text-[0.6rem] font-black uppercase tracking-[0.12em]">
-                          registration open
-                        </span>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="grid gap-4 p-3 pt-7 md:grid-cols-[0.95fr_1.35fr] md:p-4 md:pt-8">
-                    <div className="relative overflow-hidden rounded-3xl border-4 border-ink bg-paper p-3">
-                      <div className="absolute left-3 top-3 z-10 flex items-center gap-2">
-                        {campaign.entriesMultiplier ? (
-                          <span className="border-4 border-ink bg-yellow px-2 py-1 text-[0.62rem] font-black uppercase text-ink">
-                            {campaign.entriesMultiplier}
-                          </span>
-                        ) : null}
+                    <div className="grid gap-4 p-3 pt-7 md:grid-cols-[0.95fr_1.35fr] md:p-4 md:pt-8">
+                      <div className="relative overflow-hidden rounded-3xl border-4 border-ink bg-paper p-3">
+                        <div className="absolute left-3 top-3 z-10 flex items-center gap-2">
+                          {campaign.entriesMultiplier ? (
+                            <span className="border-4 border-ink bg-yellow px-2 py-1 text-[0.62rem] font-black uppercase text-ink">
+                              {campaign.entriesMultiplier}
+                            </span>
+                          ) : null}
+                        </div>
+
+                        <img
+                          src={campaign.image}
+                          alt={campaign.title}
+                          className="h-56 w-full rounded-2xl object-cover md:h-60"
+                        />
                       </div>
 
-                      <img
-                        src={campaign.image}
-                        alt={campaign.title}
-                        className="h-56 w-full rounded-2xl object-cover md:h-60"
-                      />
-                    </div>
+                      <div className="flex flex-col justify-center rounded-3xl bg-[#f7f7f7] p-4 md:p-5">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="flex flex-col">
+                            <span className="font-display text-[2rem] leading-none uppercase text-red">
+                              Win
+                            </span>
+                            <span className="mt-2 font-display text-[1.75rem] leading-none uppercase text-ink sm:text-[2.1rem]">
+                              {formatPrize(campaign)}
+                            </span>
+                          </div>
 
-                    <div className="flex flex-col justify-center rounded-3xl bg-[#f7f7f7] p-4 md:p-5">
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex flex-col">
-                          <span className="font-display text-[2rem] leading-none uppercase text-red">
-                            Win
+                          <button
+                            type="button"
+                            className="cursor-pointer inline-flex items-center justify-center border-4 border-ink bg-[#4b5bdc] px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.08em] text-white shadow-[3px_3px_0_var(--color-ink)] transition-transform duration-150 hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[1px_1px_0_var(--color-ink)]"
+                          >
+                            Entry from {campaign.entryFrom}
+                          </button>
+                        </div>
+
+                        <div className="mt-4 flex items-center justify-between gap-3 border-t-4 border-dashed border-ink pt-3 text-[0.78rem] font-bold text-ink/80">
+                          <span>
+                            Draw date:{" "}
+                            {new Date(campaign.drawDate).toLocaleDateString(
+                              "en-GB",
+                              {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              },
+                            )}
                           </span>
-                          <span className="mt-2 font-display text-[1.75rem] leading-none uppercase text-ink sm:text-[2.1rem]">
-                            {formatPrize(campaign)}
+                          <span className="text-[0.68rem] uppercase tracking-[0.08em] text-red">
+                            {campaign.id}
                           </span>
                         </div>
 
-                        <button
-                          type="button"
-                          className="cursor-pointer inline-flex items-center justify-center border-4 border-ink bg-[#4b5bdc] px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.08em] text-white shadow-[3px_3px_0_var(--color-ink)] transition-transform duration-150 hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[1px_1px_0_var(--color-ink)]"
-                        >
-                          Entry from {campaign.entryFrom}
-                        </button>
-                      </div>
+                        <div className="mt-4 flex items-center justify-between gap-3 text-[0.8rem] font-bold text-ink">
+                          <span>
+                            {showCountdown ? (
+                              <span className="inline-flex items-center border-4 border-ink bg-red px-3 py-2 text-[1.05rem] font-black leading-none text-white shadow-[2px_2px_0_var(--color-ink)]">
+                                {formatCountdown(deadline, now)}
+                              </span>
+                            ) : (
+                              <span className="text-ink/70">
+                                Open registration
+                              </span>
+                            )}
+                          </span>
 
-                      <div className="mt-4 flex items-center justify-between gap-3 border-t-4 border-dashed border-ink pt-3 text-[0.78rem] font-bold text-ink/80">
-                        <span>
-                          Draw date:{" "}
-                          {new Date(campaign.drawDate).toLocaleDateString(
-                            "en-GB",
-                            { day: "2-digit", month: "short", year: "numeric" },
-                          )}
-                        </span>
-                        <span className="text-[0.68rem] uppercase tracking-[0.08em] text-red">
-                          {campaign.id}
-                        </span>
-                      </div>
-
-                      <div className="mt-4 flex items-center justify-between gap-3 text-[0.8rem] font-bold text-ink">
-                        <span>
-                          {showCountdown ? (
-                            <span className="inline-flex items-center border-4 border-ink bg-red px-3 py-2 text-[1.05rem] font-black leading-none text-white shadow-[2px_2px_0_var(--color-ink)]">
-                              {formatCountdown(deadline, now)}
-                            </span>
-                          ) : (
-                            <span className="text-ink/70">
-                              Open registration
-                            </span>
-                          )}
-                        </span>
-
-                        <span className="text-ink/70">{campaign.currency}</span>
+                          <span className="text-ink/70">
+                            {campaign.currency}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </article>
+                  </article>
+                </Link>
               );
             })}
           </div>
@@ -510,7 +519,7 @@ function Home() {
       </section>
       <HowItWorks />
       <WinnersCarousel />
-      <div  className="mt-10" />
+      <div className="mt-10" />
       <Footer />
     </main>
   );
