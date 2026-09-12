@@ -42,6 +42,8 @@ function SiteHeader({ brand, actionLabel }: SiteHeaderProps) {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const accountLabel = user?.firstName ? user.firstName : "Account";
 
+  const openAuthModal = () => setIsAuthModalOpen(true);
+
   return (
     <>
       <AuthModal
@@ -124,13 +126,33 @@ function SiteHeader({ brand, actionLabel }: SiteHeaderProps) {
                 </button>
               </div>
             ) : (
-              <button
-                type="button"
-                className="inline-flex items-center justify-center rounded-full border-[3px] border-ink bg-[#f7f7f7] px-5 py-2.5 text-sm font-black uppercase tracking-[0.08em] text-ink shadow-[4px_4px_0_#171310] transition-transform duration-150 hover:-translate-y-0.5"
-                onClick={() => setIsAuthModalOpen(true)}
-              >
-                {actionLabel || "Login / Signup"}
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  className="relative flex items-center justify-center rounded-[22px] border-[3px] border-ink bg-red px-3 py-2 shadow-[4px_4px_0_#171310] transition-transform duration-150 hover:-translate-y-0.5"
+                  aria-label="Cart"
+                  onClick={openAuthModal}
+                >
+                  <span className="text-lg font-black text-white">🛒</span>
+                  {cartCount > 0 ? (
+                    <span className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full border-[3px] border-ink bg-[#f7f7f7] text-[0.8rem] font-black text-ink">
+                      {cartCount}
+                    </span>
+                  ) : null}
+                </button>
+
+                <button
+                  type="button"
+                  className="group relative inline-flex items-center justify-center overflow-hidden rounded-full border-[3px] border-ink bg-[#ff3d8c] px-5 py-2.5 text-sm font-black uppercase tracking-[0.12em] text-white shadow-[5px_5px_0_#171310] transition-all duration-200 hover:-translate-y-1 hover:shadow-[7px_7px_0_#171310] active:translate-y-0 active:shadow-[3px_3px_0_#171310]"
+                  onClick={openAuthModal}
+                >
+                  <span className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.5),_transparent_35%)]" />
+                  <span className="absolute inset-y-0 left-[-35%] w-[38%] -skew-x-12 bg-gradient-to-r from-transparent via-white/70 to-transparent opacity-80 blur-[1px] animate-[shine_3s_ease-in-out_infinite]" />
+                  <span className="relative z-10">
+                    {actionLabel || "Login / Signup"}
+                  </span>
+                </button>
+              </div>
             )}
           </div>
         </div>
