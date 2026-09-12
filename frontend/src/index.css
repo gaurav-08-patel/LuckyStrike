@@ -140,6 +140,30 @@
   }
 }
 
+@keyframes shine {
+  0% {
+    transform: translateX(-220%) skewX(-12deg);
+    opacity: 0;
+  }
+
+  15% {
+    opacity: 0.9;
+  }
+
+  45% {
+    opacity: 1;
+  }
+
+  70% {
+    opacity: 0.85;
+  }
+
+  100% {
+    transform: translateX(320%) skewX(-12deg);
+    opacity: 0;
+  }
+}
+
 @keyframes toast-in-top {
   0% {
     opacity: 0;
