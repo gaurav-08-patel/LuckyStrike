@@ -9,7 +9,6 @@ export const countryCodes: CountryCodeOption[] = [
   { label: "United Kingdom (+44)", value: "+44" },
   { label: "UAE (+971)", value: "+971" },
   { label: "Australia (+61)", value: "+61" },
-  { label: "Canada (+1)", value: "+1" },
   { label: "Germany (+49)", value: "+49" },
   { label: "France (+33)", value: "+33" },
   { label: "Spain (+34)", value: "+34" },
