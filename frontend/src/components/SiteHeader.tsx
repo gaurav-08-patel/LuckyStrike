@@ -117,8 +117,12 @@ function SiteHeader({ brand, actionLabel }: SiteHeaderProps) {
             </a>
             <a
               className="text-sm font-bold text-ink transition-colors duration-150 hover:text-pink"
-              href="/#wallet"
-              onClick={(event) => handleSectionClick(event, "wallet")}
+              href="/wallet"
+              onClick={(event) => {
+                event.preventDefault();
+                navigate("/wallet");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
             >
               Wallet
             </a>
