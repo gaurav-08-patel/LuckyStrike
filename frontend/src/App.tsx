@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./components/ui/Toast";
+import DrawTerms from "./pages/DrawTerms";
 import Home from "./pages/Home";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import UserAgreement from "./pages/UserAgreement";
@@ -38,6 +39,7 @@ function App() {
             />
             <Route path="/user-agreement" element={<UserAgreement />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/draw-terms" element={<DrawTerms />} />
             <Route path="/winners" element={<WinnersPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
