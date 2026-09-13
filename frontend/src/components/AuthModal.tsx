@@ -19,6 +19,7 @@ function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [resendCountdown, setResendCountdown] = useState(52);
+  const [previewOtp, setPreviewOtp] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -27,6 +28,7 @@ function AuthModal({ isOpen, onClose }: AuthModalProps) {
       setError("");
       setLoading(false);
       setResendCountdown(52);
+      setPreviewOtp(null);
     }
   }, [isOpen]);
 
@@ -87,6 +89,7 @@ function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
       setStep("otp");
       setResendCountdown(52);
+      setPreviewOtp(data?.otp ?? null);
       toast.success("OTP sent", "Verification code sent to your phone.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -132,6 +135,7 @@ function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
       const user = data.user;
       setUser(user);
+      setPreviewOtp(null);
       toast.success(
         data.isNewUser ? "Account created" : "Login successful",
         data.isNewUser
@@ -240,6 +244,17 @@ function AuthModal({ isOpen, onClose }: AuthModalProps) {
               <p className="mt-2 break-all text-center text-[1.5rem] font-black leading-none text-[#4a4ae6] sm:text-[2.6rem]">
                 +{fullPhone.replace(/\D/g, "")}
               </p>
+
+              {previewOtp ? (
+                <div className="mt-3 rounded-[12px] border-[2px] border-ink bg-[#fff] p-3 text-center">
+                  <p className="text-sm font-bold text-ink">
+                    DEV OTP (preview)
+                  </p>
+                  <p className="mt-1 text-2xl font-black tracking-[0.18em] text-ink">
+                    {previewOtp}
+                  </p>
+                </div>
+              ) : null}
 
               <input
                 value={otp}
