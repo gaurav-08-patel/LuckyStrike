@@ -16,6 +16,7 @@ import UserAgreement from "./pages/UserAgreement";
 import WalletPage from "./pages/WalletPage";
 import WhatsAppVerifyPage from "./pages/WhatsAppVerifyPage";
 import WinnersPage from "./pages/WinnersPage";
+import ProfilePage from "./pages/Profile";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -44,6 +45,7 @@ function App() {
             <Route path="/draw-terms" element={<DrawTerms />} />
             <Route path="/wallet" element={<WalletPage />} />
             <Route path="/winners" element={<WinnersPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
             <Route path="/:id" element={<CampaignPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
