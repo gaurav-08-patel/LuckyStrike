@@ -38,7 +38,7 @@ function useScrollProgress(fadeDistance = 120) {
 
 function SiteHeader({ brand, actionLabel }: SiteHeaderProps) {
   const progress = useScrollProgress(120);
-  const { isLoggedIn, user, logoutUser } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [cartCount, setCartCount] = useState(4);
@@ -152,7 +152,7 @@ function SiteHeader({ brand, actionLabel }: SiteHeaderProps) {
                 <button
                   type="button"
                   className="flex items-center gap-3 rounded-full border-[3px] border-ink bg-[#ececec] px-4 py-2 text-left shadow-[3px_3px_0_#171310] transition-transform duration-150 hover:-translate-y-0.5"
-                  onClick={logoutUser}
+                  onClick={() => navigate("/profile")}
                 >
                   <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-[3px] border-ink bg-[#1d1d1d] text-xs font-black uppercase text-white">
                     A
