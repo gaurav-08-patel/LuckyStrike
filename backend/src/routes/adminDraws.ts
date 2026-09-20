@@ -100,9 +100,9 @@ router.post("/admin/draws", requireAuth, requireAdmin, async (req, res) => {
       .json({ message: "Valid expiresAt timestamp is required." });
   }
 
-  if (expiresDate.getTime() <= drawDate.getTime()) {
+  if (expiresDate.getTime() >= drawDate.getTime()) {
     return res.status(400).json({
-      message: "expiresAt must be later than drawAt.",
+      message: "expiresAt must be earlier than drawAt.",
     });
   }
 

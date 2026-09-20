@@ -57,7 +57,7 @@ router.post("/draws/:id/buy", requireAuth, async (req, res) => {
     }
 
     if (new Date(draw.expires_at).getTime() <= Date.now()) {
-      throw new Error("Draw has expired.");
+      throw new Error("Ticket sales have ended for this draw.");
     }
 
     if (draw.tickets_sold + quantity > draw.max_tickets) {
