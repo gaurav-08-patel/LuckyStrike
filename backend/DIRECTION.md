@@ -27,10 +27,10 @@ Status as of current build:
 - Phase A — Completed
 - Phase B — Completed
 - Phase C — Completed
-- Phase D — Not started
+- Phase D — Completed
 - Phase E — Not started
 
-This project has already validated the local MariaDB/MySQL setup, connected the backend successfully, created the required schema tables for `users`, `wallet_transaction_history`, `draws`, and `tickets`, and implemented the phone + OTP authentication flow with JWT-based protected routes.
+This project has already validated the local MariaDB/MySQL setup, connected the backend successfully, created the required schema tables for `users`, `wallet_transaction_history`, `draws`, and `tickets`, implemented the phone + OTP authentication flow with JWT-based protected routes, and completed the wallet flow with a shared helper plus protected balance and transaction endpoints.
 
 ---
 
@@ -611,13 +611,11 @@ router.post("/admin/draws", requireAuth, requireAdmin, async (req, res) => {
   // NOTE: rng_seed is stored now but must never be exposed via any GET route
   // until the draw is completed (Step 24 reveals it deliberately).
 
-  res
-    .status(201)
-    .json({
-      message: "Draw created.",
-      drawId: result.insertId,
-      rngSeedHash: seedHash,
-    });
+  res.status(201).json({
+    message: "Draw created.",
+    drawId: result.insertId,
+    rngSeedHash: seedHash,
+  });
 });
 
 module.exports = router;
