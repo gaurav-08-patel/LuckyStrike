@@ -4,6 +4,8 @@ import SiteHeader from "../components/SiteHeader";
 import { toast } from "../components/ui/Toast";
 import { useAuth } from "../context/AuthContext";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 const INITIAL_FORM = {
   firstName: "",
   lastName: "",
@@ -53,11 +55,12 @@ function WhatsAppVerifyPage() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/users/${userId}/profile`,
+        `${API_BASE_URL}/api/users/${userId}/profile`,
         {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("luckyStrikeToken") || ""}`,
           },
           body: JSON.stringify({
             firstName: form.firstName.trim(),
