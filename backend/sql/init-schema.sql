@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS draws (
     max_tickets     INT NOT NULL,
     tickets_sold    INT NOT NULL DEFAULT 0,
     draw_at         DATETIME NOT NULL,
+    expires_at      DATETIME NOT NULL,
     status          ENUM('active', 'closed', 'completed') NOT NULL DEFAULT 'active',
     winner_user_id  INT NULL,
     rng_seed_hash   VARCHAR(255) NULL,
