@@ -1,6 +1,7 @@
 import { Router } from "express";
 import type { RowDataPacket } from "mysql2";
 import { dbPool } from "../config/db";
+import { requireAuth } from "../middleware/auth";
 
 const router = Router();
 
@@ -36,8 +37,18 @@ const sanitizeUser = (user: DbUserRow) => ({
   updatedAt: user.updated_at,
 });
 
-router.patch("/:userId/profile", async (req, res) => {
+router.patch("/:userId/profile", requireAuth, async (req, res) => {
   const { userId } = req.params;
+  const authenticatedUserId = req.user?.id;
+
+  if (!authenticatedUserId) {
+    return res.status(401).json({ message: "Unauthorized." });
+  }
+
+  if (Number(userId) !== authenticatedUserId) {
+    return res.status(403).json({ message: "You can only update your own profile." });
+  }
+
   const {
     firstName,
     lastName,
