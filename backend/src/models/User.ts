@@ -1,90 +1,19 @@
-import { Schema, model, type Document, type Types } from "mongoose";
-
 export type Gender = "male" | "female" | "other";
 
-export interface IUser extends Document {
-  phoneNumber: string;
-  firstName: string;
-  lastName: string;
-  email?: string;
-  gender?: Gender;
-  nationality?: string;
-  countryOfResidence?: string;
-  walletBalance: number;
-  isPhoneVerified: boolean;
-  otp?: string;
-  otpExpiresAt?: Date | null;
-  cart?: Types.ObjectId;
-  createdAt: Date;
-  updatedAt: Date;
+export interface IUser {
+  id: number;
+  phone_number: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  gender: Gender | string | null;
+  nationality: string | null;
+  country_of_residence: string | null;
+  wallet_balance: number | string | null;
+  is_phone_verified: boolean | number;
+  is_admin: boolean | number;
+  created_at: Date | string | null;
+  updated_at: Date | string | null;
 }
 
-const userSchema = new Schema<IUser>(
-  {
-    phoneNumber: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-    },
-    firstName: {
-      type: String,
-      default: "John",
-      trim: true,
-    },
-    lastName: {
-      type: String,
-      default: "Doe",
-      trim: true,
-    },
-    email: {
-      type: String,
-      default: "",
-      trim: true,
-      lowercase: true,
-    },
-    gender: {
-      type: String,
-      enum: ["male", "female", "other", ""],
-      default: "",
-    },
-    nationality: {
-      type: String,
-      default: "",
-      trim: true,
-    },
-    countryOfResidence: {
-      type: String,
-      default: "",
-      trim: true,
-    },
-    walletBalance: {
-      type: Number,
-      default: 0,
-    },
-    isPhoneVerified: {
-      type: Boolean,
-      default: false,
-    },
-    otp: {
-      type: String,
-      default: "",
-    },
-    otpExpiresAt: {
-      type: Date,
-      default: null,
-    },
-    cart: {
-      type: Schema.Types.ObjectId,
-      ref: "Cart",
-      default: null,
-    },
-  },
-  {
-    timestamps: true,
-  },
-);
-
-const User = model<IUser>("User", userSchema);
-
-export default User;
+export default IUser;
