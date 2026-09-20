@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth";
+import adminDrawRoutes from "./routes/adminDraws";
+import ticketsRoutes from "./routes/tickets";
 import userRoutes from "./routes/users";
 import walletRoutes from "./routes/wallet";
 
@@ -22,5 +24,7 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api", walletRoutes);
+app.use("/api", adminDrawRoutes);
+app.use("/api", ticketsRoutes);
 
 export default app;
