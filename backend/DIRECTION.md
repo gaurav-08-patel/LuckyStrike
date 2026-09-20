@@ -201,6 +201,7 @@ CREATE TABLE draws (
     max_tickets     INT NOT NULL,
     tickets_sold    INT NOT NULL DEFAULT 0,
     draw_at         DATETIME NOT NULL,
+    expires_at      DATETIME NOT NULL,
     status          ENUM('active', 'closed', 'completed') NOT NULL DEFAULT 'active',
     winner_user_id  INT NULL,
     rng_seed_hash   VARCHAR(255) NULL,
@@ -588,15 +589,28 @@ async function requireAdmin(req, res, next) {
 }
 
 router.post("/admin/draws", requireAuth, requireAdmin, async (req, res) => {
-  const { title, prizeTitle, prizeAmount, ticketPrice, maxTickets, drawAt } =
-    req.body;
+  const {
+    title,
+    prizeTitle,
+    prizeAmount,
+    ticketPrice,
+    maxTickets,
+    drawAt,
+    expiresAt,
+  } = req.body;
+
+  if (new Date(expiresAt).getTime() <= new Date(drawAt).getTime()) {
+    return res
+      .status(400)
+      .json({ message: "expiresAt must be later than drawAt." });
+  }
 
   const seed = crypto.randomBytes(32).toString("hex");
   const seedHash = crypto.createHash("sha256").update(seed).digest("hex");
 
   const [result] = await pool.query(
-    `INSERT INTO draws (title, prize_title, prize_amount, ticket_price, max_tickets, draw_at, rng_seed_hash, rng_seed)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO draws (title, prize_title, prize_amount, ticket_price, max_tickets, draw_at, expires_at, rng_seed_hash, rng_seed)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       title,
       prizeTitle,
@@ -604,6 +618,7 @@ router.post("/admin/draws", requireAuth, requireAdmin, async (req, res) => {
       ticketPrice,
       maxTickets,
       drawAt,
+      expiresAt,
       seedHash,
       seed,
     ],
@@ -700,6 +715,9 @@ router.post("/draws/:id/buy", requireAuth, async (req, res) => {
 
     if (!draw || draw.status !== "active") {
       throw new Error("Draw is not active.");
+    }
+    if (new Date(draw.expires_at).getTime() <= Date.now()) {
+      throw new Error("Draw has expired.");
     }
     if (draw.tickets_sold + quantity > draw.max_tickets) {
       throw new Error("Not enough tickets remaining.");
