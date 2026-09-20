@@ -1,4 +1,7 @@
+import dotenv from "dotenv";
 import mysql from "mysql2/promise";
+
+dotenv.config();
 
 export const dbPool = mysql.createPool({
   host: process.env.DB_HOST || "localhost",
@@ -15,7 +18,9 @@ const connectDB = async (): Promise<void> => {
   const { DB_HOST, DB_USER, DB_PASSWORD, DB_NAME } = process.env;
 
   if (!DB_HOST || !DB_USER || !DB_PASSWORD || !DB_NAME) {
-    throw new Error("Database environment variables are missing. Check DB_HOST, DB_USER, DB_PASSWORD, and DB_NAME.");
+    throw new Error(
+      "Database environment variables are missing. Check DB_HOST, DB_USER, DB_PASSWORD, and DB_NAME.",
+    );
   }
 
   try {
