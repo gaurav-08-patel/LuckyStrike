@@ -28,9 +28,9 @@ Status as of current build:
 - Phase B — Completed
 - Phase C — Completed
 - Phase D — Completed
-- Phase E — Not started
+- Phase E — In progress
 
-This project has already validated the local MariaDB/MySQL setup, connected the backend successfully, created the required schema tables for `users`, `wallet_transaction_history`, `draws`, and `tickets`, implemented the phone + OTP authentication flow with JWT-based protected routes, and completed the wallet flow with a shared helper plus protected balance and transaction endpoints.
+This project has already validated the local MariaDB/MySQL setup, connected the backend successfully, created the required schema tables for `users`, `wallet_transaction_history`, `draws`, and `tickets`, implemented the phone + OTP authentication flow with JWT-based protected routes, completed the wallet flow with a shared helper plus protected balance and transaction endpoints, and added the admin draw creation flow with an `expires_at` cutoff to stop ticket sales before the draw time.
 
 ---
 
