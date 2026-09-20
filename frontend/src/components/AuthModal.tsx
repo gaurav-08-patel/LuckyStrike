@@ -12,6 +12,7 @@ type AuthModalProps = {
 function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const navigate = useNavigate();
   const { setUser } = useAuth();
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
   const [step, setStep] = useState<"phone" | "otp">("phone");
   const [countryCode, setCountryCode] = useState("+91");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -72,14 +73,11 @@ function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setError("");
 
     try {
-      const response = await fetch(
-        "http://localhost:5000/api/auth/request-otp",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phoneNumber: fullPhone }),
-        },
-      );
+      const response = await fetch(`${API_BASE_URL}/api/auth/request-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phoneNumber: fullPhone }),
+      });
 
       const data = await response.json();
 
@@ -118,14 +116,11 @@ function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setError("");
 
     try {
-      const response = await fetch(
-        "http://localhost:5000/api/auth/login-signup",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phoneNumber: fullPhone, otp }),
-        },
-      );
+      const response = await fetch(`${API_BASE_URL}/api/auth/login-signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phoneNumber: fullPhone, otp }),
+      });
 
       const data = await response.json();
 
@@ -134,7 +129,7 @@ function AuthModal({ isOpen, onClose }: AuthModalProps) {
       }
 
       const user = data.user;
-      setUser(user);
+      setUser(user, data.token ?? null);
       setPreviewOtp(null);
       toast.success(
         data.isNewUser ? "Account created" : "Login successful",
