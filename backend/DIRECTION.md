@@ -26,11 +26,11 @@ Status as of current build:
 
 - Phase A — Completed
 - Phase B — Completed
-- Phase C — In progress
+- Phase C — Completed
 - Phase D — Not started
 - Phase E — Not started
 
-This project has already validated the local MariaDB/MySQL setup, connected the backend successfully, and created the required schema tables for `users`, `wallet_transaction_history`, `draws`, and `tickets`.
+This project has already validated the local MariaDB/MySQL setup, connected the backend successfully, created the required schema tables for `users`, `wallet_transaction_history`, `draws`, and `tickets`, and implemented the phone + OTP authentication flow with JWT-based protected routes.
 
 ---
 
