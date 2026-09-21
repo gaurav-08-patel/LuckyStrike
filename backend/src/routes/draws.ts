@@ -6,6 +6,7 @@ const router = Router();
 
 interface DrawRow extends RowDataPacket {
   id: number;
+  draw_code: string;
   title: string;
   prize_title: string;
   prize_amount: string | number;
@@ -30,6 +31,34 @@ router.get("/draws", async (_req, res) => {
   );
 
   return res.status(200).json(rows);
+});
+
+router.get("/draws/:id", async (req, res) => {
+  const drawId = Number(req.params.id);
+
+  if (!Number.isInteger(drawId) || drawId <= 0) {
+    return res.status(400).json({ message: "Valid draw id is required." });
+  }
+
+  const [rows] = await dbPool.query<DrawRow[]>(
+    "SELECT * FROM draws WHERE id = ? LIMIT 1",
+    [drawId],
+  );
+
+  const draw = rows[0];
+
+  if (!draw) {
+    return res.status(404).json({ message: "Draw not found." });
+  }
+
+  const responseDraw = {
+    ...draw,
+    prize_amount: Number(draw.prize_amount),
+    ticket_price: Number(draw.ticket_price),
+    remaining_tickets: Number(draw.max_tickets) - Number(draw.tickets_sold),
+  };
+
+  return res.status(200).json(responseDraw);
 });
 
 export default router;
