@@ -785,14 +785,17 @@ Add to `routes/tickets.js`:
 ```js
 router.get("/my-tickets", requireAuth, async (req, res) => {
   const [rows] = await pool.query(
-    `SELECT tickets.id, tickets.status, draws.title, draws.prize_title
+    `SELECT tickets.id, tickets.ticket_code, tickets.status, draws.title, draws.prize_title
      FROM tickets JOIN draws ON tickets.draw_id = draws.id
-     WHERE tickets.user_id = ?`,
+     WHERE tickets.user_id = ?
+     ORDER BY tickets.created_at DESC`,
     [req.user.id],
   );
   res.json(rows);
 });
 ```
+
+This route lets the user see the status of each purchased ticket, especially which specific ticket code won or lost for a draw.
 
 ---
 

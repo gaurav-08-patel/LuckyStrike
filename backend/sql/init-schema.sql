@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS wallet_transaction_history (
 
 CREATE TABLE IF NOT EXISTS draws (
     id              INT AUTO_INCREMENT PRIMARY KEY,
+    draw_code       VARCHAR(20) NOT NULL UNIQUE,
     title           VARCHAR(200) NOT NULL,
     prize_title     VARCHAR(200) NOT NULL,
     prize_amount    DECIMAL(10,2) NOT NULL,
@@ -56,11 +57,12 @@ CREATE TABLE IF NOT EXISTS draws (
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS tickets (
-    id          INT AUTO_INCREMENT PRIMARY KEY,
-    draw_id     INT NOT NULL,
-    user_id     INT NOT NULL,
-    status      ENUM('active', 'won', 'lost') NOT NULL DEFAULT 'active',
-    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    ticket_code     VARCHAR(20) NOT NULL UNIQUE,
+    draw_id         INT NOT NULL,
+    user_id         INT NOT NULL,
+    status          ENUM('active', 'won', 'lost') NOT NULL DEFAULT 'active',
+    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_tickets_draw
         FOREIGN KEY (draw_id) REFERENCES draws(id)
         ON DELETE RESTRICT
