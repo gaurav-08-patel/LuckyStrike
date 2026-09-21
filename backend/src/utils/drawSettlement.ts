@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import type { PoolConnection, RowDataPacket } from "mysql2/promise";
+import { sendEmail } from "./email";
 import { updateWalletBalance } from "./wallet";
 
 interface DrawRow extends RowDataPacket {
@@ -29,13 +30,21 @@ interface TicketRow extends RowDataPacket {
   created_at: Date | string;
 }
 
+interface WinnerUserRow extends RowDataPacket {
+  id: number;
+  email: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  phone_number: string;
+}
+
 interface SettledDrawResult {
   drawId: number;
-  drawStatus: "completed";
-  winnerUserId: number;
-  winningTicketId: number;
-  winningTicketCode: string;
-  prizeAmount: number;
+  drawStatus: "completed" | "closed";
+  winnerUserId: number | null;
+  winningTicketId: number | null;
+  winningTicketCode: string | null;
+  prizeAmount: number | null;
   totalTickets: number;
 }
 
@@ -65,6 +74,30 @@ export const settleDraw = async (
       throw new Error("Draw has not expired yet.");
     }
 
+    const [ticketRows] = await connection.query<TicketRow[]>(
+      "SELECT * FROM tickets WHERE draw_id = ? ORDER BY id ASC",
+      [drawId],
+    );
+
+    if (ticketRows.length === 0) {
+      await connection.query(
+        "UPDATE draws SET status = 'closed', winner_user_id = NULL WHERE id = ?",
+        [drawId],
+      );
+
+      await connection.commit();
+
+      return {
+        drawId,
+        drawStatus: "closed",
+        winnerUserId: null,
+        winningTicketId: null,
+        winningTicketCode: null,
+        prizeAmount: null,
+        totalTickets: 0,
+      };
+    }
+
     if (!draw.rng_seed || !draw.rng_seed_hash) {
       throw new Error("Draw seed is missing.");
     }
@@ -76,15 +109,6 @@ export const settleDraw = async (
 
     if (computedSeedHash !== draw.rng_seed_hash) {
       throw new Error("Seed hash mismatch. Draw cannot be settled.");
-    }
-
-    const [ticketRows] = await connection.query<TicketRow[]>(
-      "SELECT * FROM tickets WHERE draw_id = ? ORDER BY id ASC",
-      [drawId],
-    );
-
-    if (ticketRows.length === 0) {
-      throw new Error("No tickets were sold for this draw.");
     }
 
     const seedInput = `${draw.rng_seed}:${draw.id}:${draw.rng_seed_hash}`;
@@ -118,6 +142,27 @@ export const settleDraw = async (
       "draw",
       drawId,
     );
+
+    const [winnerRows] = await connection.query<WinnerUserRow[]>(
+      "SELECT id, email, first_name, last_name FROM users WHERE id = ? LIMIT 1",
+      [winnerUserId],
+    );
+
+    const winner = winnerRows[0];
+
+    if (winner?.email) {
+      await sendEmail({
+        to: winner.email,
+        template: "winner_notification",
+        data: {
+          ticketCode: winningTicket.ticket_code,
+          drawCode: draw.draw_code,
+          prizeTitle: draw.prize_title,
+          prizeAmount: prizeAmount,
+          userId: winnerUserId,
+        },
+      });
+    }
 
     await connection.commit();
 
