@@ -70,7 +70,7 @@ router.get("/my-tickets", requireAuth, async (req, res) => {
   const tickets = rows.map((ticket) => ({
     id: ticket.id,
     ticketCode: ticket.ticket_code,
-    status: ticket.status,
+    ticketStatus: ticket.status,
     createdAt: ticket.created_at,
     draw: {
       id: ticket.draw_id,
@@ -81,7 +81,7 @@ router.get("/my-tickets", requireAuth, async (req, res) => {
       ticketPrice: Number(ticket.ticket_price),
       drawAt: ticket.draw_at,
       expiresAt: ticket.expires_at,
-      status: ticket.draw_status,
+      drawStatus: ticket.draw_status,
     },
   }));
 
