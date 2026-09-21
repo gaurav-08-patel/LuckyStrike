@@ -8,6 +8,19 @@ import { settleDraw } from "../utils/drawSettlement";
 
 const router = Router();
 
+const parseDateInput = (value: unknown, fieldName: string): Date => {
+  const date = new Date(String(value));
+
+  if (Number.isNaN(date.getTime())) {
+    throw new Error(`Valid ${fieldName} timestamp is required.`);
+  }
+
+  return date;
+};
+
+const toUtcMysqlDateTime = (date: Date): string =>
+  date.toISOString().slice(0, 19).replace("T", " ");
+
 interface AdminRow extends RowDataPacket {
   is_admin: number | boolean;
 }
@@ -96,8 +109,21 @@ router.post("/admin/draws", requireAuth, requireAdmin, async (req, res) => {
   const parsedPrizeAmount = Number(prizeAmount);
   const parsedTicketPrice = Number(ticketPrice);
   const parsedMaxTickets = Number(maxTickets);
-  const drawDate = new Date(String(drawAt));
-  const expiresDate = new Date(String(expiresAt));
+
+  let drawDate: Date;
+  let expiresDate: Date;
+
+  try {
+    drawDate = parseDateInput(drawAt, "drawAt");
+    expiresDate = parseDateInput(expiresAt, "expiresAt");
+  } catch (error) {
+    return res.status(400).json({
+      message:
+        error instanceof Error
+          ? error.message
+          : "Valid draw timestamps are required.",
+    });
+  }
 
   if (!Number.isFinite(parsedPrizeAmount) || parsedPrizeAmount <= 0) {
     return res
@@ -115,18 +141,6 @@ router.post("/admin/draws", requireAuth, requireAdmin, async (req, res) => {
     return res
       .status(400)
       .json({ message: "Max tickets must be a positive integer." });
-  }
-
-  if (Number.isNaN(drawDate.getTime())) {
-    return res
-      .status(400)
-      .json({ message: "Valid drawAt timestamp is required." });
-  }
-
-  if (Number.isNaN(expiresDate.getTime())) {
-    return res
-      .status(400)
-      .json({ message: "Valid expiresAt timestamp is required." });
   }
 
   if (expiresDate.getTime() >= drawDate.getTime()) {
@@ -155,8 +169,8 @@ router.post("/admin/draws", requireAuth, requireAdmin, async (req, res) => {
       parsedPrizeAmount,
       parsedTicketPrice,
       parsedMaxTickets,
-      drawDate.toISOString().slice(0, 19).replace("T", " "),
-      expiresDate.toISOString().slice(0, 19).replace("T", " "),
+      toUtcMysqlDateTime(drawDate),
+      toUtcMysqlDateTime(expiresDate),
       seedHash,
       seed,
     ],
