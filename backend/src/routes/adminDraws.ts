@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { dbPool } from "../config/db";
 import { requireAuth } from "../middleware/auth";
+import { generateUniqueDisplayCode } from "../utils/displayCodes";
 
 const router = Router();
 
@@ -108,12 +109,19 @@ router.post("/admin/draws", requireAuth, requireAdmin, async (req, res) => {
 
   const seed = crypto.randomBytes(32).toString("hex");
   const seedHash = crypto.createHash("sha256").update(seed).digest("hex");
+  const drawCode = await generateUniqueDisplayCode(
+    dbPool,
+    "draws",
+    "draw_code",
+    "DA",
+  );
 
   const [result] = await dbPool.query<ResultSetHeader>(
     `INSERT INTO draws
-        (title, prize_title, prize_amount, ticket_price, max_tickets, draw_at, expires_at, status, rng_seed_hash, rng_seed)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`,
+        (draw_code, title, prize_title, prize_amount, ticket_price, max_tickets, draw_at, expires_at, status, rng_seed_hash, rng_seed)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`,
     [
+      drawCode,
       title.trim(),
       prizeTitle.trim(),
       parsedPrizeAmount,
@@ -129,6 +137,7 @@ router.post("/admin/draws", requireAuth, requireAdmin, async (req, res) => {
   return res.status(201).json({
     message: "Draw created.",
     drawId: result.insertId,
+    drawCode,
     rngSeedHash: seedHash,
   });
 });
