@@ -2,6 +2,7 @@ import { Router } from "express";
 import type { RowDataPacket } from "mysql2";
 import { dbPool } from "../config/db";
 import { requireAuth } from "../middleware/auth";
+import { generateUniqueDisplayCode } from "../utils/displayCodes";
 import { updateWalletBalance } from "../utils/wallet";
 
 const router = Router();
@@ -86,14 +87,27 @@ router.post("/draws/:id/buy", requireAuth, async (req, res) => {
       drawId,
     );
 
-    const ticketValues = Array.from({ length: quantity }, () => [
+    const ticketCodes = [] as string[];
+    for (let i = 0; i < quantity; i += 1) {
+      const ticketCode = await generateUniqueDisplayCode(
+        connection,
+        "tickets",
+        "ticket_code",
+        "TK",
+      );
+      ticketCodes.push(ticketCode);
+    }
+
+    const ticketValues = ticketCodes.map((ticketCode) => [
+      ticketCode,
       drawId,
       userId,
     ]);
 
-    await connection.query("INSERT INTO tickets (draw_id, user_id) VALUES ?", [
-      ticketValues as any,
-    ]);
+    await connection.query(
+      "INSERT INTO tickets (ticket_code, draw_id, user_id) VALUES ?",
+      [ticketValues as any],
+    );
 
     await connection.query(
       "UPDATE draws SET tickets_sold = tickets_sold + ? WHERE id = ?",
@@ -106,6 +120,7 @@ router.post("/draws/:id/buy", requireAuth, async (req, res) => {
       message: "Tickets purchased successfully.",
       quantity,
       totalCost,
+      ticketCodes,
     });
   } catch (error) {
     await connection.rollback();
