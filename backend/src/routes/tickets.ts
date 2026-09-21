@@ -20,6 +20,77 @@ interface UserBalanceRow extends RowDataPacket {
   wallet_balance: string | number;
 }
 
+interface MyTicketRow extends RowDataPacket {
+  id: number;
+  ticket_code: string;
+  draw_id: number;
+  user_id: number;
+  status: string;
+  created_at: Date | string;
+  draw_code: string;
+  draw_title: string;
+  prize_title: string;
+  prize_amount: string | number;
+  ticket_price: string | number;
+  draw_at: Date | string;
+  expires_at: Date | string;
+  draw_status: string;
+}
+
+router.get("/my-tickets", requireAuth, async (req, res) => {
+  const userId = req.user?.id;
+
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized." });
+  }
+
+  const [rows] = await dbPool.query<MyTicketRow[]>(
+    `SELECT
+      t.id,
+      t.ticket_code,
+      t.draw_id,
+      t.user_id,
+      t.status,
+      t.created_at,
+      d.draw_code,
+      d.title AS draw_title,
+      d.prize_title,
+      d.prize_amount,
+      d.ticket_price,
+      d.draw_at,
+      d.expires_at,
+      d.status AS draw_status
+     FROM tickets t
+     LEFT JOIN draws d ON d.id = t.draw_id
+     WHERE t.user_id = ?
+     ORDER BY t.created_at DESC`,
+    [userId],
+  );
+
+  const tickets = rows.map((ticket) => ({
+    id: ticket.id,
+    ticketCode: ticket.ticket_code,
+    status: ticket.status,
+    createdAt: ticket.created_at,
+    draw: {
+      id: ticket.draw_id,
+      drawCode: ticket.draw_code,
+      title: ticket.draw_title,
+      prizeTitle: ticket.prize_title,
+      prizeAmount: Number(ticket.prize_amount),
+      ticketPrice: Number(ticket.ticket_price),
+      drawAt: ticket.draw_at,
+      expiresAt: ticket.expires_at,
+      status: ticket.draw_status,
+    },
+  }));
+
+  return res.status(200).json({
+    tickets,
+    total: tickets.length,
+  });
+});
+
 router.post("/draws/:id/buy", requireAuth, async (req, res) => {
   const drawId = Number(req.params.id);
   const quantity = Number(req.body?.quantity);
