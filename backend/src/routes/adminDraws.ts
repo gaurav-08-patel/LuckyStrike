@@ -169,6 +169,7 @@ router.post("/admin/draws", requireAuth, requireAdmin, async (req, res) => {
   });
 });
 
+// ONLY FOR MANUAL SETTLEMENT OF DRAWS. AUTOMATIC SETTLEMENT IS IMPLEMENTED BY A CRON JOB IN THE BACKGROUND.
 router.post(
   "/admin/draws/:id/settle",
   requireAuth,
