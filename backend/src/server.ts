@@ -8,10 +8,10 @@ dotenv.config();
 
 const PORT = Number(process.env.PORT || 5000);
 
-// Function to settle expired draws
+// Settle draws when the official draw time has arrived.
 const settleExpiredDraws = async (): Promise<void> => {
   const [rows] = await dbPool.query<any[]>(
-    "SELECT id FROM draws WHERE status = 'active' AND expires_at <= NOW()",
+    "SELECT id FROM draws WHERE status = 'active' AND draw_at <= NOW()",
   );
 
   for (const row of rows) {

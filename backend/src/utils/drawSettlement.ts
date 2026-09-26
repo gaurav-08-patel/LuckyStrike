@@ -70,8 +70,8 @@ export const settleDraw = async (
       throw new Error("Draw is not active.");
     }
 
-    if (new Date(draw.expires_at).getTime() > Date.now()) {
-      throw new Error("Draw has not expired yet.");
+    if (new Date(draw.draw_at).getTime() > Date.now()) {
+      throw new Error("Draw has not reached its draw_at time yet.");
     }
 
     const [ticketRows] = await connection.query<TicketRow[]>(
