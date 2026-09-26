@@ -1,24 +1,24 @@
-# 🎟️ Lottery / Prize-Draw Platform — Dev-Stage Build Guide (v3, with code)
+# 🎟️ Lucky Strike — Backend Build Guide and Status (Updated)
 
-> Same 31 steps, same rule — **one step, one module, independently rollback-able**
-> — but now every step includes the actual code to write, not just a
-> description. Copy each block into the file named at the top of it, in order.
+> This document reflects the actual implementation state of the project as it exists today.
+> It includes the original architecture goals plus the features that were completed during development.
 
 ---
 
-## 0. Quick Reference: Final Decisions
+## 0. Final Decisions and Current Build State
 
-| Decision           | Answer                                                         |
-| ------------------ | -------------------------------------------------------------- |
-| Login              | Phone + OTP only, one route (`/login-signup`), no password     |
-| Wallet balance     | Lives directly on `users.wallet_balance`                       |
-| Wallet history     | Auto-written by a shared helper — never manual                 |
-| Payments           | Fake top-up now; real Razorpay/Stripe test mode is future work |
-| Withdrawals        | Not built yet                                                  |
-| Prize payout       | Auto-credited to wallet + emailed                              |
-| Winner pick        | Seed-commit-reveal (provably fair), not `Math.random()`        |
-| Draw closing       | Fully automatic via scheduled job                              |
-| Concurrency safety | Plain MySQL `SELECT ... FOR UPDATE`, no Redis                  |
+| Decision         | Answer                                                              |
+| ---------------- | ------------------------------------------------------------------- |
+| Auth             | Phone + OTP login completed with JWT bearer auth                    |
+| Wallet           | Stored on `users.wallet_balance` and updated via a shared helper    |
+| Wallet history   | Auto-written from wallet helper, not manual                         |
+| Payments         | Simulated top-up / wallet credit flow for now                       |
+| Prize payout     | Auto-credited to wallet and emailed to winner                       |
+| Winner selection | Seed-hash reveal style, not `Math.random()`                         |
+| Draw lifecycle   | Automatic settlement via cron scheduler                             |
+| Database         | MariaDB/MySQL compatible, using generic SQL patterns                |
+| Time handling    | UTC-first storage, local datetime converted before insert           |
+| Email            | Nodemailer-based HTML templates with separate winner/general themes |
 
 ## Project Status
 
@@ -28,9 +28,237 @@ Status as of current build:
 - Phase B — Completed
 - Phase C — Completed
 - Phase D — Completed
-- Phase E — In progress
+- Phase E — Completed
+- Phase F — Completed
 
-This project has already validated the local MariaDB/MySQL setup, connected the backend successfully, created the required schema tables for `users`, `wallet_transaction_history`, `draws`, and `tickets`, implemented the phone + OTP authentication flow with JWT-based protected routes, completed the wallet flow with a shared helper plus protected balance and transaction endpoints, and added the admin draw creation flow with an `expires_at` cutoff to stop ticket sales before the draw time.
+The project now includes:
+
+- MariaDB local setup and MySQL/MariaDB compatibility
+- DB bootstrap with `users`, `draws`, `tickets`, and `wallet_transaction_history`
+- JWT-protected auth and admin checks
+- Profile update route and wallet endpoints
+- Draw creation, listing, detail, and expiry logic
+- Ticket purchase flow and authenticated user ticket retrieval
+- Draw settlement and winner selection logic
+- Cron-based settlement for expired draws
+- HTML email templates for winner emails and general notifications
+- UTC-safe date conversion for local frontend datetime input
+- TypeScript build validation
+
+---
+
+## 1. Current Core Architecture
+
+### Backend stack
+
+- Node.js + TypeScript
+- Express
+- MySQL2 / MariaDB connection pool
+- JWT auth
+- Node-cron for scheduled settlement
+- Nodemailer for email transport
+
+### Main folders
+
+- `src/config/db.ts` — database connection pool
+- `src/middleware/auth.ts` — JWT authentication middleware
+- `src/routes/*.ts` — API routes
+- `src/utils/*.ts` — reusable logic like draw settlement and wallet updates
+- `src/server.ts` — app boot and cron setup
+
+---
+
+## 2. Database Schema (Current)
+
+The project uses a MariaDB/MySQL compatible schema with the following core tables:
+
+### `users`
+
+```sql
+CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  phone_number VARCHAR(20) NOT NULL UNIQUE,
+  first_name VARCHAR(100) NULL,
+  last_name VARCHAR(100) NULL,
+  email VARCHAR(150) NULL,
+  gender VARCHAR(20) NULL,
+  nationality VARCHAR(100) NULL,
+  country_of_residence VARCHAR(100) NULL,
+  wallet_balance DECIMAL(10,2) NOT NULL DEFAULT 0,
+  is_phone_verified BOOLEAN NOT NULL DEFAULT FALSE,
+  is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+```
+
+### `wallet_transaction_history`
+
+```sql
+CREATE TABLE IF NOT EXISTS wallet_transaction_history (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  type ENUM('topup', 'withdrawal', 'prize_credit', 'ticket_purchase') NOT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  balance_after DECIMAL(10,2) NOT NULL,
+  reference_type VARCHAR(30) NULL,
+  reference_id INT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+```
+
+### `draws`
+
+```sql
+CREATE TABLE IF NOT EXISTS draws (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  draw_code VARCHAR(20) NOT NULL UNIQUE,
+  title VARCHAR(200) NOT NULL,
+  prize_title VARCHAR(200) NOT NULL,
+  prize_amount DECIMAL(10,2) NOT NULL,
+  ticket_price DECIMAL(10,2) NOT NULL,
+  max_tickets INT NOT NULL,
+  tickets_sold INT NOT NULL DEFAULT 0,
+  draw_at DATETIME NOT NULL,
+  expires_at DATETIME NOT NULL,
+  status ENUM('active','closed','completed') NOT NULL DEFAULT 'active',
+  winner_user_id INT NULL,
+  rng_seed_hash VARCHAR(255) NULL,
+  rng_seed VARCHAR(255) NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### `tickets`
+
+```sql
+CREATE TABLE IF NOT EXISTS tickets (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  ticket_code VARCHAR(20) NOT NULL UNIQUE,
+  draw_id INT NOT NULL,
+  user_id INT NOT NULL,
+  status ENUM('active','won','lost') NOT NULL DEFAULT 'active',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (draw_id) REFERENCES draws(id),
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+```
+
+---
+
+## 3. Completed Features
+
+### Auth and users
+
+Completed routes include:
+
+- login/sign-up flow using phone number and OTP
+- JWT token generation and verification
+- protected user routes
+- admin-only checks
+- profile update route
+- user lookup and token-based identity
+
+### Wallet system
+
+Completed behavior includes:
+
+- wallet check at user level
+- shared wallet helper for all balance updates
+- transaction history insertion
+- ticket purchase deduction logic
+- prize credit to wallet
+- balance retrieval route
+
+### Draw lifecycle
+
+Completed behavior includes:
+
+- admin draw creation
+- draw detail and list endpoints
+- expiry validation for draw cutoff
+- ticket sale cutoff logic using `expires_at`
+- automatic draw settlement after expiry via cron
+- zero-ticket draw handling without crashing
+- fairness seed / hash validation workflow
+
+### Ticket system
+
+Completed behavior includes:
+
+- ticket purchase for active draws
+- per-user ticket list route
+- unique ticket code generation
+- draw status enforcement and valid purchase checks
+
+### Email system
+
+Completed behavior includes:
+
+- nodemailer setup
+- general HTML email templates
+- winner-specific HTML email templates
+- separate theme styling for different message types
+- SMTP config via `.env`
+
+### Timezone handling
+
+Completed behavior includes:
+
+- frontend local datetime normalized to UTC before DB insert
+- MySQL DATETIME values stored in UTC-safe format
+- backend logic consistently compares using DB time and ISO conversion
+
+---
+
+## 4. Important Implementation Notes
+
+### Timezone rule
+
+The app stores UTC-safe values in the database, even when the user enters local time in the frontend. The backend converts local input to UTC before insertion.
+
+Example:
+
+```ts
+const toUtcMysqlDateTime = (date: Date): string =>
+  date.toISOString().slice(0, 19).replace("T", " ");
+```
+
+This avoids drift caused by local machine time mismatches.
+
+### Draw expiry rule
+
+A draw is considered expired if its `expires_at` is in the past relative to the database clock. Scheduled settlement checks for expired draws and settles them automatically.
+
+### No-ticket settlement rule
+
+If a draw expires with no tickets sold, the system closes the draw cleanly instead of crashing or throwing an error.
+
+---
+
+## 5. Production / Local Setup Notes
+
+- Local development uses MariaDB CLI on Fedora
+- App is written to remain compatible with MariaDB and MySQL
+- SMTP credentials should be separated between local testing and production
+- Production email should use a verified sender domain and real SMTP provider
+
+---
+
+## 6. Current Next Step
+
+The project is now in a stable backend-build state, and the remaining work is mostly environment-specific and product polish:
+
+1. validate real SMTP provider credentials for production delivery
+2. confirm real frontend payload format for datetime pickers
+3. add any final admin or reporting routes needed by the product
+
+---
+
+## 7. One-line project summary
+
+Lucky Strike is now a working backend-driven lottery application with auth, wallet logic, draw lifecycle management, ticketing, cron settlement, and HTML email notifications, built with MySQL/MariaDB-compatible data structures and timezone-safe storage practices.
 
 ---
 
