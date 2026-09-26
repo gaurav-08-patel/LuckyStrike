@@ -7,6 +7,7 @@ const router = Router();
 interface DrawRow extends RowDataPacket {
   id: number;
   draw_code: string;
+  draw_type: "daily" | "weekly" | "monthly";
   title: string;
   prize_title: string;
   prize_amount: string | number;

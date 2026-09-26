@@ -8,6 +8,8 @@ import { settleDraw } from "../utils/drawSettlement";
 
 const router = Router();
 
+const VALID_DRAW_TYPES = ["daily", "weekly", "monthly"] as const;
+
 const parseDateInput = (value: unknown, fieldName: string): Date => {
   const date = new Date(String(value));
 
@@ -28,6 +30,7 @@ interface AdminRow extends RowDataPacket {
 interface DrawRow extends RowDataPacket {
   id: number;
   draw_code: string;
+  draw_type: "daily" | "weekly" | "monthly";
   title: string;
   prize_title: string;
   prize_amount: string | number;
@@ -86,6 +89,7 @@ router.post("/admin/draws", requireAuth, requireAdmin, async (req, res) => {
     prizeAmount,
     ticketPrice,
     maxTickets,
+    drawType,
     drawAt,
     expiresAt,
   } = req.body as {
@@ -94,6 +98,7 @@ router.post("/admin/draws", requireAuth, requireAdmin, async (req, res) => {
     prizeAmount?: unknown;
     ticketPrice?: unknown;
     maxTickets?: unknown;
+    drawType?: unknown;
     drawAt?: unknown;
     expiresAt?: unknown;
   };
@@ -104,6 +109,15 @@ router.post("/admin/draws", requireAuth, requireAdmin, async (req, res) => {
 
   if (typeof prizeTitle !== "string" || !prizeTitle.trim()) {
     return res.status(400).json({ message: "Prize title is required." });
+  }
+
+  const normalizedDrawType =
+    typeof drawType === "string" ? drawType.trim().toLowerCase() : "";
+
+  if (!VALID_DRAW_TYPES.includes(normalizedDrawType as any)) {
+    return res.status(400).json({
+      message: "drawType must be one of: daily, weekly, monthly.",
+    });
   }
 
   const parsedPrizeAmount = Number(prizeAmount);
@@ -160,10 +174,11 @@ router.post("/admin/draws", requireAuth, requireAdmin, async (req, res) => {
 
   const [result] = await dbPool.query<ResultSetHeader>(
     `INSERT INTO draws
-        (draw_code, title, prize_title, prize_amount, ticket_price, max_tickets, draw_at, expires_at, status, rng_seed_hash, rng_seed)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`,
+        (draw_code, draw_type, title, prize_title, prize_amount, ticket_price, max_tickets, draw_at, expires_at, status, rng_seed_hash, rng_seed)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`,
     [
       drawCode,
+      normalizedDrawType,
       title.trim(),
       prizeTitle.trim(),
       parsedPrizeAmount,
