@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS wallet_transaction_history (
 CREATE TABLE IF NOT EXISTS draws (
     id              INT AUTO_INCREMENT PRIMARY KEY,
     draw_code       VARCHAR(20) NOT NULL UNIQUE,
+    draw_type       ENUM('daily', 'weekly', 'monthly') NOT NULL DEFAULT 'daily',
     title           VARCHAR(200) NOT NULL,
     prize_title     VARCHAR(200) NOT NULL,
     prize_amount    DECIMAL(10,2) NOT NULL,
