@@ -1,8 +1,11 @@
 import { Router } from "express";
 import type { RowDataPacket } from "mysql2";
 import { dbPool } from "../config/db";
+import { requireAuth } from "../middleware/auth";
 
 const router = Router();
+
+const VALID_DRAW_TYPES = ["daily", "weekly", "monthly"] as const;
 
 interface DrawRow extends RowDataPacket {
   id: number;
@@ -32,6 +35,56 @@ router.get("/draws", async (_req, res) => {
   );
 
   return res.status(200).json(rows);
+});
+
+router.get("/admin/draws", requireAuth, async (req, res) => {
+  const status = String(req.query.status || "all").toLowerCase();
+  const drawType = String(req.query.drawType || "all").toLowerCase();
+
+  const allowedStatuses = ["active", "completed", "closed", "all"] as const;
+
+  if (!allowedStatuses.includes(status as any)) {
+    return res.status(400).json({
+      message: "status must be one of: all, active, completed, closed.",
+    });
+  }
+
+  if (drawType !== "all" && !VALID_DRAW_TYPES.includes(drawType as any)) {
+    return res.status(400).json({
+      message: "drawType must be one of: all, daily, weekly, monthly.",
+    });
+  }
+
+  let query = "SELECT * FROM draws";
+  const params: unknown[] = [];
+  const conditions: string[] = [];
+
+  if (status !== "all") {
+    conditions.push("status = ?");
+    params.push(status);
+  }
+
+  if (drawType !== "all") {
+    conditions.push("draw_type = ?");
+    params.push(drawType);
+  }
+
+  if (conditions.length > 0) {
+    query += ` WHERE ${conditions.join(" AND ")}`;
+  }
+
+  query += " ORDER BY draw_at DESC";
+
+  const [rows] = await dbPool.query<DrawRow[]>(query, params);
+
+  const response = rows.map((draw) => ({
+    ...draw,
+    prize_amount: Number(draw.prize_amount),
+    ticket_price: Number(draw.ticket_price),
+    remaining_tickets: Number(draw.max_tickets) - Number(draw.tickets_sold),
+  }));
+
+  return res.status(200).json(response);
 });
 
 router.get("/draws/:id", async (req, res) => {
