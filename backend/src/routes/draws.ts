@@ -88,16 +88,30 @@ router.get("/admin/draws", requireAuth, async (req, res) => {
 });
 
 router.get("/draws/:id", async (req, res) => {
-  const drawId = Number(req.params.id);
+  const rawIdentifier = String(req.params.id ?? "").trim();
 
-  if (!Number.isInteger(drawId) || drawId <= 0) {
+  if (!rawIdentifier) {
+    return res
+      .status(400)
+      .json({ message: "Draw id or draw_code is required." });
+  }
+
+  const isNumericId = /^\d+$/.test(rawIdentifier);
+
+  const query = isNumericId
+    ? "SELECT * FROM draws WHERE id = ? LIMIT 1"
+    : "SELECT * FROM draws WHERE LOWER(draw_code) = LOWER(?) LIMIT 1";
+
+  const params = isNumericId ? [Number(rawIdentifier)] : [rawIdentifier];
+
+  if (
+    isNumericId &&
+    (!Number.isInteger(Number(rawIdentifier)) || Number(rawIdentifier) <= 0)
+  ) {
     return res.status(400).json({ message: "Valid draw id is required." });
   }
 
-  const [rows] = await dbPool.query<DrawRow[]>(
-    "SELECT * FROM draws WHERE id = ? LIMIT 1",
-    [drawId],
-  );
+  const [rows] = await dbPool.query<DrawRow[]>(query, params);
 
   const draw = rows[0];
 
