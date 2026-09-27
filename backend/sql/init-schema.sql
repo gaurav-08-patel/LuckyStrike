@@ -73,3 +73,22 @@ CREATE TABLE IF NOT EXISTS tickets (
         ON DELETE RESTRICT
         ON UPDATE CASCADE
 ) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS winners (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    draw_id         INT NOT NULL,
+    draw_code       VARCHAR(50) NOT NULL,
+    ticket_code     VARCHAR(50) NOT NULL,
+    prize_title     VARCHAR(200) NOT NULL,
+    prize_amount    DECIMAL(10,2) NOT NULL,
+    winner_name     VARCHAR(200) NOT NULL,
+    draw_title      VARCHAR(200) NOT NULL,
+    draw_type       ENUM('daily', 'weekly', 'monthly') NOT NULL DEFAULT 'daily',
+    image_url       VARCHAR(500) NULL,
+    announced_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_winners_draw
+        FOREIGN KEY (draw_id) REFERENCES draws(id)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE
+) ENGINE=InnoDB;
