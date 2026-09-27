@@ -23,6 +23,20 @@ const parseDateInput = (value: unknown, fieldName: string): Date => {
 const toUtcMysqlDateTime = (date: Date): string =>
   date.toISOString().slice(0, 19).replace("T", " ");
 
+const resolveDrawImage = (prizeAmount: number): string => {
+  const backendUrl = process.env.BACKEND_URL || "http://localhost:5000";
+
+  if (prizeAmount < 10000) {
+    return `${backendUrl}/public/images/draw-amt-1.png`;
+  }
+
+  if (prizeAmount < 100000) {
+    return `${backendUrl}/public/images/draw-amt-2.png`;
+  }
+
+  return `${backendUrl}/public/images/draw-amt-3.png`;
+};
+
 interface AdminRow extends RowDataPacket {
   is_admin: number | boolean;
 }
@@ -172,14 +186,17 @@ router.post("/admin/draws", requireAuth, requireAdmin, async (req, res) => {
     "DA",
   );
 
+  const image = resolveDrawImage(parsedPrizeAmount);
+
   const [result] = await dbPool.query<ResultSetHeader>(
     `INSERT INTO draws
-        (draw_code, draw_type, title, prize_title, prize_amount, ticket_price, max_tickets, draw_at, expires_at, status, rng_seed_hash, rng_seed)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`,
+        (draw_code, draw_type, title, image, prize_title, prize_amount, ticket_price, max_tickets, draw_at, expires_at, status, rng_seed_hash, rng_seed)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`,
     [
       drawCode,
       normalizedDrawType,
       title.trim(),
+      image,
       prizeTitle.trim(),
       parsedPrizeAmount,
       parsedTicketPrice,
