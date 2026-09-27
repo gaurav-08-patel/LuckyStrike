@@ -27,14 +27,14 @@ const resolveDrawImage = (prizeAmount: number): string => {
   const backendUrl = process.env.BACKEND_URL || "http://localhost:5000";
 
   if (prizeAmount < 10000) {
-    return `${backendUrl}/public/images/draw-amt-1.png`;
+    return `${backendUrl}/public/images/draw-amt-1.webp`;
   }
 
   if (prizeAmount < 100000) {
-    return `${backendUrl}/public/images/draw-amt-2.png`;
+    return `${backendUrl}/public/images/draw-amt-2.webp`;
   }
 
-  return `${backendUrl}/public/images/draw-amt-3.png`;
+  return `${backendUrl}/public/images/draw-amt-3.webp`;
 };
 
 interface AdminRow extends RowDataPacket {
