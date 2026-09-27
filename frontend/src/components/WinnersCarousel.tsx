@@ -1,20 +1,43 @@
 import { useEffect, useRef, useState } from "react";
 import WinnerCard from "./WinnerCard/WinnerCard";
-import winnersData from "../data/winnersData";
+import { normalizeWinnerData, type WinnerData } from "../data/winnersData";
 import { useNavigate } from "react-router-dom";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function WinnersCarousel() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [winners, setWinners] = useState<WinnerData[]>([]);
   const dragStartX = useRef<number | null>(null);
-  const winners = winnersData;
   const cardWidth = 320;
   const gapWidth = 20;
 
   const navigate = useNavigate();
 
-  const maxIndex = Math.max(0, winners.length - 4);
+  useEffect(() => {
+    const loadWinners = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/winners?limit=12`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch winners");
+        }
+
+        const data = (await response.json()) as Array<Partial<WinnerData>>;
+        if (Array.isArray(data) && data.length > 0) {
+          setWinners(data.map(normalizeWinnerData));
+        }
+      } catch (error) {
+        console.warn("Using fallback winners data:", error);
+      }
+    };
+
+    void loadWinners();
+  }, []);
+
+  const hasWinners = winners.length > 0;
+  const maxIndex = hasWinners ? Math.max(0, winners.length - 4) : 0;
 
   const moveBy = (direction: 1 | -1) => {
     setActiveIndex((prev) => {
@@ -73,6 +96,42 @@ function WinnersCarousel() {
     setDragOffset(0);
     event.preventDefault();
   };
+
+  if (!hasWinners) {
+    return (
+      <div className="relative">
+        <div className="mb-8 flex justify-center py-10">
+          <div className="rounded-full border-4 border-ink bg-[#f43d7e] px-8 py-4 shadow-[6px_6px_0_#171310]">
+            <h2 className="font-display text-[2.2rem] leading-none uppercase text-white sm:text-[3rem]">
+              Winners
+            </h2>
+          </div>
+        </div>
+
+        <div className="mx-auto max-w-2xl rounded-[28px] border-[3px] border-ink bg-[#fffaf2] p-8 text-center shadow-[6px_6px_0_#171310]">
+          <p className="font-display text-2xl uppercase tracking-[0.06em] text-ink sm:text-3xl">
+            No winners yet
+          </p>
+          <p className="mt-3 text-sm font-medium text-ink/70 sm:text-base">
+            The latest lucky winner will appear here as soon as the draw is
+            settled.
+          </p>
+        </div>
+
+        <div className="mt-8 flex justify-center">
+          <button
+            type="button"
+            className="inline-flex items-center justify-center rounded-full border-[3px] border-ink bg-[#f7f7f7] px-8 py-4 text-[1.05rem] font-black uppercase tracking-[0.06em] text-ink shadow-[4px_4px_0_#171310] transition-transform duration-150 hover:-translate-y-0.5"
+            onClick={() => {
+              navigate("/winners");
+            }}
+          >
+            See all winners
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
