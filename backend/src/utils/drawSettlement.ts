@@ -164,6 +164,24 @@ export const settleDraw = async (
       });
     }
 
+    await connection.query(
+      `INSERT INTO winners
+       (draw_id, draw_code, ticket_code, prize_title, prize_amount, winner_name, draw_title, draw_type, image_url, announced_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [
+        drawId,
+        draw.draw_code,
+        winningTicket.ticket_code,
+        draw.prize_title,
+        prizeAmount,
+        `${winner?.first_name || ""} ${winner?.last_name || ""}`.trim() ||
+          "Lucky Winner",
+        draw.title,
+        draw.draw_type || "daily",
+        null,
+      ],
+    );
+
     await connection.commit();
 
     return {
