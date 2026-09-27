@@ -7,6 +7,7 @@ import drawsRoutes from "./routes/draws";
 import ticketsRoutes from "./routes/tickets";
 import userRoutes from "./routes/users";
 import walletRoutes from "./routes/wallet";
+import winnersRoutes from "./routes/winners";
 
 dotenv.config();
 
@@ -28,5 +29,6 @@ app.use("/api", walletRoutes);
 app.use("/api", adminDrawRoutes);
 app.use("/api", drawsRoutes);
 app.use("/api", ticketsRoutes);
+app.use("/api", winnersRoutes);
 
 export default app;
