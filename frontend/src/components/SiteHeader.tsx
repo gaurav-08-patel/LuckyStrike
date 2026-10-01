@@ -41,7 +41,6 @@ function SiteHeader({ brand, actionLabel }: SiteHeaderProps) {
   const { isLoggedIn, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [cartCount, setCartCount] = useState(4);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const accountLabel = user?.firstName ? user.firstName : "Account";
 
@@ -146,66 +145,32 @@ function SiteHeader({ brand, actionLabel }: SiteHeaderProps) {
             </a>
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {isLoggedIn ? (
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  className="flex items-center gap-3 rounded-full border-[3px] border-ink bg-[#ececec] px-4 py-2 text-left shadow-[3px_3px_0_#171310] transition-transform duration-150 hover:-translate-y-0.5"
-                  onClick={() => navigate("/profile")}
-                >
-                  <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-[3px] border-ink bg-[#1d1d1d] text-xs font-black uppercase text-white">
-                    A
-                  </span>
-                  <span className="text-base font-black uppercase text-ink">
-                    {accountLabel}
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  className="relative flex items-center justify-center rounded-[22px] border-[3px] border-ink bg-red px-3 py-2 shadow-[4px_4px_0_#171310] transition-transform duration-150 hover:-translate-y-0.5"
-                  aria-label="Cart"
-                  onClick={() =>
-                    setCartCount((current) => (current > 0 ? current - 1 : 0))
-                  }
-                >
-                  <span className="text-lg font-black text-white">🛒</span>
-                  {cartCount > 0 ? (
-                    <span className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full border-[3px] border-ink bg-[#f7f7f7] text-[0.8rem] font-black text-ink">
-                      {cartCount}
-                    </span>
-                  ) : null}
-                </button>
-              </div>
+              <button
+                type="button"
+                className="flex items-center gap-2 rounded-full border-[3px] border-ink bg-[#ececec] px-2 py-1.5 text-left shadow-[3px_3px_0_#171310] transition-transform duration-150 hover:-translate-y-0.5 sm:gap-3 sm:px-4 sm:py-2"
+                onClick={() => navigate("/profile")}
+              >
+                <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-[3px] border-ink bg-[#1d1d1d] text-[0.65rem] font-black uppercase text-white sm:h-9 sm:w-9 sm:text-xs">
+                  A
+                </span>
+                <span className="text-[0.7rem] font-black uppercase text-ink sm:text-base">
+                  {accountLabel}
+                </span>
+              </button>
             ) : (
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  className="relative flex items-center justify-center rounded-[22px] border-[3px] border-ink bg-red px-3 py-2 shadow-[4px_4px_0_#171310] transition-transform duration-150 hover:-translate-y-0.5"
-                  aria-label="Cart"
-                  onClick={openAuthModal}
-                >
-                  <span className="text-lg font-black text-white">🛒</span>
-                  {cartCount > 0 ? (
-                    <span className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full border-[3px] border-ink bg-[#f7f7f7] text-[0.8rem] font-black text-ink">
-                      {cartCount}
-                    </span>
-                  ) : null}
-                </button>
-
-                <button
-                  type="button"
-                  className="group relative inline-flex items-center justify-center overflow-hidden rounded-full border-[3px] border-ink bg-[#ff3d8c] px-5 py-2.5 text-sm font-black uppercase tracking-[0.12em] text-white shadow-[5px_5px_0_#171310] transition-all duration-200 hover:-translate-y-1 hover:shadow-[7px_7px_0_#171310] active:translate-y-0 active:shadow-[3px_3px_0_#171310]"
-                  onClick={openAuthModal}
-                >
-                  <span className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.5),_transparent_35%)]" />
-                  <span className="absolute inset-y-0 left-[-35%] w-[38%] -skew-x-12 bg-gradient-to-r from-transparent via-white/70 to-transparent opacity-80 blur-[1px] animate-[shine_3s_ease-in-out_infinite]" />
-                  <span className="relative z-10">
-                    {actionLabel || "Login / Signup"}
-                  </span>
-                </button>
-              </div>
+              <button
+                type="button"
+                className="group relative inline-flex items-center justify-center overflow-hidden rounded-full border-[3px] border-ink bg-[#ff3d8c] px-3 py-2 text-[0.68rem] font-black uppercase tracking-[0.08em] text-white shadow-[4px_4px_0_#171310] transition-all duration-200 hover:-translate-y-1 hover:shadow-[7px_7px_0_#171310] active:translate-y-0 active:shadow-[3px_3px_0_#171310] sm:px-5 sm:py-2.5 sm:text-sm sm:tracking-[0.12em]"
+                onClick={openAuthModal}
+              >
+                <span className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.5),_transparent_35%)]" />
+                <span className="absolute inset-y-0 left-[-35%] w-[38%] -skew-x-12 bg-gradient-to-r from-transparent via-white/70 to-transparent opacity-80 blur-[1px] animate-[shine_3s_ease-in-out_infinite]" />
+                <span className="relative z-10 whitespace-nowrap">
+                  {actionLabel || "Login / Signup"}
+                </span>
+              </button>
             )}
           </div>
         </div>
