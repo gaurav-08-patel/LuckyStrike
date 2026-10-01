@@ -352,7 +352,7 @@ function Home() {
                                 <span className="font-display text-[1.5rem] leading-none uppercase text-red sm:text-[2rem]">
                                   Win
                                 </span>
-                                <span className="font-display text-[1.35rem] leading-none uppercase text-ink sm:mt-2 sm:block sm:text-[1.75rem] sm:text-[2.1rem]">
+                                <span className="font-display text-[1.35rem] leading-none uppercase text-ink sm:mt-2 sm:block sm:text-[1.75rem]">
                                   {formatPrize(campaign)}
                                 </span>
                               </div>
