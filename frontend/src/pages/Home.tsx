@@ -246,21 +246,23 @@ function Home() {
               </h2>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              {tabs.map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => setActiveTab(tab)}
-                  className={`cursor-pointer border-4 border-ink px-4 py-2 text-sm font-bold transition-all duration-150 ${
-                    activeTab === tab
-                      ? "bg-red text-white shadow-[3px_3px_0_var(--color-ink)]"
-                      : "bg-paper text-ink shadow-[3px_3px_0_var(--color-ink)] hover:-translate-y-0.5"
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
+            <div className="w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:w-auto">
+              <div className="flex min-w-max items-center gap-3">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setActiveTab(tab)}
+                    className={`shrink-0 cursor-pointer border-4 border-ink px-3 py-2 text-xs font-bold whitespace-nowrap transition-all duration-150 sm:px-4 sm:text-sm ${
+                      activeTab === tab
+                        ? "bg-red text-white shadow-[3px_3px_0_var(--color-ink)]"
+                        : "bg-paper text-ink shadow-[3px_3px_0_var(--color-ink)] hover:-translate-y-0.5"
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -296,10 +298,10 @@ function Home() {
 
                 return (
                   <Link to={`/${routeId}`} key={routeId}>
-                    <article className="relative mt-16 overflow-visible rounded-3xl border-4 border-ink bg-[#f5f5f5] shadow-[6px_6px_0_var(--color-ink)] transition-transform duration-150 hover:-translate-y-1">
+                    <article className="relative mt-12 overflow-visible rounded-3xl border-4 border-ink bg-[#f5f5f5] shadow-[6px_6px_0_var(--color-ink)] transition-transform duration-150 hover:-translate-y-1 sm:mt-16">
                       <div className="absolute left-5 -top-7 z-10 -translate-y-1/2 max-sm:-top-6">
                         <div
-                          className={`inline-flex h-14 w-56 max-w-full items-center justify-center gap-2 rounded-t-2xl border-4 border-ink border-b-0 px-3 py-2 shadow-[3px_3px_0_var(--color-ink)] max-sm:h-10 max-sm:w-48 ${productTone}`}
+                          className={`inline-flex h-14 w-64 max-w-full items-center justify-center gap-2 rounded-t-2xl border-4 border-ink border-b-0 px-3 py-2 shadow-[3px_3px_0_var(--color-ink)] max-sm:h-10 max-sm:w-48 ${productTone}`}
                         >
                           {isExpired ? (
                             <span className="text-[0.8rem] max-sm:text-[0.6rem] font-black uppercase tracking-[0.12em]">
@@ -310,7 +312,7 @@ function Home() {
                               <span className="text-[0.8rem] max-sm:text-[0.6rem] font-black uppercase tracking-[0.12em]">
                                 closing in
                               </span>
-                              <span className="text-[1.2rem] font-black leading-none sm:text-[1.6rem]">
+                              <span className="text-[1.1rem] font-black leading-none sm:text-[1.6rem]">
                                 {formatCountdown(deadline, now)}
                               </span>
                             </>
@@ -326,8 +328,8 @@ function Home() {
                         </div>
                       </div>
 
-                      <div className="grid gap-4 p-3 pt-7 md:grid-cols-[0.95fr_1.35fr] md:p-4 md:pt-8">
-                        <div className="relative overflow-hidden rounded-3xl border-4 border-ink bg-paper p-3">
+                      <div className="grid gap-3 p-2 pt-6 sm:gap-4 sm:p-3 sm:pt-7 md:grid-cols-[0.95fr_1.35fr] md:p-4 md:pt-8">
+                        <div className="relative overflow-hidden rounded-3xl border-4 border-ink bg-paper p-2 sm:p-3">
                           <div className="absolute left-3 top-3 z-10 flex items-center gap-2">
                             {campaign.entriesMultiplier ? (
                               <span className="border-4 border-ink bg-yellow px-2 py-1 text-[0.62rem] font-black uppercase text-ink">
@@ -343,23 +345,25 @@ function Home() {
                           />
                         </div>
 
-                        <div className="flex flex-col justify-center rounded-3xl bg-[#f7f7f7] p-4 md:p-5">
+                        <div className="flex flex-col justify-center rounded-3xl bg-[#f7f7f7] p-3 sm:p-4 md:p-5">
                           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="flex flex-col">
-                              <span className="font-display text-[2rem] leading-none uppercase text-red">
-                                Win
-                              </span>
-                              <span className="mt-2 font-display text-[1.75rem] leading-none uppercase text-ink sm:text-[2.1rem]">
-                                {formatPrize(campaign)}
-                              </span>
-                              <span className="mt-1 text-sm font-bold uppercase tracking-[0.08em] text-ink/70">
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-2 sm:block">
+                                <span className="font-display text-[1.5rem] leading-none uppercase text-red sm:text-[2rem]">
+                                  Win
+                                </span>
+                                <span className="font-display text-[1.35rem] leading-none uppercase text-ink sm:mt-2 sm:block sm:text-[1.75rem] sm:text-[2.1rem]">
+                                  {formatPrize(campaign)}
+                                </span>
+                              </div>
+                              <span className="text-[0.7rem] font-bold uppercase tracking-[0.08em] text-ink/70 sm:mt-1 sm:text-sm">
                                 {campaign.title}
                               </span>
                             </div>
 
                             <button
                               type="button"
-                              className="cursor-pointer inline-flex items-center justify-center border-4 border-ink bg-[#4b5bdc] px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.08em] text-white shadow-[3px_3px_0_var(--color-ink)] transition-transform duration-150 hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[1px_1px_0_var(--color-ink)]"
+                              className="mt-1 inline-flex cursor-pointer items-center justify-center border-4 border-ink bg-[#4b5bdc] px-3 py-2 text-[0.65rem] font-black uppercase tracking-[0.08em] text-white shadow-[3px_3px_0_var(--color-ink)] transition-transform duration-150 hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[1px_1px_0_var(--color-ink)] sm:px-4 sm:py-3 sm:text-[0.7rem]"
                             >
                               Entry from {campaign.entryFrom}
                             </button>
