@@ -9,6 +9,7 @@ export const dbPool = mysql.createPool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+  timezone: "+00:00",
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -24,6 +25,7 @@ const connectDB = async (): Promise<void> => {
   }
 
   try {
+    await dbPool.query("SET time_zone = '+00:00'");
     const [result] = await dbPool.query("SELECT 1 as connected");
     console.log("MySQL connected successfully", result);
   } catch (error) {
