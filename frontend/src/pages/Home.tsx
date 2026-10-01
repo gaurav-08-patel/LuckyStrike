@@ -78,6 +78,31 @@ export const formatCountdown = (deadline: Date, now: Date) => {
     .join(":");
 };
 
+export const formatDrawDateTime = (value: string) => {
+  if (!value) {
+    return "N/A";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return (
+    date.toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+      timeZone: "UTC",
+    }) + " UTC"
+  );
+};
+
 function Home() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [activeTab, setActiveTab] = useState<CampaignTab>("All campaigns");
@@ -371,18 +396,11 @@ function Home() {
 
                           <div className="mt-4 flex items-center justify-between gap-3 border-t-4 border-dashed border-ink pt-3 text-[0.78rem] font-bold text-ink/80">
                             <span>
-                              Draw date:{" "}
-                              {new Date(campaign.drawDate).toLocaleDateString(
-                                "en-GB",
-                                {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric",
-                                },
-                              )}
+                              Draw date: {formatDrawDateTime(campaign.drawDate)}{" "}
+                              or earlier
                             </span>
                             <span className="text-[0.68rem] uppercase tracking-[0.08em] text-red">
-                              {campaign.draw_code || campaign.id}
+                              DRAW CODE: {campaign.draw_code || campaign.id}
                             </span>
                           </div>
 
