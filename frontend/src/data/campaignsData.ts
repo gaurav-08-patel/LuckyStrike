@@ -59,7 +59,7 @@ export const normalizeCampaignData = (
       Number.isFinite(prizeAmount)
         ? prizeAmount
         : null,
-    currency: "₹",
+    currency: "INR",
     entryFrom: Number.isFinite(ticketPrice) ? ticketPrice : 0,
     drawDate: String(backendDraw.draw_at ?? ""),
     lastRegistration: backendDraw.expires_at
