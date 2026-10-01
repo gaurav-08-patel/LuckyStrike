@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
+import { toast } from "../components/ui/Toast";
 import Footer from "../components/Footer";
 import SiteHeader from "../components/SiteHeader";
+import { useAuth } from "../context/AuthContext";
 import { normalizeCampaignData, type Campaign } from "../data/campaignsData";
 import {
   formatCountdown,
@@ -14,9 +16,17 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function CampaignPage() {
   const { id } = useParams();
+  const { user, setUser, isLoggedIn } = useAuth();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [now, setNow] = useState<Date>(() => new Date());
   const [loading, setLoading] = useState(true);
+  const [ticketModalOpen, setTicketModalOpen] = useState(false);
+  const [ticketStage, setTicketStage] = useState<"quantity" | "confirm">(
+    "quantity",
+  );
+  const [ticketQuantity, setTicketQuantity] = useState(1);
+  const [buyingTickets, setBuyingTickets] = useState(false);
+  const [ticketError, setTicketError] = useState("");
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 1000);
@@ -88,6 +98,112 @@ function CampaignPage() {
     : showCountdown
       ? "bg-red text-white"
       : "bg-[#3ACF7E] text-[#0d2a20]";
+  const walletBalance = Number(user?.walletBalance ?? 0);
+  const totalTicketCost = ticketQuantity * Number(campaign.entryFrom || 0);
+
+  const resetTicketModal = () => {
+    setTicketModalOpen(false);
+    setTicketStage("quantity");
+    setTicketQuantity(1);
+    setTicketError("");
+  };
+
+  const openTicketModal = () => {
+    if (!isLoggedIn) {
+      toast.error("Login required", "Please sign in before buying tickets.");
+      return;
+    }
+
+    setTicketError("");
+    setTicketStage("quantity");
+    setTicketQuantity(1);
+    setTicketModalOpen(true);
+  };
+
+  const handleQuantityNext = () => {
+    if (!Number.isInteger(ticketQuantity) || ticketQuantity <= 0) {
+      setTicketError("Please choose at least 1 ticket.");
+      return;
+    }
+
+    if (walletBalance < totalTicketCost) {
+      setTicketError(
+        `You need ${campaign.currency} ${totalTicketCost.toLocaleString("en-AE")} in your wallet to continue.`,
+      );
+      return;
+    }
+
+    setTicketError("");
+    setTicketStage("confirm");
+  };
+
+  const handleBuyTickets = async () => {
+    if (!campaign || !id || !isLoggedIn) {
+      toast.error("Purchase failed", "Please sign in and try again.");
+      return;
+    }
+
+    const token = localStorage.getItem("luckyStrikeToken");
+
+    if (!token) {
+      toast.error("Purchase failed", "Your session is no longer active.");
+      return;
+    }
+
+    try {
+      setBuyingTickets(true);
+      setTicketError("");
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/draws/${encodeURIComponent(String(campaign.id))}/buy`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ quantity: ticketQuantity }),
+        },
+      );
+
+      const data = (await response.json().catch(() => ({}))) as {
+        message?: string;
+      };
+
+      if (!response.ok) {
+        throw new Error(data.message || "Ticket purchase failed.");
+      }
+
+      const refreshedResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (refreshedResponse.ok) {
+        const refreshedData = (await refreshedResponse.json()) as {
+          user?: { walletBalance?: number; [key: string]: unknown };
+        };
+
+        if (refreshedData.user) {
+          setUser(refreshedData.user as typeof user, token);
+        }
+      }
+
+      toast.success(
+        "Tickets bought",
+        `You bought ${ticketQuantity} ticket${ticketQuantity > 1 ? "s" : ""} successfully.`,
+      );
+      resetTicketModal();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Something went wrong.";
+      setTicketError(message);
+      toast.error("Purchase failed", message);
+    } finally {
+      setBuyingTickets(false);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-[#f3f0ee] text-ink">
@@ -207,6 +323,7 @@ function CampaignPage() {
                 <button
                   type="button"
                   disabled={isExpired}
+                  onClick={openTicketModal}
                   className={`relative overflow-hidden flex w-full items-center justify-center rounded-[18px] border-[3px] border-ink px-3 py-3 font-display text-[1rem] uppercase tracking-[0.06em] transition-all duration-200 sm:rounded-[22px] sm:px-5 sm:py-4 sm:text-[1.6rem] ${
                     isExpired
                       ? "cursor-not-allowed bg-[#d9d7d6] text-ink/50 opacity-80"
@@ -261,6 +378,168 @@ function CampaignPage() {
           </p>
         </div>
       </section>
+
+      {ticketModalOpen ? (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-[#171310]/65 p-4 backdrop-blur-[2px]">
+          <div className="w-full max-w-md rounded-[26px] border-[3px] border-ink bg-paper p-4 shadow-[8px_8px_0_#171310] sm:p-6">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <p className="font-display text-[1.4rem] uppercase leading-none text-ink sm:text-[1.7rem]">
+                  {ticketStage === "quantity"
+                    ? "Select quantity"
+                    : "Confirm purchase"}
+                </p>
+                <p className="mt-2 text-sm font-medium text-ink/70">
+                  {ticketStage === "quantity"
+                    ? "Choose how many tickets you want to buy."
+                    : "Review your wallet payment before confirming."}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={resetTicketModal}
+                className="flex h-9 w-9 items-center justify-center rounded-full border-[3px] border-ink bg-[#f7f7f7] text-xl font-black text-ink"
+                aria-label="Close ticket modal"
+              >
+                ×
+              </button>
+            </div>
+
+            {ticketStage === "quantity" ? (
+              <div className="space-y-4">
+                <div className="rounded-[16px] border-[3px] border-ink bg-[#f7f7f7] p-4">
+                  <div className="mb-2 flex items-center justify-between text-[0.7rem] font-black uppercase tracking-[0.1em] text-ink/70">
+                    <span>Ticket price</span>
+                    <span>
+                      {campaign.currency}{" "}
+                      {Number(campaign.entryFrom || 0).toLocaleString("en-AE")}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3 rounded-[14px] border-[3px] border-ink bg-white p-3">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setTicketQuantity((current) => Math.max(1, current - 1))
+                      }
+                      className="flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-ink bg-[#ffd400] text-2xl font-black text-ink"
+                    >
+                      −
+                    </button>
+
+                    <div className="text-center">
+                      <div className="font-display text-[2rem] leading-none text-ink">
+                        {ticketQuantity}
+                      </div>
+                      <div className="text-[0.68rem] font-black uppercase tracking-[0.1em] text-ink/60">
+                        Tickets
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setTicketQuantity((current) => current + 1)
+                      }
+                      className="flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-ink bg-[#ffd400] text-2xl font-black text-ink"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <div className="rounded-[16px] border-[3px] border-ink bg-[#f5f3ef] p-4">
+                  <div className="flex items-center justify-between text-sm font-bold text-ink/70">
+                    <span>Wallet balance</span>
+                    <span>
+                      {campaign.currency}{" "}
+                      {walletBalance.toLocaleString("en-AE")}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-sm font-bold text-ink/70">
+                    <span>Cost</span>
+                    <span>
+                      {campaign.currency}{" "}
+                      {totalTicketCost.toLocaleString("en-AE")}
+                    </span>
+                  </div>
+                </div>
+
+                {ticketError ? (
+                  <p className="rounded-[12px] border-[3px] border-red bg-[#fff2f2] p-2 text-sm font-bold text-red">
+                    {ticketError}
+                  </p>
+                ) : null}
+
+                <button
+                  type="button"
+                  onClick={handleQuantityNext}
+                  className="w-full rounded-[16px] border-[3px] border-ink bg-[#4b5bdc] px-4 py-3 font-display text-lg uppercase tracking-[0.08em] text-white shadow-[4px_4px_0_#171310] transition-transform hover:-translate-y-0.5"
+                >
+                  Buy
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="rounded-[16px] border-[3px] border-ink bg-[#fff7dc] p-4 text-sm font-bold text-ink">
+                  You are about to pay for{" "}
+                  <span className="font-black">{ticketQuantity}</span> ticket
+                  {ticketQuantity > 1 ? "s" : ""} using your wallet.
+                </div>
+
+                <div className="rounded-[16px] border-[3px] border-ink bg-[#f7f7f7] p-4 text-sm font-bold text-ink/75">
+                  <div className="flex items-center justify-between">
+                    <span>Tickets</span>
+                    <span>{ticketQuantity}</span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between">
+                    <span>Price each</span>
+                    <span>
+                      {campaign.currency}{" "}
+                      {Number(campaign.entryFrom || 0).toLocaleString("en-AE")}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-base font-black text-ink">
+                    <span>Total</span>
+                    <span>
+                      {campaign.currency}{" "}
+                      {totalTicketCost.toLocaleString("en-AE")}
+                    </span>
+                  </div>
+                </div>
+
+                {ticketError ? (
+                  <p className="rounded-[12px] border-[3px] border-red bg-[#fff2f2] p-2 text-sm font-bold text-red">
+                    {ticketError}
+                  </p>
+                ) : null}
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTicketStage("quantity");
+                      setTicketError("");
+                    }}
+                    className="flex-1 rounded-[14px] border-[3px] border-ink bg-[#f7f7f7] px-4 py-3 font-display text-base uppercase tracking-[0.06em] text-ink"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleBuyTickets}
+                    disabled={buyingTickets}
+                    className="flex-1 rounded-[14px] border-[3px] border-ink bg-[#1fbf73] px-4 py-3 font-display text-base uppercase tracking-[0.06em] text-white shadow-[4px_4px_0_#171310] disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {buyingTickets ? "Processing..." : "Pay now"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
 
       <Footer />
     </main>
