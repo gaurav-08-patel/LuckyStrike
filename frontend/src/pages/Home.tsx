@@ -278,20 +278,19 @@ function Home() {
             ) : (
               filteredCampaigns.map((campaign) => {
                 const deadline = getCampaignDeadline(campaign);
-                const remainingMs = Math.max(
-                  deadline.getTime() - now.getTime(),
-                  0,
-                );
+                const remainingMs = deadline.getTime() - now.getTime();
+                const isExpired = remainingMs <= 0;
                 const dayMs = 24 * 60 * 60 * 1000;
-                const showCountdown =
-                  remainingMs > 0 && remainingMs <= 2 * dayMs;
+                const showCountdown = !isExpired && remainingMs <= 2 * dayMs;
                 const isJustLaunched =
-                  remainingMs > 0 &&
+                  !isExpired &&
                   remainingMs > 2 * dayMs &&
                   remainingMs <= 7 * dayMs;
-                const productTone = showCountdown
-                  ? "bg-red text-white"
-                  : "bg-[#3ACF7E] text-[#0d2a20]";
+                const productTone = isExpired
+                  ? "bg-ink text-paper"
+                  : showCountdown
+                    ? "bg-red text-white"
+                    : "bg-[#3ACF7E] text-[#0d2a20]";
 
                 const routeId = campaign.draw_code || campaign.id;
 
@@ -302,7 +301,11 @@ function Home() {
                         <div
                           className={`inline-flex h-14 w-56 max-w-full items-center justify-center gap-2 rounded-t-2xl border-4 border-ink border-b-0 px-3 py-2 shadow-[3px_3px_0_var(--color-ink)] max-sm:h-10 max-sm:w-48 ${productTone}`}
                         >
-                          {showCountdown ? (
+                          {isExpired ? (
+                            <span className="text-[0.8rem] max-sm:text-[0.6rem] font-black uppercase tracking-[0.12em]">
+                              Closed
+                            </span>
+                          ) : showCountdown ? (
                             <>
                               <span className="text-[0.8rem] max-sm:text-[0.6rem] font-black uppercase tracking-[0.12em]">
                                 closing in
@@ -349,6 +352,9 @@ function Home() {
                               <span className="mt-2 font-display text-[1.75rem] leading-none uppercase text-ink sm:text-[2.1rem]">
                                 {formatPrize(campaign)}
                               </span>
+                              <span className="mt-1 text-sm font-bold uppercase tracking-[0.08em] text-ink/70">
+                                {campaign.title}
+                              </span>
                             </div>
 
                             <button
@@ -378,7 +384,11 @@ function Home() {
 
                           <div className="mt-4 flex items-center justify-between gap-3 text-[0.8rem] font-bold text-ink">
                             <span>
-                              {showCountdown ? (
+                              {isExpired ? (
+                                <span className="inline-flex items-center border-4 border-ink bg-ink px-3 py-2 text-[1.05rem] font-black leading-none text-paper shadow-[2px_2px_0_var(--color-ink)]">
+                                  Closed
+                                </span>
+                              ) : showCountdown ? (
                                 <span className="inline-flex items-center border-4 border-ink bg-red px-3 py-2 text-[1.05rem] font-black leading-none text-white shadow-[2px_2px_0_var(--color-ink)]">
                                   {formatCountdown(deadline, now)}
                                 </span>
