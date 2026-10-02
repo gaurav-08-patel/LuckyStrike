@@ -26,15 +26,64 @@ interface DrawRow extends RowDataPacket {
   created_at: Date | string;
 }
 
-router.get("/draws", async (_req, res) => {
-  const [rows] = await dbPool.query<DrawRow[]>(
-    `SELECT *
+router.get("/draws", async (req, res) => {
+  const rawLimit = Number(req.query.limit ?? 5);
+  const rawOffset = Number(req.query.offset ?? 0);
+  const drawType = String(req.query.drawType ?? "all").toLowerCase();
+
+  const limit =
+    Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 50) : 5;
+  const offset = Number.isFinite(rawOffset) && rawOffset >= 0 ? rawOffset : 0;
+
+  if (drawType !== "all" && !VALID_DRAW_TYPES.includes(drawType as any)) {
+    return res.status(400).json({
+      message: "drawType must be one of: all, daily, weekly, monthly.",
+    });
+  }
+
+  const conditions: string[] = ["status = 'active'"];
+  const params: unknown[] = [];
+
+  if (drawType !== "all") {
+    conditions.push("draw_type = ?");
+    params.push(drawType);
+  }
+
+  const [countRows] = await dbPool.query<RowDataPacket[]>(
+    `SELECT COUNT(*) AS total
      FROM draws
-     WHERE status = 'active'
-     ORDER BY draw_at ASC`,
+     WHERE ${conditions.join(" AND ")}`,
+    params,
   );
 
-  return res.status(200).json(rows);
+  const total = Number(countRows[0]?.total ?? 0);
+
+  const query = `SELECT *
+     FROM draws
+     WHERE ${conditions.join(" AND ")}
+     ORDER BY draw_at ASC
+     LIMIT ? OFFSET ?`;
+
+  const [rows] = await dbPool.query<DrawRow[]>(query, [
+    ...params,
+    limit,
+    offset,
+  ]);
+
+  const draws = rows.map((draw) => ({
+    ...draw,
+    prize_amount: Number(draw.prize_amount),
+    ticket_price: Number(draw.ticket_price),
+    remaining_tickets: Number(draw.max_tickets) - Number(draw.tickets_sold),
+  }));
+
+  return res.status(200).json({
+    draws,
+    total,
+    limit,
+    offset,
+    hasMore: offset + draws.length < total,
+  });
 });
 
 router.get("/admin/draws", requireAuth, async (req, res) => {
