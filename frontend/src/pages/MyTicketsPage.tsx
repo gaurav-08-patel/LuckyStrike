@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import Footer from "../components/Footer";
 import SiteHeader from "../components/SiteHeader";
 import { useAuth } from "../context/AuthContext";
 
@@ -406,8 +405,6 @@ function MyTicketsPage() {
           </div>
         )}
       </section>
-
-      <Footer />
     </main>
   );
 }
