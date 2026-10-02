@@ -45,7 +45,7 @@ function formatDateTime(value: string) {
 }
 
 function WalletPage() {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const [activeTab, setActiveTab] = useState<WalletTab>("topup");
   const [selectedAmount, setSelectedAmount] = useState<number>(50);
   const [customAmount, setCustomAmount] = useState("");
@@ -55,6 +55,9 @@ function WalletPage() {
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [visibleHistoryCount, setVisibleHistoryCount] = useState(10);
   const [hasMoreHistory, setHasMoreHistory] = useState(false);
+  const [isTopupModalOpen, setIsTopupModalOpen] = useState(false);
+  const [isProcessingTopup, setIsProcessingTopup] = useState(false);
+  const [topupError, setTopupError] = useState("");
 
   const walletBalance = Number(user?.walletBalance ?? 0);
 
@@ -135,6 +138,82 @@ function WalletPage() {
   }, [customAmount, selectedAmount]);
 
   const formattedAmount = formatCurrency(activeAmount);
+
+  const handleConfirmTopup = async () => {
+    const amount = Number(activeAmount);
+
+    if (!Number.isFinite(amount) || amount < 50) {
+      setTopupError("Please enter a valid amount of at least INR 50.");
+      return;
+    }
+
+    const token = localStorage.getItem("luckyStrikeToken");
+
+    if (!token) {
+      setTopupError("Please log in to continue with the top-up.");
+      return;
+    }
+
+    try {
+      setIsProcessingTopup(true);
+      setTopupError("");
+
+      const response = await fetch(`${API_BASE_URL}/api/wallet/topup`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ amount }),
+      });
+
+      const payload = (await response.json().catch(() => ({}))) as {
+        message?: string;
+        walletBalance?: number;
+        balance?: number;
+      };
+
+      if (!response.ok) {
+        throw new Error(payload.message || "Top-up failed. Please try again.");
+      }
+
+      const updatedBalance = Number(
+        payload.walletBalance ?? payload.balance ?? user?.walletBalance ?? 0,
+      );
+
+      setUser(
+        {
+          ...(user ?? {}),
+          walletBalance: updatedBalance,
+        },
+        token,
+      );
+
+      const nextTransaction: WalletTransaction = {
+        id: Date.now(),
+        user_id: Number(user?.id ?? 0),
+        type: "topup",
+        amount: String(amount),
+        balance_after: String(updatedBalance),
+        reference_type: "topup",
+        reference_id: null,
+        created_at: new Date().toISOString(),
+      };
+
+      setWalletHistory((current) => [nextTransaction, ...current]);
+      setSelectedAmount(50);
+      setCustomAmount("");
+      setIsTopupModalOpen(false);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while processing the top-up.";
+      setTopupError(message);
+    } finally {
+      setIsProcessingTopup(false);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-[#eae7e5] text-ink">
@@ -289,6 +368,10 @@ function WalletPage() {
 
                   <button
                     type="button"
+                    onClick={() => {
+                      setTopupError("");
+                      setIsTopupModalOpen(true);
+                    }}
                     className="mt-4 flex h-[58px] w-full items-center justify-center rounded-[16px] border-[3px] border-ink bg-[linear-gradient(135deg,#ff3c8c_0%,#ff6b3d_100%)] text-center font-display text-[1.3rem] uppercase tracking-[0.08em] text-white shadow-[5px_5px_0_#171310] transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:bg-[linear-gradient(135deg,#ff2e7f_0%,#ff7a38_100%)] hover:shadow-[7px_7px_0_#171310] active:translate-y-0 active:shadow-[3px_3px_0_#171310] sm:h-[72px] sm:rounded-[18px] sm:text-[1.7rem]"
                   >
                     Pay Now
@@ -461,6 +544,68 @@ function WalletPage() {
           )}
         </div>
       </section>
+
+      {isTopupModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#171310]/60 p-4 backdrop-blur-[2px]">
+          <div className="w-full max-w-md rounded-[24px] border-[3px] border-ink bg-[#fffaf7] p-5 shadow-[8px_8px_0_#171310] sm:p-6">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[0.62rem] font-black uppercase tracking-[0.14em] text-ink/60">
+                  Confirm top-up
+                </p>
+                <h3 className="mt-2 font-display text-[2rem] uppercase leading-none tracking-[-0.05em] text-ink">
+                  {formattedAmount}
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsTopupModalOpen(false);
+                  setTopupError("");
+                }}
+                className="flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-ink bg-white text-lg font-black text-ink shadow-[3px_3px_0_#171310]"
+                aria-label="Close modal"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="rounded-[18px] border-[3px] border-ink bg-[#fff7dc] p-3 text-sm font-medium text-ink/80 shadow-[3px_3px_0_#171310]">
+              This top-up is only for development purposes. It will be replaced
+              later with a real payment gateway integration.
+            </div>
+
+            {topupError && (
+              <div className="mt-3 rounded-[12px] border-[2px] border-[#d03552] bg-[#ffe8ec] px-3 py-2 text-sm font-medium text-[#8d1d2f]">
+                {topupError}
+              </div>
+            )}
+
+            <div className="mt-5 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsTopupModalOpen(false);
+                  setTopupError("");
+                }}
+                className="flex-1 rounded-[14px] border-[3px] border-ink bg-white px-4 py-3 text-center font-display text-base uppercase tracking-[0.08em] text-ink shadow-[3px_3px_0_#171310] transition-all hover:-translate-y-0.5"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={handleConfirmTopup}
+                disabled={isProcessingTopup}
+                className="flex-1 rounded-[14px] border-[3px] border-ink bg-[linear-gradient(135deg,#ff3c8c_0%,#ff6b3d_100%)] px-4 py-3 text-center font-display text-base uppercase tracking-[0.08em] text-white shadow-[4px_4px_0_#171310] transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {isProcessingTopup ? "Processing..." : "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
