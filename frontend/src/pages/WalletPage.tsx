@@ -53,22 +53,25 @@ function WalletPage() {
     useState<"netbanking">("netbanking");
   const [walletHistory, setWalletHistory] = useState<WalletTransaction[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [visibleHistoryCount, setVisibleHistoryCount] = useState(10);
+  const [hasMoreHistory, setHasMoreHistory] = useState(false);
 
   const walletBalance = Number(user?.walletBalance ?? 0);
 
   useEffect(() => {
-    const fetchWalletHistory = async () => {
+    const fetchWalletHistory = async (offset = 0, append = false) => {
       const token = localStorage.getItem("luckyStrikeToken");
 
       if (!token) {
         setWalletHistory([]);
+        setHasMoreHistory(false);
         setLoadingHistory(false);
         return;
       }
 
       try {
         const response = await fetch(
-          `${API_BASE_URL}/api/wallet/transactions`,
+          `${API_BASE_URL}/api/wallet/transactions?limit=${append ? 8 : 10}&offset=${offset}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -80,18 +83,45 @@ function WalletPage() {
           throw new Error("Failed to load wallet history");
         }
 
-        const data = (await response.json()) as WalletTransaction[];
-        setWalletHistory(Array.isArray(data) ? data : []);
+        const payload = (await response.json()) as
+          | {
+              transactions?: WalletTransaction[];
+              total?: number;
+              hasMore?: boolean;
+            }
+          | WalletTransaction[];
+
+        const transactions = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload.transactions)
+            ? payload.transactions
+            : [];
+
+        setWalletHistory((current) =>
+          append ? [...current, ...transactions] : transactions,
+        );
+
+        const nextHasMore = Array.isArray(payload)
+          ? payload.length > (append ? offset + transactions.length : 10)
+          : Boolean(payload.hasMore);
+
+        setHasMoreHistory(nextHasMore);
       } catch (error) {
         console.warn("Wallet history unavailable:", error);
         setWalletHistory([]);
+        setHasMoreHistory(false);
       } finally {
         setLoadingHistory(false);
       }
     };
 
-    void fetchWalletHistory();
+    void fetchWalletHistory(0, false);
   }, []);
+
+  const visibleHistory = useMemo(
+    () => walletHistory.slice(0, visibleHistoryCount),
+    [walletHistory, visibleHistoryCount],
+  );
 
   const activeAmount = useMemo(() => {
     if (customAmount.trim()) {
@@ -145,27 +175,18 @@ function WalletPage() {
 
         <div className="relative overflow-hidden rounded-[28px] border-[3px] border-ink bg-[linear-gradient(135deg,#ff3c8c_0%,#ff5f8f_30%,#ff2b74_100%)] p-4 shadow-[8px_8px_0_#171310] sm:rounded-[34px] sm:p-8 lg:p-10">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.28),_transparent_26%)]" />
-          <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-white/80 sm:text-base">
-                Available Wallet Balance
-              </p>
-              <div className="mt-3 flex items-center gap-2 text-3xl font-black text-white sm:gap-3 sm:text-5xl lg:text-[4rem]">
-                <span className="font-display tracking-[0.02em]">
-                  {walletCurrencyCode}
-                </span>
-                <span className="font-display tracking-[-0.02em]">
-                  {formatCurrency(walletBalance)
-                    .replace(walletCurrencyCode, "")
-                    .trim()}
-                </span>
-              </div>
-            </div>
-
-            <div className="inline-flex w-fit items-center gap-3 rounded-full border-[3px] border-ink bg-[#f7f7f7] px-3 py-2 text-[0.62rem] font-black uppercase tracking-[0.12em] text-ink shadow-[3px_3px_0_#171310] sm:px-4 sm:text-[0.78rem]">
-              <span>Wallet status</span>
-              <span className="rounded-full bg-[#93e2c8] px-2 py-1 text-ink">
-                Active
+          <div className="relative">
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-white/80 sm:text-base">
+              Wallet balance
+            </p>
+            <div className="mt-3 flex items-end gap-2 text-3xl font-black text-white sm:gap-3 sm:text-5xl lg:text-[4rem]">
+              <span className="font-display tracking-[0.02em]">
+                {walletCurrencyCode}
+              </span>
+              <span className="font-display tracking-[-0.02em]">
+                {formatCurrency(walletBalance)
+                  .replace(walletCurrencyCode, "")
+                  .trim()}
               </span>
             </div>
           </div>
@@ -175,13 +196,10 @@ function WalletPage() {
           {activeTab === "topup" ? (
             <div className="grid min-h-[460px] gap-4 p-3 sm:min-h-[520px] sm:gap-6 sm:p-6 lg:grid-cols-2">
               <div className="rounded-[20px] border-[3px] border-ink bg-[#f7f7f7] p-3 sm:rounded-[26px] sm:p-5">
-                <div className="mb-4 flex items-center justify-between gap-3 sm:mb-5">
+                <div className="mb-4 sm:mb-5">
                   <h2 className="font-display text-[1.4rem] uppercase leading-[0.95] tracking-[-0.02em] text-ink sm:text-[1.9rem]">
                     Select top-up amount
                   </h2>
-                  <span className="rounded-full border-[3px] border-ink bg-[#f6d857] px-2 py-1 text-[0.55rem] font-black uppercase tracking-[0.18em] text-ink sm:px-3 sm:text-[0.65rem]">
-                    Popular
-                  </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-5">
@@ -229,13 +247,10 @@ function WalletPage() {
               </div>
 
               <div className="rounded-[20px] border-[3px] border-ink bg-[#f7f7f7] p-3 sm:rounded-[26px] sm:p-5">
-                <div className="mb-4 flex items-center justify-between gap-3 sm:mb-5">
+                <div className="mb-4 sm:mb-5">
                   <h2 className="font-display text-[1.4rem] uppercase leading-[0.95] tracking-[-0.02em] text-ink sm:text-[1.9rem]">
                     Payment method
                   </h2>
-                  <span className="rounded-full border-[3px] border-ink bg-[#93e2c8] px-2 py-1 text-[0.55rem] font-black uppercase tracking-[0.18em] text-ink sm:px-3 sm:text-[0.65rem]">
-                    Safe
-                  </span>
                 </div>
 
                 <div className="space-y-4">
@@ -261,13 +276,13 @@ function WalletPage() {
                     </span>
                   </button>
 
-                  <div className="mt-6 rounded-[18px] border-[3px] border-ink bg-[#fff7dc] px-4 py-4 shadow-[4px_4px_0_#171310]">
-                    <div className="flex items-center justify-between gap-3 text-sm font-bold text-ink/80">
-                      <span>Wallet Balance</span>
+                  <div className="mt-5 rounded-[16px] border-[3px] border-ink bg-[#fff7dc] px-3 py-3 shadow-[3px_3px_0_#171310] sm:mt-6 sm:px-4 sm:py-4">
+                    <div className="flex items-center justify-between gap-3 text-xs font-bold uppercase tracking-[0.08em] text-ink/70 sm:text-sm">
+                      <span>Curr. balance</span>
                       <span>{formatCurrency(walletBalance)}</span>
                     </div>
-                    <div className="mt-3 flex items-center justify-between gap-3 text-lg font-black text-ink">
-                      <span>Total Top-up</span>
+                    <div className="mt-2 flex items-center justify-between gap-3 text-base font-black text-ink sm:text-lg">
+                      <span>Top-up</span>
                       <span>{formattedAmount}</span>
                     </div>
                   </div>
@@ -313,7 +328,7 @@ function WalletPage() {
                   </div>
 
                   <div className="divide-y-[3px] divide-ink/10">
-                    {walletHistory.map((transaction) => {
+                    {visibleHistory.map((transaction) => {
                       const amountValue = Number(transaction.amount || 0);
                       const balanceAfterValue = Number(
                         transaction.balance_after || 0,
@@ -367,6 +382,79 @@ function WalletPage() {
                       );
                     })}
                   </div>
+
+                  {(hasMoreHistory ||
+                    walletHistory.length > visibleHistoryCount) && (
+                    <div className="border-t-[3px] border-ink bg-[#f3f0ef] p-3 sm:p-4">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (loadingHistory) {
+                            return;
+                          }
+
+                          const nextOffset = walletHistory.length;
+                          setLoadingHistory(true);
+
+                          const token =
+                            localStorage.getItem("luckyStrikeToken");
+
+                          if (!token) {
+                            setLoadingHistory(false);
+                            return;
+                          }
+
+                          try {
+                            const response = await fetch(
+                              `${API_BASE_URL}/api/wallet/transactions?limit=8&offset=${nextOffset}`,
+                              {
+                                headers: {
+                                  Authorization: `Bearer ${token}`,
+                                },
+                              },
+                            );
+
+                            if (!response.ok) {
+                              throw new Error(
+                                "Failed to load more wallet history",
+                              );
+                            }
+
+                            const payload = (await response.json()) as {
+                              transactions?: WalletTransaction[];
+                              hasMore?: boolean;
+                            };
+
+                            const moreTransactions = Array.isArray(
+                              payload.transactions,
+                            )
+                              ? payload.transactions
+                              : [];
+
+                            setWalletHistory((current) => [
+                              ...current,
+                              ...moreTransactions,
+                            ]);
+                            setHasMoreHistory(Boolean(payload.hasMore));
+                            setVisibleHistoryCount(
+                              (current) => current + moreTransactions.length,
+                            );
+                          } catch (error) {
+                            console.warn(
+                              "Wallet history pagination failed:",
+                              error,
+                            );
+                          } finally {
+                            setLoadingHistory(false);
+                          }
+                        }}
+                        className="w-full rounded-[14px] border-[3px] border-ink bg-white px-4 py-3 text-center font-display text-base uppercase tracking-[0.08em] text-ink shadow-[3px_3px_0_#171310] transition-all duration-150 hover:-translate-y-0.5 hover:bg-[#fff7dc] disabled:cursor-not-allowed disabled:opacity-60"
+                        disabled={loadingHistory}
+                      >
+                        {loadingHistory ? "Loading..." : "Show more"}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
