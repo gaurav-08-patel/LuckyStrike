@@ -128,14 +128,18 @@ function Home() {
   useEffect(() => {
     const loadCampaigns = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/draws`);
+        const response = await fetch(
+          `${API_BASE_URL}/api/draws?limit=5&offset=0`,
+        );
         if (!response.ok) {
           throw new Error("Failed to fetch draws");
         }
 
-        const data = (await response.json()) as Array<Record<string, unknown>>;
-        const normalizedCampaigns = Array.isArray(data)
-          ? data.map((draw) => normalizeCampaignData(draw))
+        const data = (await response.json()) as {
+          draws?: Array<Record<string, unknown>>;
+        };
+        const normalizedCampaigns = Array.isArray(data.draws)
+          ? data.draws.map((draw) => normalizeCampaignData(draw))
           : [];
 
         allCampaigns.splice(0, allCampaigns.length, ...normalizedCampaigns);
@@ -289,6 +293,15 @@ function Home() {
                 ))}
               </div>
             </div>
+          </div>
+
+          <div className="mb-5 flex justify-end">
+            <Link
+              to="/campaigns"
+              className="inline-flex items-center justify-center border-4 border-ink bg-[#ffd400] px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-ink shadow-[3px_3px_0_var(--color-ink)] transition-transform duration-150 hover:-translate-y-0.5"
+            >
+              Show All
+            </Link>
           </div>
 
           <div className="space-y-5">
