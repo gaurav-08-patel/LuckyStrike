@@ -101,6 +101,11 @@ function CampaignPage() {
   const walletBalance = Number(user?.walletBalance ?? 0);
   const totalTicketCost = ticketQuantity * Number(campaign.entryFrom || 0);
   const displayedWalletBalance = isLoggedIn ? walletBalance : 0;
+  const totalTicketsAvailable = Number(
+    campaign.soldTotal ?? campaign.max_tickets ?? 0,
+  );
+  const soldTicketsCount = Number(campaign.soldCount ?? 0);
+  const hasTicketInventory = totalTicketsAvailable > 0;
 
   const resetTicketModal = () => {
     setTicketModalOpen(false);
@@ -311,6 +316,26 @@ function CampaignPage() {
                 </div>
               </div>
 
+              <div className="mb-5 grid gap-2 sm:grid-cols-2">
+                <div className="flex items-center justify-between gap-2 rounded-full border-[3px] border-ink bg-[#f7f7f7] px-2.5 py-1.5 text-[0.58rem] font-black uppercase tracking-[0.12em] text-ink/80 shadow-[2px_2px_0_#171310] sm:px-3 sm:text-[0.68rem]">
+                  <span>Wallet</span>
+                  <span className="text-ink">
+                    {isLoggedIn
+                      ? `${campaign.currency} ${displayedWalletBalance.toLocaleString("en-AE")}`
+                      : "Login required"}
+                  </span>
+                </div>
+
+                {hasTicketInventory && (
+                  <div className="flex items-center justify-between gap-2 rounded-full border-[3px] border-ink bg-[#f7f7f7] px-2.5 py-1.5 text-[0.58rem] font-black uppercase tracking-[0.12em] text-ink/75 shadow-[2px_2px_0_#171310] sm:px-3 sm:text-[0.68rem]">
+                    <span>Sold</span>
+                    <span>
+                      {soldTicketsCount} / {totalTicketsAvailable}
+                    </span>
+                  </div>
+                )}
+              </div>
+
               <div className="mb-5">
                 <style>{`
                   .glow-entry-button{ 
@@ -351,22 +376,7 @@ function CampaignPage() {
                 </button>
               </div>
 
-              <div className="mb-4 flex justify-end">
-                <div className="inline-flex items-center gap-2 rounded-full border-[3px] border-ink bg-[#f7f7f7] px-2.5 py-1.5 text-[0.62rem] font-black uppercase tracking-[0.12em] text-ink/80 shadow-[2px_2px_0_#171310] sm:px-3 sm:text-[0.72rem]">
-                  <span>Wallet</span>
-                  <span className="text-ink">
-                    {isLoggedIn
-                      ? `${campaign.currency} ${displayedWalletBalance.toLocaleString("en-AE")}`
-                      : "Login required"}
-                  </span>
-                </div>
-              </div>
-
               <div className="space-y-2 text-sm font-medium text-ink/80 sm:space-y-3 sm:text-base">
-                <p>
-                  Redeem your credit at Modesh{" "}
-                  <span className="font-black">i</span>
-                </p>
                 <p className="break-words">
                   Draw date: {formatDrawDateTime(campaign.drawDate)} or earlier.
                 </p>
