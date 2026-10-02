@@ -39,13 +39,33 @@ interface MyTicketRow extends RowDataPacket {
 
 router.get("/my-tickets", requireAuth, async (req, res) => {
   const userId = req.user?.id;
+  const rawStatus = String(req.query.status ?? "all").toLowerCase();
+  const allowedStatuses = new Set(["all", "active", "won", "lost"]);
+  const statusFilter = allowedStatuses.has(rawStatus) ? rawStatus : "all";
 
   if (!userId) {
     return res.status(401).json({ message: "Unauthorized." });
   }
 
-  const [rows] = await dbPool.query<MyTicketRow[]>(
+  const [summaryRows] = await dbPool.query<RowDataPacket[]>(
     `SELECT
+      COUNT(*) AS all_count,
+      SUM(CASE WHEN t.status = 'active' THEN 1 ELSE 0 END) AS active_count,
+      SUM(CASE WHEN t.status = 'won' THEN 1 ELSE 0 END) AS won_count,
+      SUM(CASE WHEN t.status = 'lost' THEN 1 ELSE 0 END) AS lost_count
+     FROM tickets t
+     WHERE t.user_id = ?`,
+    [userId],
+  );
+
+  const summary = {
+    all: Number(summaryRows[0]?.all_count ?? 0),
+    active: Number(summaryRows[0]?.active_count ?? 0),
+    won: Number(summaryRows[0]?.won_count ?? 0),
+    lost: Number(summaryRows[0]?.lost_count ?? 0),
+  };
+
+  let query = `SELECT
       t.id,
       t.ticket_code,
       t.draw_id,
@@ -62,10 +82,18 @@ router.get("/my-tickets", requireAuth, async (req, res) => {
       d.status AS draw_status
      FROM tickets t
      LEFT JOIN draws d ON d.id = t.draw_id
-     WHERE t.user_id = ?
-     ORDER BY t.created_at DESC`,
-    [userId],
-  );
+     WHERE t.user_id = ?`;
+
+  const params: Array<string | number> = [userId];
+
+  if (statusFilter !== "all") {
+    query += " AND t.status = ?";
+    params.push(statusFilter);
+  }
+
+  query += " ORDER BY t.created_at DESC";
+
+  const [rows] = await dbPool.query<MyTicketRow[]>(query, params);
 
   const tickets = rows.map((ticket) => ({
     id: ticket.id,
@@ -88,6 +116,8 @@ router.get("/my-tickets", requireAuth, async (req, res) => {
   return res.status(200).json({
     tickets,
     total: tickets.length,
+    filter: statusFilter,
+    summary,
   });
 });
 
