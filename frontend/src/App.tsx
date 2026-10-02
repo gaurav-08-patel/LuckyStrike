@@ -9,6 +9,7 @@ import {
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./components/ui/Toast";
 import CampaignPage from "./pages/CampaignPage";
+import CampaignsPage from "./pages/CampaignsPage";
 import DrawTerms from "./pages/DrawTerms";
 import Home from "./pages/Home";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -46,6 +47,7 @@ function App() {
             <Route path="/wallet" element={<WalletPage />} />
             <Route path="/winners" element={<WinnersPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/campaigns" element={<CampaignsPage />} />
             <Route path="/:id" element={<CampaignPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
