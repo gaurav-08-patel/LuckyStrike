@@ -19,6 +19,7 @@ export type AuthUser = {
   countryOfResidence?: string;
   walletBalance?: number;
   isPhoneVerified?: boolean;
+  isAdmin?: boolean;
 };
 
 type AuthContextType = {
