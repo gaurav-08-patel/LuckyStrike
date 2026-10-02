@@ -100,6 +100,7 @@ function CampaignPage() {
       : "bg-[#3ACF7E] text-[#0d2a20]";
   const walletBalance = Number(user?.walletBalance ?? 0);
   const totalTicketCost = ticketQuantity * Number(campaign.entryFrom || 0);
+  const displayedWalletBalance = isLoggedIn ? walletBalance : 0;
 
   const resetTicketModal = () => {
     setTicketModalOpen(false);
@@ -173,6 +174,19 @@ function CampaignPage() {
       if (!response.ok) {
         throw new Error(data.message || "Ticket purchase failed.");
       }
+
+      const updatedWalletBalance = Math.max(
+        0,
+        Number(user?.walletBalance ?? 0) - totalTicketCost,
+      );
+
+      setUser(
+        {
+          ...(user ?? {}),
+          walletBalance: updatedWalletBalance,
+        },
+        token,
+      );
 
       const refreshedResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
         headers: {
@@ -337,6 +351,17 @@ function CampaignPage() {
                 </button>
               </div>
 
+              <div className="mb-4 flex justify-end">
+                <div className="inline-flex items-center gap-2 rounded-full border-[3px] border-ink bg-[#f7f7f7] px-2.5 py-1.5 text-[0.62rem] font-black uppercase tracking-[0.12em] text-ink/80 shadow-[2px_2px_0_#171310] sm:px-3 sm:text-[0.72rem]">
+                  <span>Wallet</span>
+                  <span className="text-ink">
+                    {isLoggedIn
+                      ? `${campaign.currency} ${displayedWalletBalance.toLocaleString("en-AE")}`
+                      : "Login required"}
+                  </span>
+                </div>
+              </div>
+
               <div className="space-y-2 text-sm font-medium text-ink/80 sm:space-y-3 sm:text-base">
                 <p>
                   Redeem your credit at Modesh{" "}
@@ -454,7 +479,7 @@ function CampaignPage() {
                     <span>Wallet balance</span>
                     <span>
                       {campaign.currency}{" "}
-                      {walletBalance.toLocaleString("en-AE")}
+                      {displayedWalletBalance.toLocaleString("en-AE")}
                     </span>
                   </div>
                   <div className="mt-2 flex items-center justify-between text-sm font-bold text-ink/70">
