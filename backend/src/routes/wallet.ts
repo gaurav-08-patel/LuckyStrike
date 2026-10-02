@@ -97,15 +97,40 @@ router.get("/wallet/transactions", requireAuth, async (req, res) => {
     return res.status(401).json({ message: "Unauthorized." });
   }
 
+  const rawLimit = Number(req.query.limit ?? 10);
+  const rawOffset = Number(req.query.offset ?? 0);
+  const limit =
+    Number.isFinite(rawLimit) && rawLimit > 0
+      ? Math.min(Math.floor(rawLimit), 100)
+      : 10;
+  const offset =
+    Number.isFinite(rawOffset) && rawOffset >= 0 ? Math.floor(rawOffset) : 0;
+
+  const [countRows] = await dbPool.query<RowDataPacket[]>(
+    `SELECT COUNT(*) AS total
+     FROM wallet_transaction_history
+     WHERE user_id = ?`,
+    [userId],
+  );
+
+  const total = Number(countRows[0]?.total ?? 0);
+
   const [rows] = await dbPool.query<WalletTransactionRow[]>(
     `SELECT *
      FROM wallet_transaction_history
      WHERE user_id = ?
-     ORDER BY created_at DESC`,
-    [userId],
+     ORDER BY created_at DESC
+     LIMIT ? OFFSET ?`,
+    [userId, limit, offset],
   );
 
-  return res.status(200).json(rows);
+  return res.status(200).json({
+    transactions: rows,
+    total,
+    limit,
+    offset,
+    hasMore: offset + rows.length < total,
+  });
 });
 
 export default router;
