@@ -371,7 +371,7 @@ function CampaignPage() {
                 >
                   {isExpired
                     ? "Closed"
-                    : `BUY TICKET ${campaign.currency} ${campaign.cashPrizeValue ?? campaign.entryFrom}`}
+                    : `BUY TICKET ${campaign.currency} ${campaign.entryFrom}`}
                   {!isExpired && <span className="shine" aria-hidden="true" />}
                 </button>
               </div>
