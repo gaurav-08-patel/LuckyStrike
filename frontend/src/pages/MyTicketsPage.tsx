@@ -248,29 +248,29 @@ function MyTicketsPage() {
         }
       />
 
-      <section className="mx-auto max-w-[1100px] px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
-        <div className="mb-6 rounded-[28px] border-[3px] border-ink bg-[#fff4d6] p-4 shadow-[6px_6px_0_#171310] sm:p-6">
+      <section className="mx-auto max-w-[1100px] px-2 py-3 sm:px-6 lg:px-8 lg:py-10">
+        <div className="mb-3 rounded-[22px] border-[3px] border-ink bg-[#fff4d6] p-3 shadow-[6px_6px_0_#171310] sm:mb-6 sm:p-6 sm:rounded-[28px]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[0.7rem] font-black uppercase tracking-[0.14em] text-ink/60">
+              <p className="text-[0.62rem] font-black uppercase tracking-[0.14em] text-ink/60 sm:text-[0.7rem]">
                 Account
               </p>
-              <h1 className="font-display text-4xl uppercase tracking-[-0.05em] text-ink sm:text-5xl">
+              <h1 className="font-display text-[1.9rem] uppercase tracking-[-0.05em] text-ink sm:text-4xl lg:text-5xl">
                 My tickets
               </h1>
             </div>
 
             <button
               type="button"
-              onClick={() => navigate("/")}
-              className="inline-flex items-center justify-center rounded-full border-[3px] border-ink bg-[#ff3d8c] px-4 py-2 text-[0.7rem] font-black uppercase tracking-[0.12em] text-white shadow-[4px_4px_0_#171310] transition-transform hover:-translate-y-0.5"
+              onClick={() => navigate("/campaigns")}
+              className="inline-flex items-center justify-center rounded-full border-[3px] border-ink bg-[#ff3d8c] px-3 py-1.5 text-[0.62rem] font-black uppercase tracking-[0.12em] text-white shadow-[4px_4px_0_#171310] transition-transform hover:-translate-y-0.5 sm:px-4 sm:py-2 sm:text-[0.7rem]"
             >
               Browse draws
             </button>
           </div>
         </div>
 
-        <div className="mb-6 flex flex-wrap gap-2">
+        <div className="mb-4 flex flex-wrap gap-2 sm:mb-6">
           {filterOptions.map((option) => {
             const isActive = option.key === selectedStatus;
 
@@ -279,7 +279,7 @@ function MyTicketsPage() {
                 key={option.key}
                 type="button"
                 onClick={() => setSelectedStatus(option.key)}
-                className={`rounded-full border-[3px] px-3 py-2 text-[0.68rem] font-black uppercase tracking-[0.12em] transition-all ${
+                className={`rounded-full border-[3px] px-2.5 py-1.5 text-[0.58rem] font-black uppercase tracking-[0.12em] transition-all sm:px-3 sm:py-2 sm:text-[0.68rem] ${
                   isActive
                     ? "border-ink bg-[#ff4d8d] text-white shadow-[3px_3px_0_#171310]"
                     : "border-ink bg-white text-ink shadow-[2px_2px_0_#f6d6a8]"
@@ -296,49 +296,49 @@ function MyTicketsPage() {
             Loading your tickets...
           </div>
         ) : groupedTickets.length === 0 ? (
-          <div className="rounded-[22px] border-[3px] border-ink bg-[linear-gradient(135deg,#fff8fb_0%,#ffe2f1_100%)] p-8 text-center shadow-[5px_5px_0_#171310]">
-            <p className="font-display text-2xl uppercase tracking-[-0.04em] text-ink">
+          <div className="rounded-[18px] border-[3px] border-ink bg-[linear-gradient(135deg,#fff8fb_0%,#ffe2f1_100%)] p-5 text-center shadow-[5px_5px_0_#171310] sm:rounded-[22px] sm:p-8">
+            <p className="font-display text-xl uppercase tracking-[-0.04em] text-ink sm:text-2xl">
               No tickets found
             </p>
-            <p className="mt-3 text-sm text-ink/70">
+            <p className="mt-2 text-xs text-ink/70 sm:mt-3 sm:text-sm">
               Try another filter or buy tickets from an active draw.
             </p>
           </div>
         ) : (
-          <div className="space-y-5">
+          <div className="space-y-3 sm:space-y-5">
             {groupedTickets.map((group) => (
               <div
                 key={group.drawId}
-                className="rounded-[24px] border-[2px] border-ink/70 bg-[linear-gradient(135deg,#fffaf1_0%,#fff1b8_30%,#ffe1ef_100%)] p-4 shadow-[5px_5px_0_#171310] sm:p-5"
+                className="rounded-[18px] border-[2px] border-ink/70 bg-[linear-gradient(135deg,#fffaf1_0%,#fff1b8_30%,#ffe1ef_100%)] p-3 shadow-[5px_5px_0_#171310] sm:rounded-[24px] sm:p-5"
               >
-                <div className="mb-4 flex flex-col gap-3 pb-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="mb-3 flex flex-col gap-2 pb-2 sm:mb-4 sm:flex-row sm:items-center sm:justify-between sm:pb-3">
                   <div>
-                    <p className="text-[0.68rem] font-black uppercase tracking-[0.12em] text-ink/60">
+                    <p className="text-[0.58rem] font-black uppercase tracking-[0.12em] text-ink/60 sm:text-[0.68rem]">
                       Draw: {group.drawCode}
                     </p>
-                    <h2 className="mt-1 font-display text-[1.6rem] uppercase tracking-[-0.05em] text-ink sm:text-[2.1rem]">
+                    <h2 className="mt-1 font-display text-[1.2rem] uppercase tracking-[-0.05em] text-ink sm:text-[1.6rem] lg:text-[2.1rem]">
                       {group.title}
                     </h2>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                     <span
-                      className={`inline-flex items-center rounded-full border-[2px] px-2.5 py-1 text-[0.62rem] font-black uppercase tracking-[0.12em] ${getDrawStatusClasses(
+                      className={`inline-flex items-center rounded-full border-[2px] px-2 py-0.5 text-[0.52rem] font-black uppercase tracking-[0.12em] sm:px-2.5 sm:py-1 sm:text-[0.62rem] ${getDrawStatusClasses(
                         group.drawStatus,
                       )}`}
                     >
                       {group.drawStatus}
                     </span>
-                    <span className="rounded-full border-[2px] border-ink bg-white px-2.5 py-1 text-[0.62rem] font-black uppercase tracking-[0.12em] text-ink">
+                    <span className="rounded-full border-[2px] border-ink bg-white px-2 py-0.5 text-[0.52rem] font-black uppercase tracking-[0.12em] text-ink sm:px-2.5 sm:py-1 sm:text-[0.62rem]">
                       {group.tickets.length} ticket
                       {group.tickets.length > 1 ? "s" : ""}
                     </span>
                   </div>
                 </div>
 
-                <div className="mb-4 grid gap-2 text-sm text-ink/80 sm:grid-cols-3">
-                  <div className="rounded-[12px] border-[1px] border-ink/30 bg-white/80 p-2.5">
-                    <div className="text-[0.62rem] font-black uppercase tracking-[0.12em] text-ink/60">
+                <div className="mb-3 grid gap-1.5 text-[0.7rem] text-ink/80 sm:mb-4 sm:grid-cols-3 sm:gap-2 sm:text-sm">
+                  <div className="rounded-[10px] border-[1px] border-ink/30 bg-white/80 p-2 sm:rounded-[12px] sm:p-2.5">
+                    <div className="text-[0.52rem] font-black uppercase tracking-[0.12em] text-ink/60 sm:text-[0.62rem]">
                       Prize
                     </div>
                     <div className="mt-1 font-bold text-ink">
@@ -346,8 +346,8 @@ function MyTicketsPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-[12px] border-[1px] border-ink/30 bg-white/80 p-2.5">
-                    <div className="text-[0.62rem] font-black uppercase tracking-[0.12em] text-ink/60">
+                  <div className="rounded-[10px] border-[1px] border-ink/30 bg-white/80 p-2 sm:rounded-[12px] sm:p-2.5">
+                    <div className="text-[0.52rem] font-black uppercase tracking-[0.12em] text-ink/60 sm:text-[0.62rem]">
                       Draw time
                     </div>
                     <div className="mt-1 font-bold text-ink">
@@ -355,8 +355,8 @@ function MyTicketsPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-[12px] border-[1px] border-ink/30 bg-white/80 p-2.5">
-                    <div className="text-[0.62rem] font-black uppercase tracking-[0.12em] text-ink/60">
+                  <div className="rounded-[10px] border-[1px] border-ink/30 bg-white/80 p-2 sm:rounded-[12px] sm:p-2.5">
+                    <div className="text-[0.52rem] font-black uppercase tracking-[0.12em] text-ink/60 sm:text-[0.62rem]">
                       Closes
                     </div>
                     <div className="mt-1 font-bold text-ink">
@@ -365,28 +365,27 @@ function MyTicketsPage() {
                   </div>
                 </div>
 
-                <div className="max-h-[420px] overflow-y-auto rounded-[18px] border-[2px] border-ink/30 bg-[#f9f7f5] p-2 sm:p-3">
+                <div className="max-h-[420px] overflow-y-auto rounded-[14px] border-[2px] border-ink/30 bg-[#f9f7f5] p-1.5 sm:rounded-[18px] sm:p-2">
                   <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                     {group.tickets.map((ticket) => (
                       <div
                         key={ticket.id}
-                        className={`relative overflow-hidden rounded-[18px] border-[2px] border-ink/70 p-3 shadow-[3px_3px_0_#171310] before:absolute before:left-[-8px] before:top-1/2 before:h-5 before:w-5 before:-translate-y-1/2 before:rounded-full before:border-[2px] before:border-ink before:bg-[#f9f7f5] after:absolute after:right-[-8px] after:top-1/2 after:h-5 after:w-5 after:-translate-y-1/2 after:rounded-full after:border-[2px] after:border-ink after:bg-[#f9f7f5] ${getTicketCardTheme(
+                        className={`relative overflow-hidden rounded-[16px] border-[2px] border-ink/70 p-2.5 shadow-[3px_3px_0_#171310] before:absolute before:left-[-8px] before:top-1/2 before:h-5 before:w-5 before:-translate-y-1/2 before:rounded-full before:border-[2px] before:border-ink before:bg-[#f9f7f5] after:absolute after:right-[-8px] after:top-1/2 after:h-5 after:w-5 after:-translate-y-1/2 after:rounded-full after:border-[2px] after:border-ink after:bg-[#f9f7f5] sm:rounded-[18px] sm:p-3 ${getTicketCardTheme(
                           ticket.ticketStatus,
                         )}`}
                       >
-                        <div className="pointer-events-none absolute inset-x-3 top-1/2 h-0 -translate-y-1/2 border-t-[2px] border-dashed border-ink/30" />
                         <div className="relative z-10 flex items-start justify-between gap-2">
                           <div>
-                            <p className="text-[0.62rem] font-black uppercase tracking-[0.12em] text-ink/60">
+                            <p className="text-[0.52rem] font-black uppercase tracking-[0.12em] text-ink/60 sm:text-[0.62rem]">
                               Ticket
                             </p>
-                            <p className="mt-1 font-display text-xl uppercase tracking-[-0.04em] text-ink">
+                            <p className="mt-1 font-display text-lg uppercase tracking-[-0.04em] text-ink sm:text-xl">
                               {ticket.ticketCode}
                             </p>
                           </div>
 
                           <span
-                            className={`inline-flex items-center rounded-full border-[2px] px-2 py-1 text-[0.56rem] font-black uppercase tracking-[0.12em] ${getTicketStatusClasses(
+                            className={`inline-flex items-center rounded-full border-[2px] px-1.5 py-0.5 text-[0.48rem] font-black uppercase tracking-[0.12em] sm:px-2 sm:py-1 sm:text-[0.56rem] ${getTicketStatusClasses(
                               ticket.ticketStatus,
                             )}`}
                           >
@@ -394,7 +393,7 @@ function MyTicketsPage() {
                           </span>
                         </div>
 
-                        <div className="relative z-10 mt-3 space-y-1 border-t-[2px] border-dashed border-ink/20 pt-2 text-[0.72rem] text-ink/75">
+                        <div className="relative z-10 mt-2 space-y-1 border-t-[2px] border-dashed border-ink/20 pt-2 text-[0.62rem] text-ink/75 sm:mt-3 sm:text-[0.72rem]">
                           <p>Price: {ticket.draw.ticketPrice}</p>
                           <p>Purchased: {formatDate(ticket.createdAt)}</p>
                         </div>
