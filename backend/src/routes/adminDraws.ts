@@ -231,7 +231,9 @@ router.post(
     const connection = await dbPool.getConnection();
 
     try {
-      const result = await settleDraw(connection, drawId);
+      const result = await settleDraw(connection, drawId, {
+        allowBeforeDrawAt: true,
+      });
 
       return res.status(200).json({
         message: "Draw settled successfully.",

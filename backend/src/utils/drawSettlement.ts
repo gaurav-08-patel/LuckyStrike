@@ -48,10 +48,16 @@ interface SettledDrawResult {
   totalTickets: number;
 }
 
+interface SettleDrawOptions {
+  allowBeforeDrawAt?: boolean;
+}
+
 export const settleDraw = async (
   connection: PoolConnection,
   drawId: number,
+  options: SettleDrawOptions = {},
 ): Promise<SettledDrawResult> => {
+  const { allowBeforeDrawAt = false } = options;
   await connection.beginTransaction();
 
   try {
@@ -70,8 +76,21 @@ export const settleDraw = async (
       throw new Error("Draw is not active.");
     }
 
-    if (new Date(draw.draw_at).getTime() > Date.now()) {
+    const now = Date.now();
+    const drawAtTime = new Date(draw.draw_at).getTime();
+    const expiresAtTime = new Date(draw.expires_at).getTime();
+
+    const isExpiredForSales = expiresAtTime <= now;
+    const isPastDrawTime = drawAtTime <= now;
+
+    if (!allowBeforeDrawAt && !isPastDrawTime) {
       throw new Error("Draw has not reached its draw_at time yet.");
+    }
+
+    if (allowBeforeDrawAt && !isPastDrawTime && !isExpiredForSales) {
+      throw new Error(
+        "Manual settlement is only allowed for expired or already started draws.",
+      );
     }
 
     const [ticketRows] = await connection.query<TicketRow[]>(
