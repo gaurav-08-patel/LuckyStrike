@@ -127,11 +127,16 @@ function SiteHeader({ brand, actionLabel }: SiteHeaderProps) {
             </a>
             <a
               className="text-sm font-bold text-ink transition-colors duration-150 hover:text-pink"
-              href="/#draw"
-              onClick={(event) => handleSectionClick(event, "draw")}
+              href="/my-tickets"
+              onClick={(event) => {
+                event.preventDefault();
+                navigate("/my-tickets");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
             >
-              Prize line-up
+              My Tickets
             </a>
+
             <a
               className="text-sm font-bold text-ink transition-colors duration-150 hover:text-pink"
               href="/winners"
