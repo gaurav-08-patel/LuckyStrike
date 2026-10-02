@@ -18,6 +18,7 @@ import WalletPage from "./pages/WalletPage";
 import WhatsAppVerifyPage from "./pages/WhatsAppVerifyPage";
 import WinnersPage from "./pages/WinnersPage";
 import ProfilePage from "./pages/Profile";
+import MyTicketsPage from "./pages/MyTicketsPage";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -47,6 +48,7 @@ function App() {
             <Route path="/wallet" element={<WalletPage />} />
             <Route path="/winners" element={<WinnersPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/my-tickets" element={<MyTicketsPage />} />
             <Route path="/campaigns" element={<CampaignsPage />} />
             <Route path="/:id" element={<CampaignPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
