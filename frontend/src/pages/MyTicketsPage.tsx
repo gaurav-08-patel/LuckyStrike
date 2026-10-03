@@ -129,7 +129,7 @@ function getTicketCardTheme(status: string) {
 }
 
 function MyTicketsPage() {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, isAuthReady } = useAuth();
   const navigate = useNavigate();
   const [selectedStatus, setSelectedStatus] =
     useState<TicketStatusFilter>("all");
@@ -232,6 +232,23 @@ function MyTicketsPage() {
       lost: summary.lost,
     };
   }, [summary]);
+
+  if (!isAuthReady) {
+    return (
+      <main className="min-h-screen bg-[linear-gradient(180deg,#f8f4f1_0%,#fffaf7_100%)] text-ink">
+        <SiteHeader
+          brand={
+            <>
+              Lucky<span className="text-red">Strike</span>
+            </>
+          }
+        />
+        <section className="mx-auto max-w-[1100px] px-6 py-16 text-center text-sm font-black uppercase tracking-[0.12em] text-ink/70">
+          Loading your tickets...
+        </section>
+      </main>
+    );
+  }
 
   if (!isLoggedIn) {
     return <Navigate to="/" replace />;
