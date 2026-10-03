@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import AuthModal from "./AuthModal";
+import { toast } from "./ui/Toast";
 import { useAuth } from "../context/AuthContext";
 
 type SiteHeaderProps = {
@@ -42,9 +43,26 @@ function SiteHeader({ brand, actionLabel }: SiteHeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [pendingRedirect, setPendingRedirect] = useState<string | null>(null);
   const accountLabel = user?.firstName ? user.firstName : "Account";
 
-  const openAuthModal = () => setIsAuthModalOpen(true);
+  const openAuthModal = (redirectTarget?: string) => {
+    if (redirectTarget) {
+      setPendingRedirect(redirectTarget);
+    }
+    setIsAuthModalOpen(true);
+  };
+
+  const handleProtectedNavigation = (target: string) => {
+    if (!isLoggedIn) {
+      toast.error("Login first", "Please sign in to continue.");
+      openAuthModal(target);
+      return;
+    }
+
+    navigate(target);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const handleSectionClick = (
     event: React.MouseEvent<HTMLAnchorElement>,
@@ -83,7 +101,11 @@ function SiteHeader({ brand, actionLabel }: SiteHeaderProps) {
     <>
       <AuthModal
         isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
+        redirectAfterLogin={pendingRedirect ?? undefined}
+        onClose={() => {
+          setIsAuthModalOpen(false);
+          setPendingRedirect(null);
+        }}
       />
 
       <header
@@ -130,8 +152,7 @@ function SiteHeader({ brand, actionLabel }: SiteHeaderProps) {
               href="/my-tickets"
               onClick={(event) => {
                 event.preventDefault();
-                navigate("/my-tickets");
-                window.scrollTo({ top: 0, behavior: "smooth" });
+                handleProtectedNavigation("/my-tickets");
               }}
             >
               My Tickets
@@ -168,7 +189,7 @@ function SiteHeader({ brand, actionLabel }: SiteHeaderProps) {
               <button
                 type="button"
                 className="group relative inline-flex items-center justify-center overflow-hidden rounded-full border-[3px] border-ink bg-[#ff3d8c] px-3 py-2 text-[0.68rem] font-black uppercase tracking-[0.08em] text-white shadow-[4px_4px_0_#171310] transition-all duration-200 hover:-translate-y-1 hover:shadow-[7px_7px_0_#171310] active:translate-y-0 active:shadow-[3px_3px_0_#171310] sm:px-5 sm:py-2.5 sm:text-sm sm:tracking-[0.12em]"
-                onClick={openAuthModal}
+                onClick={() => openAuthModal()}
               >
                 <span className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.5),_transparent_35%)]" />
                 <span className="absolute inset-y-0 left-[-35%] w-[38%] -skew-x-12 bg-gradient-to-r from-transparent via-white/70 to-transparent opacity-80 blur-[1px] animate-[shine_3s_ease-in-out_infinite]" />
