@@ -63,13 +63,16 @@ function formatDate(value: string) {
     return value;
   }
 
-  return date.toLocaleString("en-IN", {
+  const deviceTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  return new Intl.DateTimeFormat("en-IN", {
+    timeZone: deviceTimeZone,
     day: "2-digit",
     month: "short",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  });
+  }).format(date);
 }
 
 function formatPrize(amount: number) {
