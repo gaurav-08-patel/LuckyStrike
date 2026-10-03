@@ -25,6 +25,7 @@ export type AuthUser = {
 type AuthContextType = {
   user: AuthUser | null;
   isLoggedIn: boolean;
+  isAuthReady: boolean;
   setUser: (user: AuthUser | null, token?: string | null) => void;
   logoutUser: () => void;
 };
@@ -48,6 +49,7 @@ const setStoredToken = (token: string | null) => {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUserState] = useState<AuthUser | null>(null);
+  const [isAuthReady, setIsAuthReady] = useState(false);
 
   useEffect(() => {
     const bootstrapSession = async () => {
@@ -56,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (!token) {
           setUserState(null);
+          setIsAuthReady(true);
           return;
         }
 
@@ -76,6 +79,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch {
         clearStoredToken();
         setUserState(null);
+      } finally {
+        setIsAuthReady(true);
       }
     };
 
@@ -104,11 +109,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextType>(
     () => ({
       user,
-      isLoggedIn: Boolean(user),
+      isLoggedIn: isAuthReady && Boolean(user),
+      isAuthReady,
       setUser,
       logoutUser,
     }),
-    [user],
+    [user, isAuthReady],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
