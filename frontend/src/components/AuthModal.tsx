@@ -7,9 +7,10 @@ import { toast } from "./ui/Toast";
 type AuthModalProps = {
   isOpen: boolean;
   onClose: () => void;
+  redirectAfterLogin?: string;
 };
 
-function AuthModal({ isOpen, onClose }: AuthModalProps) {
+function AuthModal({ isOpen, onClose, redirectAfterLogin }: AuthModalProps) {
   const navigate = useNavigate();
   const { setUser } = useAuth();
   const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -139,6 +140,11 @@ function AuthModal({ isOpen, onClose }: AuthModalProps) {
       );
 
       onClose();
+
+      if (redirectAfterLogin) {
+        navigate(redirectAfterLogin);
+        return;
+      }
 
       if (data.redirectUrl) {
         navigate(data.redirectUrl);
