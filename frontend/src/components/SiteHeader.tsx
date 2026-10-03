@@ -182,7 +182,7 @@ function SiteHeader({ brand, actionLabel }: SiteHeaderProps) {
               <button
                 type="button"
                 className="flex items-center gap-2 rounded-full border-[3px] border-ink bg-[#ececec] px-2 py-1.5 text-left shadow-[3px_3px_0_#171310] transition-transform duration-150 hover:-translate-y-0.5 sm:gap-3 sm:px-4 sm:py-2"
-                onClick={() => navigate("/profile")}
+                onClick={() => navigate("/user/profile")}
               >
                 <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-[3px] border-ink bg-[#1d1d1d] text-[0.65rem] font-black uppercase text-white sm:h-9 sm:w-9 sm:text-xs">
                   A
