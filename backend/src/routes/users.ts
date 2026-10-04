@@ -2,8 +2,31 @@ import { Router } from "express";
 import type { RowDataPacket } from "mysql2";
 import { dbPool } from "../config/db";
 import { requireAuth } from "../middleware/auth";
-// Note: avatar upload will accept an `imageUrl` in JSON for now.
-// Cloudinary/multipart upload will be added later when the service is configured.
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+
+// prepare uploads dir
+const uploadsDir = path.join(process.cwd(), "backend", "uploads");
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
+const storage = multer.diskStorage({
+  destination: () => uploadsDir,
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname) || "";
+    const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
+    cb(null, name);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (_req, file, cb) => {
+    if (/^image\//.test(file.mimetype)) cb(null, true);
+    else cb(new Error("Invalid file type"));
+  },
+});
 
 const router = Router();
 
@@ -134,38 +157,38 @@ router.patch("/:userId/profile", requireAuth, async (req, res) => {
   });
 });
 
-// Avatar update endpoint: accept { imageUrl } in request body and save it.
-router.post("/:userId/avatar", requireAuth, async (req, res) => {
-  const { userId } = req.params;
-  const authenticatedUserId = req.user?.id;
+// Avatar upload: accept multipart/form-data with field `avatar`
+router.post(
+  "/:userId/avatar",
+  requireAuth,
+  upload.single("avatar"),
+  async (req, res) => {
+    const { userId } = req.params;
+    const authenticatedUserId = req.user?.id;
 
-  if (!authenticatedUserId)
-    return res.status(401).json({ message: "Unauthorized." });
-  if (Number(userId) !== authenticatedUserId)
-    return res
-      .status(403)
-      .json({ message: "You can only update your own avatar." });
+    if (!authenticatedUserId)
+      return res.status(401).json({ message: "Unauthorized." });
+    if (Number(userId) !== authenticatedUserId)
+      return res
+        .status(403)
+        .json({ message: "You can only update your own avatar." });
 
-  const imageUrl = String(req.body?.imageUrl || "").trim();
-  if (!imageUrl)
-    return res
-      .status(400)
-      .json({ message: "imageUrl is required in request body." });
+    const file = (req as any).file;
+    if (!file) return res.status(400).json({ message: "No file uploaded." });
 
-  await dbPool.query(
-    "UPDATE users SET profile_image = ?, updated_at = UTC_TIMESTAMP() WHERE id = ?",
-    [imageUrl, userId],
-  );
+    const publicUrl = `/uploads/${file.filename}`;
 
-  const [rows] = await dbPool.query<DbUserRow[]>(
-    "SELECT * FROM users WHERE id = ? LIMIT 1",
-    [userId],
-  );
-  const user = (rows as DbUserRow[])[0];
+    const base =
+      process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`;
+    const fullUrl = `${base}${publicUrl}`;
 
-  return res
-    .status(200)
-    .json({ message: "Avatar updated.", user: sanitizeUser(user) });
-});
+    await dbPool.query(
+      "UPDATE users SET profile_image = ?, updated_at = UTC_TIMESTAMP() WHERE id = ?",
+      [fullUrl, userId],
+    );
+
+    return res.status(200).json({ url: fullUrl });
+  },
+);
 
 export default router;
