@@ -16,8 +16,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use("/public", express.static("public"));
-// serve uploaded files
-app.use("/uploads", express.static("uploads"));
 
 app.get("/api/health", (_req, res) => {
   res.status(200).json({
