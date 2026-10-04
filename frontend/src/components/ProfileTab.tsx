@@ -6,7 +6,6 @@ type ProfileForm = {
   firstName?: string;
   lastName?: string;
   email?: string;
-  phoneNumber?: string;
   gender?: string;
   nationality?: string;
   countryOfResidence?: string;
@@ -26,7 +25,6 @@ export default function ProfileTab() {
       firstName: user?.firstName ?? "",
       lastName: user?.lastName ?? "",
       email: user?.email ?? "",
-      phoneNumber: user?.phoneNumber ?? "",
       gender: (user as any)?.gender ?? "",
       nationality: (user as any)?.nationality ?? "",
       countryOfResidence: (user as any)?.countryOfResidence ?? "",
@@ -56,23 +54,13 @@ export default function ProfileTab() {
         if (v !== undefined) (payload as any)[k] = v;
       });
 
-      const res = await fetch(
-        `${API_BASE_URL}/api/users/${user?.id}/profile`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token ? `Bearer ${token}` : "",
-          },
-          body: JSON.stringify(payload),
-        },
-      );
+      const res = await fetch(`${API_BASE_URL}/api/users/${user?.id}/profile`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: token ? `Bearer ${token}` : "",
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -159,6 +147,13 @@ export default function ProfileTab() {
           />
         </label>
 
+        {!editing && (
+          <label className="flex flex-col sm:col-span-2">
+            <span className="text-xs font-black uppercase text-ink/70">Phone</span>
+            <div className="mt-1 rounded-md border px-3 py-2">{user?.phoneNumber ?? ""}</div>
+          </label>
+        )}
+
         <label className="flex flex-col">
           <span className="text-xs font-black uppercase text-ink/70">
             Gender
@@ -177,19 +172,7 @@ export default function ProfileTab() {
           </select>
         </label>
 
-        <label className="flex flex-col sm:col-span-2">
-          <span className="text-xs font-black uppercase text-ink/70">
-            Phone
-          </span>
-          <input
-            value={form.phoneNumber}
-            onChange={(e) =>
-              setForm((s) => ({ ...s, phoneNumber: e.target.value }))
-            }
-            className="mt-1 rounded-md border px-3 py-2"
-            disabled={!editing}
-          />
-        </label>
+        {/* Phone number is not editable via this endpoint; hide the field. */}
 
         <label className="flex flex-col sm:col-span-2">
           <span className="text-xs font-black uppercase text-ink/70">
@@ -253,7 +236,6 @@ export default function ProfileTab() {
                   firstName: user?.firstName ?? "",
                   lastName: user?.lastName ?? "",
                   email: user?.email ?? "",
-                  phoneNumber: user?.phoneNumber ?? "",
                   gender: (user as any)?.gender ?? "",
                   nationality: (user as any)?.nationality ?? "",
                   countryOfResidence: (user as any)?.countryOfResidence ?? "",
