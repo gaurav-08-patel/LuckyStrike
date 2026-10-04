@@ -117,7 +117,7 @@ router.post("/login-signup", async (req, res) => {
 
   if (existingUser) {
     await dbPool.query(
-      "UPDATE users SET is_phone_verified = TRUE, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+      "UPDATE users SET is_phone_verified = TRUE, updated_at = UTC_TIMESTAMP() WHERE id = ?",
       [existingUser.id],
     );
 
@@ -143,7 +143,7 @@ router.post("/login-signup", async (req, res) => {
   }
 
   const [insertResult] = await dbPool.query(
-    "INSERT INTO users (phone_number, first_name, last_name, wallet_balance, is_phone_verified, is_admin) VALUES (?, ?, ?, 0, TRUE, FALSE)",
+    "INSERT INTO users (phone_number, first_name, last_name, wallet_balance, is_phone_verified, is_admin, created_at, updated_at) VALUES (?, ?, ?, 0, TRUE, FALSE, UTC_TIMESTAMP(), UTC_TIMESTAMP())",
     [phoneNumber, "John", "Doe"],
   );
 

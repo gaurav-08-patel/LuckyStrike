@@ -186,7 +186,7 @@ export const settleDraw = async (
     await connection.query(
       `INSERT INTO winners
        (draw_id, draw_code, ticket_code, prize_title, prize_amount, winner_name, draw_title, draw_type, image_url, announced_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())`,
       [
         drawId,
         draw.draw_code,

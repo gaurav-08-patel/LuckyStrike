@@ -35,8 +35,8 @@ export const updateWalletBalance = async (
 
   await connection.query(
     `INSERT INTO wallet_transaction_history
-      (user_id, type, amount, balance_after, reference_type, reference_id)
-     VALUES (?, ?, ?, ?, ?, ?)`,
+      (user_id, type, amount, balance_after, reference_type, reference_id, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())`,
     [userId, type, amount, balanceAfter, referenceType, referenceId],
   );
 

@@ -199,16 +199,12 @@ router.post("/draws/:id/buy", requireAuth, async (req, res) => {
       ticketCodes.push(ticketCode);
     }
 
-    const ticketValues = ticketCodes.map((ticketCode) => [
-      ticketCode,
-      drawId,
-      userId,
-    ]);
-
-    await connection.query(
-      "INSERT INTO tickets (ticket_code, draw_id, user_id) VALUES ?",
-      [ticketValues as any],
-    );
+    for (const ticketCode of ticketCodes) {
+      await connection.query(
+        "INSERT INTO tickets (ticket_code, draw_id, user_id, created_at) VALUES (?, ?, ?, UTC_TIMESTAMP())",
+        [ticketCode, drawId, userId],
+      );
+    }
 
     await connection.query(
       "UPDATE draws SET tickets_sold = tickets_sold + ? WHERE id = ?",

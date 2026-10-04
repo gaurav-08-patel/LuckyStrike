@@ -104,7 +104,7 @@ router.patch("/:userId/profile", requireAuth, async (req, res) => {
          gender = ?,
          nationality = ?,
          country_of_residence = ?,
-         updated_at = CURRENT_TIMESTAMP
+         updated_at = UTC_TIMESTAMP()
      WHERE id = ?`,
     [
       nextFirstName,
