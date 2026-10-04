@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 import { useAuth } from "../context/AuthContext";
 
@@ -339,103 +339,118 @@ function MyTicketsPage() {
           </div>
         ) : (
           <div className="space-y-3 sm:space-y-5">
-            {groupedTickets.map((group) => (
-              <div
-                key={group.drawId}
-                className="rounded-[18px] border-[2px] border-ink/70 bg-[linear-gradient(135deg,#fffaf1_0%,#fff1b8_30%,#ffe1ef_100%)] p-3 shadow-[5px_5px_0_#171310] sm:rounded-[24px] sm:p-5"
-              >
-                <div className="mb-3 flex flex-col gap-2 pb-2 sm:mb-4 sm:flex-row sm:items-center sm:justify-between sm:pb-3">
-                  <div>
-                    <p className="text-[0.58rem] font-black uppercase tracking-[0.12em] text-ink/60 sm:text-[0.68rem]">
-                      Draw: {group.drawCode}
-                    </p>
-                    <h2 className="mt-1 font-display text-[1.2rem] uppercase tracking-[-0.05em] text-ink sm:text-[1.6rem] lg:text-[2.1rem]">
-                      {group.title}
-                    </h2>
-                  </div>
+            {groupedTickets.map((group) => {
+              const routeId = group.drawCode || group.drawId;
 
-                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                    <span
-                      className={`inline-flex items-center rounded-full border-[2px] px-2 py-0.5 text-[0.52rem] font-black uppercase tracking-[0.12em] sm:px-2.5 sm:py-1 sm:text-[0.62rem] ${getDrawStatusClasses(
-                        group.drawStatus,
-                      )}`}
+              return (
+                <div
+                  key={group.drawId}
+                  className="rounded-[18px] border-[2px] border-ink/70 bg-[linear-gradient(135deg,#fffaf1_0%,#fff1b8_30%,#ffe1ef_100%)] p-3 shadow-[5px_5px_0_#171310] sm:rounded-[24px] sm:p-5"
+                >
+                  <div className="mb-3 flex flex-col gap-2 pb-2 sm:mb-4 sm:flex-row sm:items-center sm:justify-between sm:pb-3">
+                    <Link
+                      to={`/${routeId}`}
+                      className="group flex-1 rounded-[14px] transition-colors focus:outline-none focus:ring-2 focus:ring-ink/40"
                     >
-                      {group.drawStatus}
-                    </span>
-                    <span className="rounded-full border-[2px] border-ink bg-white px-2 py-0.5 text-[0.52rem] font-black uppercase tracking-[0.12em] text-ink sm:px-2.5 sm:py-1 sm:text-[0.62rem]">
-                      {group.tickets.length} ticket
-                      {group.tickets.length > 1 ? "s" : ""}
-                    </span>
-                  </div>
-                </div>
+                      <div className="flex flex-col gap-1">
+                        <p className="text-[0.58rem] font-black uppercase tracking-[0.12em] text-ink/60 sm:text-[0.68rem]">
+                          Draw: {group.drawCode}
+                        </p>
+                        <h2 className="mt-1 font-display text-[1.2rem] uppercase tracking-[-0.05em] text-ink underline-offset-4 transition-colors group-hover:text-red group-hover:underline sm:text-[1.6rem] lg:text-[2.1rem]">
+                          {group.title}
+                        </h2>
+                      </div>
+                    </Link>
 
-                <div className="mb-3 grid gap-1.5 text-[0.7rem] text-ink/80 sm:mb-4 sm:grid-cols-3 sm:gap-2 sm:text-sm">
-                  <div className="rounded-[10px] border-[1px] border-ink/30 bg-white/80 p-2 sm:rounded-[12px] sm:p-2.5">
-                    <div className="text-[0.52rem] font-black uppercase tracking-[0.12em] text-ink/60 sm:text-[0.62rem]">
-                      Prize
-                    </div>
-                    <div className="mt-1 font-bold text-ink">
-                      {group.prizeTitle} · {formatPrize(group.prizeAmount)}
-                    </div>
-                  </div>
-
-                  <div className="rounded-[10px] border-[1px] border-ink/30 bg-white/80 p-2 sm:rounded-[12px] sm:p-2.5">
-                    <div className="text-[0.52rem] font-black uppercase tracking-[0.12em] text-ink/60 sm:text-[0.62rem]">
-                      Draw time
-                    </div>
-                    <div className="mt-1 font-bold text-ink">
-                      {formatDate(group.drawAt)}
-                    </div>
-                  </div>
-
-                  <div className="rounded-[10px] border-[1px] border-ink/30 bg-white/80 p-2 sm:rounded-[12px] sm:p-2.5">
-                    <div className="text-[0.52rem] font-black uppercase tracking-[0.12em] text-ink/60 sm:text-[0.62rem]">
-                      Closes
-                    </div>
-                    <div className="mt-1 font-bold text-ink">
-                      {formatDate(group.expiresAt)}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="max-h-[420px] overflow-y-auto rounded-[14px] border-[2px] border-ink/30 bg-[#f9f7f5] p-1.5 sm:rounded-[18px] sm:p-2">
-                  <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                    {group.tickets.map((ticket) => (
-                      <div
-                        key={ticket.id}
-                        className={`relative overflow-hidden rounded-[16px] border-[2px] border-ink/70 p-2.5 shadow-[3px_3px_0_#171310] before:absolute before:left-[-8px] before:top-1/2 before:h-5 before:w-5 before:-translate-y-1/2 before:rounded-full before:border-[2px] before:border-ink before:bg-[#f9f7f5] after:absolute after:right-[-8px] after:top-1/2 after:h-5 after:w-5 after:-translate-y-1/2 after:rounded-full after:border-[2px] after:border-ink after:bg-[#f9f7f5] sm:rounded-[18px] sm:p-3 ${getTicketCardTheme(
-                          ticket.ticketStatus,
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                      <span
+                        className={`inline-flex items-center rounded-full border-[2px] px-2 py-0.5 text-[0.52rem] font-black uppercase tracking-[0.12em] sm:px-2.5 sm:py-1 sm:text-[0.62rem] ${getDrawStatusClasses(
+                          group.drawStatus,
                         )}`}
                       >
-                        <div className="relative z-10 flex items-start justify-between gap-2">
-                          <div>
-                            <p className="text-[0.52rem] font-black uppercase tracking-[0.12em] text-ink/60 sm:text-[0.62rem]">
-                              Ticket
-                            </p>
-                            <p className="mt-1 font-display text-lg uppercase tracking-[-0.04em] text-ink sm:text-xl">
-                              {ticket.ticketCode}
-                            </p>
+                        {group.drawStatus}
+                      </span>
+                      <span className="rounded-full border-[2px] border-ink bg-white px-2 py-0.5 text-[0.52rem] font-black uppercase tracking-[0.12em] text-ink sm:px-2.5 sm:py-1 sm:text-[0.62rem]">
+                        {group.tickets.length} ticket
+                        {group.tickets.length > 1 ? "s" : ""}
+                      </span>
+                      <Link
+                        to={`/${routeId}`}
+                        className="inline-flex items-center justify-center rounded-full border-[2px] border-ink bg-[#4b5bdc] px-2 py-1 text-[0.52rem] font-black uppercase tracking-[0.12em] text-white shadow-[3px_3px_0_#171310] transition-transform hover:-translate-y-0.5 sm:px-2.5 sm:py-1.5 sm:text-[0.62rem]"
+                      >
+                        View draw
+                      </Link>
+                    </div>
+                  </div>
+
+                  <div className="mb-3 grid gap-1.5 text-[0.7rem] text-ink/80 sm:mb-4 sm:grid-cols-3 sm:gap-2 sm:text-sm">
+                    <div className="rounded-[10px] border-[1px] border-ink/30 bg-white/80 p-2 sm:rounded-[12px] sm:p-2.5">
+                      <div className="text-[0.52rem] font-black uppercase tracking-[0.12em] text-ink/60 sm:text-[0.62rem]">
+                        Prize
+                      </div>
+                      <div className="mt-1 font-bold text-ink">
+                        {group.prizeTitle} · {formatPrize(group.prizeAmount)}
+                      </div>
+                    </div>
+
+                    <div className="rounded-[10px] border-[1px] border-ink/30 bg-white/80 p-2 sm:rounded-[12px] sm:p-2.5">
+                      <div className="text-[0.52rem] font-black uppercase tracking-[0.12em] text-ink/60 sm:text-[0.62rem]">
+                        Draw time
+                      </div>
+                      <div className="mt-1 font-bold text-ink">
+                        {formatDate(group.drawAt)}
+                      </div>
+                    </div>
+
+                    <div className="rounded-[10px] border-[1px] border-ink/30 bg-white/80 p-2 sm:rounded-[12px] sm:p-2.5">
+                      <div className="text-[0.52rem] font-black uppercase tracking-[0.12em] text-ink/60 sm:text-[0.62rem]">
+                        Closes
+                      </div>
+                      <div className="mt-1 font-bold text-ink">
+                        {formatDate(group.expiresAt)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="max-h-[420px] overflow-y-auto rounded-[14px] border-[2px] border-ink/30 bg-[#f9f7f5] p-1.5 sm:rounded-[18px] sm:p-2">
+                    <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                      {group.tickets.map((ticket) => (
+                        <div
+                          key={ticket.id}
+                          className={`relative overflow-hidden rounded-[16px] border-[2px] border-ink/70 p-2.5 shadow-[3px_3px_0_#171310] before:absolute before:left-[-8px] before:top-1/2 before:h-5 before:w-5 before:-translate-y-1/2 before:rounded-full before:border-[2px] before:border-ink before:bg-[#f9f7f5] after:absolute after:right-[-8px] after:top-1/2 after:h-5 after:w-5 after:-translate-y-1/2 after:rounded-full after:border-[2px] after:border-ink after:bg-[#f9f7f5] sm:rounded-[18px] sm:p-3 ${getTicketCardTheme(
+                            ticket.ticketStatus,
+                          )}`}
+                        >
+                          <div className="relative z-10 flex items-start justify-between gap-2">
+                            <div>
+                              <p className="text-[0.52rem] font-black uppercase tracking-[0.12em] text-ink/60 sm:text-[0.62rem]">
+                                Ticket
+                              </p>
+                              <p className="mt-1 font-display text-lg uppercase tracking-[-0.04em] text-ink sm:text-xl">
+                                {ticket.ticketCode}
+                              </p>
+                            </div>
+
+                            <span
+                              className={`inline-flex items-center rounded-full border-[2px] px-1.5 py-0.5 text-[0.48rem] font-black uppercase tracking-[0.12em] sm:px-2 sm:py-1 sm:text-[0.56rem] ${getTicketStatusClasses(
+                                ticket.ticketStatus,
+                              )}`}
+                            >
+                              {ticket.ticketStatus}
+                            </span>
                           </div>
 
-                          <span
-                            className={`inline-flex items-center rounded-full border-[2px] px-1.5 py-0.5 text-[0.48rem] font-black uppercase tracking-[0.12em] sm:px-2 sm:py-1 sm:text-[0.56rem] ${getTicketStatusClasses(
-                              ticket.ticketStatus,
-                            )}`}
-                          >
-                            {ticket.ticketStatus}
-                          </span>
+                          <div className="relative z-10 mt-2 space-y-1 border-t-[2px] border-dashed border-ink/20 pt-2 text-[0.62rem] text-ink/75 sm:mt-3 sm:text-[0.72rem]">
+                            <p>Price: {ticket.draw.ticketPrice}</p>
+                            <p>Purchased: {formatDate(ticket.createdAt)}</p>
+                          </div>
                         </div>
-
-                        <div className="relative z-10 mt-2 space-y-1 border-t-[2px] border-dashed border-ink/20 pt-2 text-[0.62rem] text-ink/75 sm:mt-3 sm:text-[0.72rem]">
-                          <p>Price: {ticket.draw.ticketPrice}</p>
-                          <p>Purchased: {formatDate(ticket.createdAt)}</p>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
