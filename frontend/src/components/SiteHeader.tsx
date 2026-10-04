@@ -46,6 +46,12 @@ function SiteHeader({ brand, actionLabel }: SiteHeaderProps) {
   const [pendingRedirect, setPendingRedirect] = useState<string | null>(null);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const accountLabel = user?.firstName ? user.firstName : "Account";
+  const avatarUrl = user?.profileImage ?? null;
+  const accountInitial = (
+    user?.firstName?.[0] ??
+    user?.lastName?.[0] ??
+    "A"
+  ).toUpperCase();
 
   const openAuthModal = (redirectTarget?: string) => {
     if (redirectTarget) {
@@ -184,9 +190,17 @@ function SiteHeader({ brand, actionLabel }: SiteHeaderProps) {
                 className="flex w-auto max-w-[clamp(130px,19vw,220px)] items-center gap-2 rounded-full border-[3px] border-ink bg-[#ececec] px-2 py-1.5 text-left shadow-[3px_3px_0_#171310] transition-transform duration-150 hover:-translate-y-0.5 sm:gap-3 sm:px-4 sm:py-2"
                 onClick={() => navigate("/user/profile")}
               >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border-[3px] border-ink bg-[#1d1d1d] text-[0.65rem] font-black uppercase text-white sm:h-9 sm:w-9 sm:text-xs">
-                  A
-                </span>
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={accountLabel}
+                    className="h-8 w-8 shrink-0 rounded-full border-[2px] border-white/80 bg-[#fff3f8] object-cover shadow-[0_0_0_2px_rgba(255,255,255,0.9)] sm:h-9 sm:w-9"
+                  />
+                ) : (
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border-[2px] border-white/80 bg-[#1d1d1d] text-[0.65rem] font-black uppercase text-white shadow-[0_0_0_2px_rgba(255,255,255,0.9)] sm:h-9 sm:w-9 sm:text-xs">
+                    {accountInitial}
+                  </span>
+                )}
                 <span className="min-w-0 flex-1 truncate text-[0.7rem] font-black uppercase text-ink sm:text-base">
                   {accountLabel}
                 </span>
