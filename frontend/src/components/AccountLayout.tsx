@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Footer from "./Footer";
 import SiteHeader from "./SiteHeader";
+import { FiLogOut } from "react-icons/fi";
 
 type AccountLayoutProps = {
   title: string;
@@ -17,7 +19,9 @@ function AccountLayout({
   children,
 }: AccountLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user } = useAuth();
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
+  const { user, logoutUser } = useAuth();
+  const navigate = useNavigate();
 
   const fullName =
     [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Lucky User";
@@ -68,7 +72,7 @@ function AccountLayout({
         }
       />
 
-      <div className="mx-auto w-full max-w-[1400px] flex-1 px-3 py-4 sm:px-6 lg:px-8 lg:py-6">
+      <div className="mx-auto min-h-screen w-full max-w-[1400px] flex-1 px-3 py-4 sm:px-6 lg:px-8 lg:py-6 relative">
         {sidebar && (
           <div className="flex items-center justify-between gap-3 lg:hidden">
             <button
@@ -100,7 +104,7 @@ function AccountLayout({
         <div className="mt-4 flex gap-5 lg:mt-6">
           {sidebar && (
             <>
-              <aside className="hidden w-[260px] shrink-0 rounded-[24px] border-[3px] border-ink bg-[#fffaf7] p-3 shadow-[6px_6px_0_#171310] lg:block">
+              <aside className="hidden w-[260px] shrink-0 rounded-[24px] border-[3px] border-ink bg-[#fffaf7] p-3 shadow-[6px_6px_0_#171310] lg:flex lg:flex-col">
                 <div className="mb-4 px-2 pt-2">
                   <p className="text-[0.62rem] font-black uppercase tracking-[0.14em] text-ink/60">
                     {subtitle}
@@ -108,7 +112,21 @@ function AccountLayout({
                 </div>
 
                 {profileCard}
-                {sidebar}
+
+                <div className="flex-1 overflow-auto pt-2">{sidebar}</div>
+
+                {user && (
+                  <div className="mt-auto lg:mt-6 px-2 pb-3">
+                    <button
+                      type="button"
+                      onClick={() => setLogoutConfirmOpen(true)}
+                      className="flex w-full items-center justify-center gap-3 rounded-[14px] border-2 border-[#d83b45] bg-gradient-to-r from-[#ff6b73] to-[#ff3b47] px-3 py-2 text-white font-black uppercase tracking-[0.06em] shadow-[3px_3px_0_#7a1a1f]"
+                    >
+                      <FiLogOut className="h-4 w-4" />
+                      Logout
+                    </button>
+                  </div>
+                )}
               </aside>
 
               <div
@@ -123,6 +141,10 @@ function AccountLayout({
                   className={`relative z-[70] h-full w-[82%] max-w-[320px] border-r-[3px] border-ink bg-[#fffaf7] p-4 shadow-[8px_0_0_#171310] transition-transform duration-300 ease-out ${
                     sidebarOpen ? "translate-x-0" : "-translate-x-full"
                   }`}
+                  style={{
+                    paddingBottom:
+                      "calc(env(safe-area-inset-bottom, 16px) + 1rem)",
+                  }}
                   onClick={(event) => event.stopPropagation()}
                 >
                   <div className="mb-5 flex items-center justify-between gap-3">
@@ -141,8 +163,53 @@ function AccountLayout({
                     </button>
                   </div>
 
-                  {profileCard}
-                  <div onClick={() => setSidebarOpen(false)}>{sidebar}</div>
+                  <div className="flex h-full flex-col">
+                    {profileCard}
+
+                    <div
+                      className="flex-1 overflow-auto"
+                      onClick={() => setSidebarOpen(false)}
+                      style={{
+                        paddingBottom:
+                          "calc(72px + env(safe-area-inset-bottom, 16px))",
+                      }}
+                    >
+                      {sidebar}
+                    </div>
+
+                    {user && (
+                      <div className="mt-auto px-1 pb-4">
+                        <button
+                          type="button"
+                          onClick={() => setLogoutConfirmOpen(true)}
+                          className="flex w-full items-center justify-center gap-3 rounded-[12px] border-2 border-[#d83b45] bg-gradient-to-r from-[#ff6b73] to-[#ff3b47] px-3 py-2 text-white font-black uppercase tracking-[0.06em] shadow-[3px_3px_0_#7a1a1f]"
+                        >
+                          <FiLogOut className="h-4 w-4" />
+                          Logout
+                        </button>
+                      </div>
+                    )}
+
+                    {user && (
+                      <div
+                        className="absolute left-0 right-0 bottom-0 px-4"
+                        style={{ bottom: "env(safe-area-inset-bottom, 16px)" }}
+                      >
+                        <div className="mx-0 w-full">
+                          <button
+                            type="button"
+                            onClick={() => setLogoutConfirmOpen(true)}
+                            className="w-full rounded-[12px] border-2 border-[#d83b45] bg-gradient-to-r from-[#ff6b73] to-[#ff3b47] px-3 py-3 text-white font-black uppercase tracking-[0.06em] shadow-[3px_3px_0_#7a1a1f]"
+                          >
+                            <div className="flex items-center justify-center gap-3">
+                              <FiLogOut className="h-4 w-4" />
+                              Logout
+                            </div>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </>
@@ -151,6 +218,54 @@ function AccountLayout({
           <div className="min-h-[500px] flex-1">{children}</div>
         </div>
       </div>
+
+      {/* Logout confirmation modal */}
+      {logoutConfirmOpen && (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-black/50"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setLogoutConfirmOpen(false)}
+        >
+          <div
+            className={`w-[92%] max-w-md rounded-xl bg-white p-5 shadow-[0_12px_30px_rgba(0,0,0,0.25)] transform transition-all duration-300 ease-out ${
+              logoutConfirmOpen
+                ? "opacity-100 translate-y-0 scale-100"
+                : "opacity-0 -translate-y-4 scale-95"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="mb-3 text-lg font-black text-ink">Confirm logout</h3>
+            <p className="mb-5 text-sm text-ink/80">
+              Are you sure you want to log out?
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setLogoutConfirmOpen(false)}
+                className="rounded-md px-3 py-2 text-sm font-bold text-ink/80"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    logoutUser();
+                  } catch {}
+                  setLogoutConfirmOpen(false);
+                  navigate("/");
+                }}
+                className="rounded-md bg-gradient-to-r from-[#ff6b73] to-[#ff3b47] px-4 py-2 text-sm font-black text-white"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </main>
