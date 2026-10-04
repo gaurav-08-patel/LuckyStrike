@@ -2,12 +2,15 @@ import { Router } from "express";
 import type { RowDataPacket } from "mysql2";
 import { dbPool } from "../config/db";
 import { requireAuth } from "../middleware/auth";
+// Note: avatar upload will accept an `imageUrl` in JSON for now.
+// Cloudinary/multipart upload will be added later when the service is configured.
 
 const router = Router();
 
 interface DbUserRow extends RowDataPacket {
   id: number;
   phone_number: string;
+  profile_image: string | null;
   first_name: string | null;
   last_name: string | null;
   email: string | null;
@@ -24,6 +27,7 @@ interface DbUserRow extends RowDataPacket {
 const sanitizeUser = (user: DbUserRow) => ({
   id: user.id,
   phoneNumber: user.phone_number,
+  profileImage: user.profile_image || null,
   firstName: user.first_name || "",
   lastName: user.last_name || "",
   email: user.email || "",
@@ -46,7 +50,9 @@ router.patch("/:userId/profile", requireAuth, async (req, res) => {
   }
 
   if (Number(userId) !== authenticatedUserId) {
-    return res.status(403).json({ message: "You can only update your own profile." });
+    return res
+      .status(403)
+      .json({ message: "You can only update your own profile." });
   }
 
   const {
@@ -126,6 +132,40 @@ router.patch("/:userId/profile", requireAuth, async (req, res) => {
     message: "User profile updated successfully.",
     user: sanitizeUser(updatedRows[0]),
   });
+});
+
+// Avatar update endpoint: accept { imageUrl } in request body and save it.
+router.post("/:userId/avatar", requireAuth, async (req, res) => {
+  const { userId } = req.params;
+  const authenticatedUserId = req.user?.id;
+
+  if (!authenticatedUserId)
+    return res.status(401).json({ message: "Unauthorized." });
+  if (Number(userId) !== authenticatedUserId)
+    return res
+      .status(403)
+      .json({ message: "You can only update your own avatar." });
+
+  const imageUrl = String(req.body?.imageUrl || "").trim();
+  if (!imageUrl)
+    return res
+      .status(400)
+      .json({ message: "imageUrl is required in request body." });
+
+  await dbPool.query(
+    "UPDATE users SET profile_image = ?, updated_at = UTC_TIMESTAMP() WHERE id = ?",
+    [imageUrl, userId],
+  );
+
+  const [rows] = await dbPool.query<DbUserRow[]>(
+    "SELECT * FROM users WHERE id = ? LIMIT 1",
+    [userId],
+  );
+  const user = (rows as DbUserRow[])[0];
+
+  return res
+    .status(200)
+    .json({ message: "Avatar updated.", user: sanitizeUser(user) });
 });
 
 export default router;

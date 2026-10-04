@@ -11,6 +11,7 @@ const otpStore = new Map<string, { otp: string; expiresAt: number }>();
 interface DbUserRow extends RowDataPacket {
   id: number;
   phone_number: string;
+  profile_image: string | null;
   first_name: string | null;
   last_name: string | null;
   email: string | null;
@@ -35,6 +36,7 @@ const generateOtp = () => {
 const sanitizeUser = (user: DbUserRow) => ({
   id: user.id,
   phoneNumber: user.phone_number,
+  profileImage: user.profile_image || null,
   firstName: user.first_name || "",
   lastName: user.last_name || "",
   email: user.email || "",

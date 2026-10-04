@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
     gender                VARCHAR(20) NULL,
     nationality           VARCHAR(100) NULL,
     country_of_residence  VARCHAR(100) NULL,
+    profile_image         VARCHAR(500) NULL,
     wallet_balance        DECIMAL(10,2) NOT NULL DEFAULT 0,
     is_phone_verified     BOOLEAN NOT NULL DEFAULT FALSE,
     is_admin              BOOLEAN NOT NULL DEFAULT FALSE,
