@@ -1,6 +1,7 @@
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import AccountLayout from "../components/AccountLayout";
 import { useAuth } from "../context/AuthContext";
+import ProfileTab from "../components/ProfileTab";
 
 type AccountPageProps = {
   role: "user" | "admin";
@@ -121,16 +122,7 @@ function AccountPage({ role }: AccountPageProps) {
 
     switch (currentTab) {
       case "profile":
-        return (
-          <div className="rounded-[24px] border-[3px] border-ink bg-[#fffaf7] p-6 shadow-[5px_5px_0_#171310]">
-            <h2 className="font-display text-[2rem] uppercase leading-none tracking-[-0.05em] text-ink">
-              Profile
-            </h2>
-            <p className="mt-3 text-sm text-ink/70">
-              Personal details and account information will appear here.
-            </p>
-          </div>
-        );
+        return <ProfileTab />;
       case "security":
         return (
           <div className="rounded-[24px] border-[3px] border-ink bg-[#fffdf7] p-6 shadow-[5px_5px_0_#171310]">
