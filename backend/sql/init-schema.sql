@@ -19,8 +19,8 @@ CREATE TABLE IF NOT EXISTS users (
     wallet_balance        DECIMAL(10,2) NOT NULL DEFAULT 0,
     is_phone_verified     BOOLEAN NOT NULL DEFAULT FALSE,
     is_admin              BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at            DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at            DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    created_at            DATETIME DEFAULT UTC_TIMESTAMP,
+    updated_at            DATETIME DEFAULT UTC_TIMESTAMP ON UPDATE UTC_TIMESTAMP
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS wallet_transaction_history (
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS wallet_transaction_history (
     balance_after   DECIMAL(10,2) NOT NULL,
     reference_type  VARCHAR(30) NULL,
     reference_id    INT NULL,
-    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at      DATETIME DEFAULT UTC_TIMESTAMP,
     CONSTRAINT fk_wallet_txn_user
         FOREIGN KEY (user_id) REFERENCES users(id)
         ON DELETE RESTRICT
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS draws (
     winner_user_id  INT NULL,
     rng_seed_hash   VARCHAR(255) NULL,
     rng_seed        VARCHAR(255) NULL,
-    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at      DATETIME DEFAULT UTC_TIMESTAMP
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS tickets (
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS tickets (
     draw_id         INT NOT NULL,
     user_id         INT NOT NULL,
     status          ENUM('active', 'won', 'lost') NOT NULL DEFAULT 'active',
-    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at      DATETIME DEFAULT UTC_TIMESTAMP,
     CONSTRAINT fk_tickets_draw
         FOREIGN KEY (draw_id) REFERENCES draws(id)
         ON DELETE RESTRICT
@@ -86,8 +86,8 @@ CREATE TABLE IF NOT EXISTS winners (
     draw_title      VARCHAR(200) NOT NULL,
     draw_type       ENUM('daily', 'weekly', 'monthly') NOT NULL DEFAULT 'daily',
     image_url       VARCHAR(500) NULL,
-    announced_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+    announced_at    DATETIME NOT NULL DEFAULT UTC_TIMESTAMP,
+    created_at      DATETIME DEFAULT UTC_TIMESTAMP,
     CONSTRAINT fk_winners_draw
         FOREIGN KEY (draw_id) REFERENCES draws(id)
         ON DELETE RESTRICT
