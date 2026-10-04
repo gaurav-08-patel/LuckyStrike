@@ -34,6 +34,7 @@ function AccountLayout({
       .join("") || "U";
   const email = user?.email || "No email provided";
   const roleLabel = user?.isAdmin ? "Admin account" : "User account";
+  const avatarUrl = user?.profileImage ?? null;
   const roleBadgeClasses = user?.isAdmin
     ? "border-violet-700 bg-[linear-gradient(135deg,#f3e8ff_0%,#ede9fe_45%,#f5f3ff_100%)] text-violet-900 shadow-[2px_2px_0_#7c3aed]"
     : "border-emerald-700 bg-[linear-gradient(135deg,#ecfdf5_0%,#d1fae5_45%,#f0fdf4_100%)] text-emerald-900 shadow-[2px_2px_0_#059669]";
@@ -41,9 +42,17 @@ function AccountLayout({
   const profileCard = (
     <div className="mb-5 rounded-[18px] border-[3px] border-ink bg-[linear-gradient(135deg,#fffaf5_0%,#f5efe9_45%,#fdf2f8_100%)] p-3 shadow-[4px_4px_0_#171310]">
       <div className="flex items-center gap-3">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-[3px] border-ink bg-[#1a1a1a] text-sm font-black uppercase text-white">
-          {initials}
-        </div>
+        {avatarUrl ? (
+          <img
+            src={avatarUrl}
+            alt={fullName}
+            className="h-12 w-12 shrink-0 rounded-full border-[2px] border-white/80 bg-[#fff3f8] object-cover shadow-[0_0_0_2px_rgba(255,255,255,0.9)]"
+          />
+        ) : (
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-[2px] border-white/80 bg-[#1a1a1a] text-sm font-black uppercase text-white shadow-[0_0_0_2px_rgba(255,255,255,0.9)]">
+            {initials}
+          </div>
+        )}
 
         <div className="min-w-0 flex-1">
           <p className="truncate font-display text-xl uppercase leading-none tracking-[-0.04em] text-ink">
