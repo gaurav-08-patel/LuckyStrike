@@ -89,18 +89,16 @@ export const formatDrawDateTime = (value: string) => {
     return value;
   }
 
-  return (
-    date.toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: false,
-      timeZone: "UTC",
-    }) + " UTC"
-  );
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).format(date);
 };
 
 function Home() {
