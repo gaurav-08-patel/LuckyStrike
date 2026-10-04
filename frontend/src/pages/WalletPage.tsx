@@ -27,17 +27,27 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
-function formatDateTime(value: string) {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
+function toLocalTime(utcValue: string) {
+  if (!utcValue) {
+    return "";
   }
 
-  const deviceTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const normalizedValue =
+    utcValue.includes("T") || utcValue.includes(" ")
+      ? utcValue.replace(" ", "T")
+      : utcValue;
+
+  const hasExplicitTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(normalizedValue);
+  const date = new Date(
+    hasExplicitTimezone ? normalizedValue : `${normalizedValue}Z`,
+  );
+
+  if (Number.isNaN(date.getTime())) {
+    return utcValue;
+  }
 
   return new Intl.DateTimeFormat("en-IN", {
-    timeZone: deviceTimeZone,
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -45,6 +55,10 @@ function formatDateTime(value: string) {
     minute: "2-digit",
     hour12: true,
   }).format(date);
+}
+
+function formatDateTime(value: string) {
+  return toLocalTime(value);
 }
 
 function WalletPage() {
