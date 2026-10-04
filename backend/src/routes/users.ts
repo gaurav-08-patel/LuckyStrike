@@ -1,32 +1,72 @@
 import { Router } from "express";
 import type { RowDataPacket } from "mysql2";
+import { v2 as cloudinary } from "cloudinary";
+import dotenv from "dotenv";
+import multer from "multer";
 import { dbPool } from "../config/db";
 import { requireAuth } from "../middleware/auth";
-import multer from "multer";
-import path from "path";
-import fs from "fs";
 
-// prepare uploads dir
-const uploadsDir = path.join(process.cwd(), "backend", "uploads");
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: () => uploadsDir,
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname) || "";
-    const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
-    cb(null, name);
-  },
-});
+dotenv.config();
 
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
   fileFilter: (_req, file, cb) => {
     if (/^image\//.test(file.mimetype)) cb(null, true);
     else cb(new Error("Invalid file type"));
   },
 });
+
+const getCloudinaryConfig = () => ({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "",
+  api_key: process.env.CLOUDINARY_API_KEY || "",
+  api_secret: process.env.CLOUDINARY_API_SECRET || "",
+  secure: true,
+});
+
+const uploadAvatarToCloudinary = async (file: Express.Multer.File) => {
+  const config = getCloudinaryConfig();
+
+  if (!config.cloud_name || !config.api_key || !config.api_secret) {
+    throw new Error(
+      "Cloudinary is not configured. Add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to your backend .env file.",
+    );
+  }
+
+  cloudinary.config(config);
+
+  const result = await new Promise<{ secure_url?: string; url?: string }>(
+    (resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: "lucky-strike/avatars",
+          resource_type: "image",
+        },
+        (error, response) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+
+          if (!response) {
+            reject(new Error("Cloudinary upload returned no response."));
+            return;
+          }
+
+          resolve(response);
+        },
+      );
+
+      uploadStream.end(file.buffer);
+    },
+  );
+
+  if (!result.secure_url && !result.url) {
+    throw new Error("Cloudinary upload succeeded but returned no usable URL.");
+  }
+
+  return result.secure_url || result.url!;
+};
 
 const router = Router();
 
@@ -173,21 +213,27 @@ router.post(
         .status(403)
         .json({ message: "You can only update your own avatar." });
 
-    const file = (req as any).file;
+    const file = (req as any).file as Express.Multer.File | undefined;
     if (!file) return res.status(400).json({ message: "No file uploaded." });
 
-    const publicUrl = `/uploads/${file.filename}`;
+    let avatarUrl: string;
 
-    const base =
-      process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`;
-    const fullUrl = `${base}${publicUrl}`;
+    try {
+      avatarUrl = await uploadAvatarToCloudinary(file);
+    } catch (error: any) {
+      return res.status(500).json({
+        message:
+          error?.message ||
+          "Avatar upload failed. Please check your Cloudinary credentials.",
+      });
+    }
 
     await dbPool.query(
       "UPDATE users SET profile_image = ?, updated_at = UTC_TIMESTAMP() WHERE id = ?",
-      [fullUrl, userId],
+      [avatarUrl, userId],
     );
 
-    return res.status(200).json({ url: fullUrl });
+    return res.status(200).json({ url: avatarUrl });
   },
 );
 
