@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { countries } from "../data/countries";
+import { toast } from "./ui/Toast";
 
 type ProfileForm = {
   firstName?: string;
@@ -24,6 +25,16 @@ export default function ProfileTab() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarImageLoaded, setAvatarImageLoaded] = useState(false);
+  const [avatarImageError, setAvatarImageError] = useState(false);
+
+  const avatarSource = avatarPreview ?? user?.profileImage ?? null;
+  const avatarInitials = (user?.firstName || user?.lastName || "U")
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   useEffect(() => {
     setForm({
@@ -36,12 +47,16 @@ export default function ProfileTab() {
     });
     setAvatarPreview(user?.profileImage ?? null);
     setAvatarFile(null);
+    setAvatarImageLoaded(false);
+    setAvatarImageError(false);
   }, [user]);
 
   const onPickAvatar = (file?: File | null) => {
     if (!file) return;
 
     setAvatarFile(file);
+    setAvatarImageError(false);
+    setAvatarImageLoaded(false);
     setAvatarPreview(URL.createObjectURL(file));
   };
 
@@ -95,7 +110,10 @@ export default function ProfileTab() {
       }
 
       setAvatarFile(null);
+      setAvatarImageLoaded(false);
+      setAvatarImageError(false);
       setSaved(true);
+      toast.success("Profile photo updated", "Avatar updated successfully.");
       setTimeout(() => setSaved(false), 2000);
     } catch (err: any) {
       setError(err?.message || "Failed to upload avatar");
@@ -342,16 +360,28 @@ export default function ProfileTab() {
 
         <div className="order-1 col-span-1 lg:order-2 lg:col-span-1">
           <div className="rounded-lg border bg-white p-4 text-center">
-            <div className="mx-auto h-36 w-36 overflow-hidden rounded-full border-[3px] border-pink-100 bg-gradient-to-br from-[#fff0f3] to-[#fffaf0] shadow-[0_10px_20px_rgba(255,93,160,0.1)]">
-              {avatarPreview ? (
-                <img
-                  src={avatarPreview}
-                  alt="avatar"
-                  className="h-full w-full object-cover"
-                />
+            <div className="relative mx-auto h-36 w-36 overflow-hidden rounded-full border-[3px] border-pink-100 bg-gradient-to-br from-[#fff0f3] to-[#fffaf0] shadow-[0_10px_20px_rgba(255,93,160,0.1)]">
+              {avatarSource && !avatarImageError ? (
+                <>
+                  {!avatarImageLoaded && (
+                    <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-[#ffe4ea] to-[#fffaf0]" />
+                  )}
+                  <img
+                    src={avatarSource}
+                    alt="avatar"
+                    onLoad={() => setAvatarImageLoaded(true)}
+                    onError={() => {
+                      setAvatarImageError(true);
+                      setAvatarImageLoaded(false);
+                    }}
+                    className={`h-full w-full object-cover transition-opacity duration-200 ${
+                      avatarImageLoaded ? "opacity-100" : "opacity-0"
+                    }`}
+                  />
+                </>
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-3xl font-black text-pink-600">
-                  {(user?.firstName || "U")[0]}
+                  {avatarInitials || "U"}
                 </div>
               )}
             </div>
