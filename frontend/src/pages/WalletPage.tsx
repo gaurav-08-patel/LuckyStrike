@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import SiteHeader from "../components/SiteHeader";
+import { toast } from "../components/ui/Toast";
 import { useAuth } from "../context/AuthContext";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -221,6 +222,10 @@ function WalletPage() {
       setSelectedAmount(50);
       setCustomAmount("");
       setIsTopupModalOpen(false);
+      toast.success(
+        "Top-up successful",
+        `Wallet topped up with ${formattedAmount}.`,
+      );
     } catch (error) {
       const message =
         error instanceof Error
