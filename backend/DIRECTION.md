@@ -28,7 +28,15 @@ Completed features:
 - backend bootstrap and API setup
 - JWT auth flow and protected routes
 - profile and user management routes
+- profile update flow using PATCH with auth refresh after save
+- avatar upload flow using Cloudinary and storing full remote URLs
+- user profile image support with placeholder initials and image fallback UI
 - wallet balance system and transaction history
+- wallet top-up flow with success toast feedback
+- top-up and transaction activity on the frontend wallet page
+- account/profile page with mobile-friendly dashboard layout
+- sidebar/account UX improvements and responsive mobile drawer behavior
+- mobile-safe profile action layout for Edit / Cancel / Save controls
 - draw creation and draw filtering routes
 - draw detail route supporting either id or draw_code
 - ticket purchase flow
@@ -43,13 +51,16 @@ Completed features:
 - UTC-safe date conversion for database inserts
 - backend public asset serving for banner images
 - draw banner `image` field in DB
-- updated schema in local MariaDB
+- local schema updates including `profile_image` support
+- frontend toast system for success and error feedback across major actions
 
-Current known focus:
+Current working state:
 
-- maintain the local DB schema in sync with code
-- keep winner records and public image URLs working reliably
-- finalise production-ready email config and environment setup
+- the app is functional end-to-end for auth, profile management, wallet flow, tickets, and winners
+- the profile avatar image is persisted as a full Cloudinary URL
+- the frontend is actively polished for mobile responsiveness and account UX
+- environment variables for Cloudinary and DB config must remain in sync with local `.env` files
+- production email and payment gateway integrations are still the remaining external-service work
 
 ---
 
@@ -141,13 +152,20 @@ CREATE TABLE IF NOT EXISTS users (
   gender VARCHAR(20) NULL,
   nationality VARCHAR(100) NULL,
   country_of_residence VARCHAR(100) NULL,
+  profile_image VARCHAR(500) NULL,
   wallet_balance DECIMAL(10,2) NOT NULL DEFAULT 0,
   is_phone_verified BOOLEAN NOT NULL DEFAULT FALSE,
   is_admin BOOLEAN NOT NULL DEFAULT FALSE,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  created_at DATETIME DEFAULT UTC_TIMESTAMP,
+  updated_at DATETIME DEFAULT UTC_TIMESTAMP ON UPDATE UTC_TIMESTAMP
 ) ENGINE=InnoDB;
 ```
+
+Important note:
+
+- `profile_image` stores the full Cloudinary URL, not a local file path
+- frontend code expects `profileImage` on the client and `profile_image` in MySQL
+- the app refreshes `/api/auth/me` after profile updates so the latest data is immediately reflected in auth state
 
 ### wallet_transaction_history
 
