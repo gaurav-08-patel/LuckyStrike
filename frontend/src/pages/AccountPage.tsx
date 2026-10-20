@@ -23,7 +23,7 @@ function AccountPage({ role }: AccountPageProps) {
   }
 
   const isActualAdmin = user.isAdmin === true;
-  const effectiveRole = isActualAdmin ? "admin" : "user";
+  const effectiveRole = role === "admin" && isActualAdmin ? "admin" : "user";
 
   if (role === "admin" && !isActualAdmin) {
     return <Navigate to="/user/profile" replace />;
@@ -78,7 +78,7 @@ function AccountPage({ role }: AccountPageProps) {
   );
 
   const renderTabContent = () => {
-    if (effectiveRole === "admin") {
+    if (role === "admin" && isActualAdmin) {
       switch (currentTab) {
         case "overview":
           return (
@@ -153,7 +153,7 @@ function AccountPage({ role }: AccountPageProps) {
     }
   };
 
-  const headerTitle = effectiveRole === "admin" ? "Admin" : "User";
+  const headerTitle = role === "admin" && isActualAdmin ? "Admin" : "User";
   const headerSubtitle =
     effectiveRole === "admin" ? "Admin account" : "My account";
 
