@@ -13,6 +13,10 @@ function AccountPage({ role }: AccountPageProps) {
   const { tab } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isActualAdmin = Boolean(user?.isAdmin);
+  const effectiveRole =
+    role === "admin" ? (isActualAdmin ? "admin" : "user") : "user";
+  const allowedRole = role === "admin" ? "admin" : "user";
 
   const userTabs = [
     { key: "profile", label: "Profile", link: "/user/profile" },
@@ -29,13 +33,24 @@ function AccountPage({ role }: AccountPageProps) {
     { key: "settings", label: "Settings", link: "/admin/settings" },
   ];
 
-  const tabs = role === "admin" ? adminTabs : userTabs;
-  const currentTab =
-    tab && tabs.some((item) => item.key === tab) ? tab : tabs[0].key;
+  const tabs = effectiveRole === "admin" ? adminTabs : userTabs;
+  const fallbackTab = tabs[0].key;
+  const isKnownTab = Boolean(tab && tabs.some((item) => item.key === tab));
 
-  if (role === "admin" && !user?.isAdmin) {
+  if (allowedRole === "admin" && !isActualAdmin) {
     return <Navigate to="/user/profile" replace />;
   }
+
+  if (tab && !isKnownTab) {
+    return (
+      <Navigate
+        to={role === "admin" ? "/admin/overview" : "/user/profile"}
+        replace
+      />
+    );
+  }
+
+  const currentTab = tab ?? fallbackTab;
 
   const sidebar = (
     <nav className="space-y-2">
@@ -58,7 +73,7 @@ function AccountPage({ role }: AccountPageProps) {
   );
 
   const renderTabContent = () => {
-    if (role === "admin") {
+    if (effectiveRole === "admin") {
       switch (currentTab) {
         case "overview":
           return (
@@ -124,17 +139,6 @@ function AccountPage({ role }: AccountPageProps) {
     switch (currentTab) {
       case "profile":
         return <ProfileTab />;
-      case "tickets":
-        return (
-          <div className="rounded-[24px] border-[3px] border-ink bg-[#f2f6ff] p-6 shadow-[5px_5px_0_#171310]">
-            <h2 className="font-display text-[2rem] uppercase leading-none tracking-[-0.05em] text-ink">
-              Tickets
-            </h2>
-            <p className="mt-3 text-sm text-ink/70">
-              Recent entries, status, and draw activity will appear here.
-            </p>
-          </div>
-        );
       case "activity":
         return <ActivityTab />;
       case "support":
@@ -146,8 +150,8 @@ function AccountPage({ role }: AccountPageProps) {
 
   return (
     <AccountLayout
-      title={role === "admin" ? "Admin" : "User"}
-      subtitle={role === "admin" ? "Admin account" : "My account"}
+      title={effectiveRole === "admin" ? "Admin" : "User"}
+      subtitle={effectiveRole === "admin" ? "Admin account" : "My account"}
       sidebar={sidebar}
     >
       {renderTabContent()}
