@@ -50,6 +50,23 @@ interface OverviewSummaryRow extends RowDataPacket {
   wallet_volume_30d: string | number;
 }
 
+interface AdminUserRow extends RowDataPacket {
+  id: number;
+  phone_number: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  gender: string | null;
+  nationality: string | null;
+  country_of_residence: string | null;
+  profile_image: string | null;
+  wallet_balance: string | number | null;
+  is_phone_verified: number | boolean | string | null;
+  is_admin: number | boolean | string | null;
+  created_at: Date | string | null;
+  updated_at: Date | string | null;
+}
+
 const requireAdmin = async (
   req: any,
   res: any,
@@ -212,6 +229,102 @@ router.get("/admin/overview", requireAuth, requireAdmin, async (_req, res) => {
           : "Unable to load admin overview data.",
     });
   }
+});
+
+router.get("/admin/users", requireAuth, requireAdmin, async (req, res) => {
+    const rawLimit = Number(req.query.limit ?? 15);
+    const rawOffset = Number(req.query.offset ?? 0);
+    const search = String(req.query.search ?? "").trim();
+    const role = String(req.query.role ?? "all").toLowerCase();
+    const verification = String(req.query.verification ?? "all").toLowerCase();
+    const sortOrder = String(req.query.sortOrder ?? "desc").toLowerCase();
+
+    const allowedRoles = ["all", "admin", "user"] as const;
+    const allowedVerification = ["all", "verified", "unverified"] as const;
+    const allowedSortOrders = ["asc", "desc"] as const;
+
+    if (!allowedRoles.includes(role as any)) {
+      return res.status(400).json({ message: "role must be one of: all, admin, user." });
+    }
+
+    if (!allowedVerification.includes(verification as any)) {
+      return res.status(400).json({
+        message: "verification must be one of: all, verified, unverified.",
+      });
+    }
+
+    if (!allowedSortOrders.includes(sortOrder as any)) {
+      return res.status(400).json({ message: "sortOrder must be one of: asc, desc." });
+    }
+
+    const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 100) : 15;
+    const offset = Number.isFinite(rawOffset) && rawOffset >= 0 ? rawOffset : 0;
+
+    const conditions: string[] = [];
+    const params: unknown[] = [];
+
+    if (role !== "all") {
+      conditions.push("is_admin = ?");
+      params.push(role === "admin" ? 1 : 0);
+    }
+
+    if (verification !== "all") {
+      conditions.push("is_phone_verified = ?");
+      params.push(verification === "verified" ? 1 : 0);
+    }
+
+    if (search) {
+      const searchValue = `%${search.toLowerCase()}%`;
+      conditions.push(
+        "(LOWER(COALESCE(first_name, '')) LIKE ? OR LOWER(COALESCE(last_name, '')) LIKE ? OR LOWER(COALESCE(email, '')) LIKE ? OR LOWER(COALESCE(phone_number, '')) LIKE ? OR CAST(id AS CHAR) LIKE ?)",
+      );
+      params.push(
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+      );
+    }
+
+    const whereClause = conditions.length > 0 ? ` WHERE ${conditions.join(" AND ")}` : "";
+
+    const [countRows] = await dbPool.query<RowDataPacket[]>(
+      `SELECT COUNT(*) AS total FROM users${whereClause}`,
+      params,
+    );
+
+    const total = Number(countRows[0]?.total ?? 0);
+
+    const query = `SELECT * FROM users${whereClause} ORDER BY created_at ${sortOrder} LIMIT ? OFFSET ?`;
+    const [rows] = await dbPool.query<AdminUserRow[]>(query, [...params, limit, offset]);
+
+    const users = rows.map((user) => ({
+      id: Number(user.id),
+      phoneNumber: user.phone_number,
+      firstName: user.first_name || "",
+      lastName: user.last_name || "",
+      fullName:
+        [user.first_name, user.last_name].filter(Boolean).join(" ") || "Unknown user",
+      email: user.email || "",
+      gender: user.gender || "",
+      nationality: user.nationality || "",
+      countryOfResidence: user.country_of_residence || "",
+      profileImage: user.profile_image || null,
+      walletBalance: Number(user.wallet_balance ?? 0),
+      isPhoneVerified: parseDbBooleanFlag(user.is_phone_verified),
+      isAdmin: parseDbBooleanFlag(user.is_admin),
+      createdAt: user.created_at,
+      updatedAt: user.updated_at,
+    }));
+
+    return res.status(200).json({
+      users,
+      total,
+      limit,
+      offset,
+      hasMore: offset + users.length < total,
+    });
 });
 
 router.post("/admin/draws", requireAuth, requireAdmin, async (req, res) => {
