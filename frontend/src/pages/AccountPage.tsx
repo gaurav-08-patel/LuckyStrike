@@ -15,8 +15,6 @@ function AccountPage({ role }: AccountPageProps) {
 
   const userTabs = [
     { key: "profile", label: "Profile", link: "/user/profile" },
-    { key: "security", label: "Security", link: "/user/security" },
-    { key: "wallet", label: "Wallet", link: "/user/wallet" },
     { key: "tickets", label: "Tickets", link: "/my-tickets" },
     { key: "activity", label: "Activity", link: "/user/activity" },
     { key: "support", label: "Support", link: "/user/support" },
@@ -125,28 +123,6 @@ function AccountPage({ role }: AccountPageProps) {
     switch (currentTab) {
       case "profile":
         return <ProfileTab />;
-      case "security":
-        return (
-          <div className="rounded-[24px] border-[3px] border-ink bg-[#fffdf7] p-6 shadow-[5px_5px_0_#171310]">
-            <h2 className="font-display text-[2rem] uppercase leading-none tracking-[-0.05em] text-ink">
-              Security
-            </h2>
-            <p className="mt-3 text-sm text-ink/70">
-              Update login security and verification settings here.
-            </p>
-          </div>
-        );
-      case "wallet":
-        return (
-          <div className="rounded-[24px] border-[3px] border-ink bg-[#fff7dc] p-6 shadow-[5px_5px_0_#171310]">
-            <h2 className="font-display text-[2rem] uppercase leading-none tracking-[-0.05em] text-ink">
-              Wallet
-            </h2>
-            <p className="mt-3 text-sm text-ink/70">
-              Wallet balance and transaction history can live here.
-            </p>
-          </div>
-        );
       case "tickets":
         return (
           <div className="rounded-[24px] border-[3px] border-ink bg-[#f2f6ff] p-6 shadow-[5px_5px_0_#171310]">
