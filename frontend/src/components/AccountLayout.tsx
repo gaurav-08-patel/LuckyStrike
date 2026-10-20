@@ -35,9 +35,10 @@ function AccountLayout({
   const email = user?.email || "No email provided";
   const roleLabel = user?.isAdmin === true ? "Admin account" : "User account";
   const avatarUrl = user?.profileImage ?? null;
-  const roleBadgeClasses = user?.isAdmin === true
-    ? "border-violet-700 bg-[linear-gradient(135deg,#f3e8ff_0%,#ede9fe_45%,#f5f3ff_100%)] text-violet-900 shadow-[2px_2px_0_#7c3aed]"
-    : "border-emerald-700 bg-[linear-gradient(135deg,#ecfdf5_0%,#d1fae5_45%,#f0fdf4_100%)] text-emerald-900 shadow-[2px_2px_0_#059669]";
+  const roleBadgeClasses =
+    user?.isAdmin === true
+      ? "border-violet-700 bg-[linear-gradient(135deg,#f3e8ff_0%,#ede9fe_45%,#f5f3ff_100%)] text-violet-900 shadow-[2px_2px_0_#7c3aed]"
+      : "border-emerald-700 bg-[linear-gradient(135deg,#ecfdf5_0%,#d1fae5_45%,#f0fdf4_100%)] text-emerald-900 shadow-[2px_2px_0_#059669]";
 
   const profileCard = (
     <div className="mb-5 rounded-[18px] border-[3px] border-ink bg-[linear-gradient(135deg,#fffaf5_0%,#f5efe9_45%,#fdf2f8_100%)] p-3 shadow-[4px_4px_0_#171310]">
@@ -110,10 +111,10 @@ function AccountLayout({
           </div>
         )}
 
-        <div className="mt-4 flex items-start gap-5 lg:mt-6">
+        <div className="mt-4 flex flex-col gap-4 lg:mt-6 lg:flex-row lg:items-start lg:gap-5">
           {sidebar && (
             <>
-              <aside className="hidden w-[260px] shrink-0 self-start rounded-[24px] border-[3px] border-ink bg-[#fffaf7] p-3 shadow-[6px_6px_0_#171310] lg:flex lg:flex-col">
+              <aside className="hidden w-[260px] shrink-0 self-start rounded-[24px] border-[3px] border-ink bg-[#fffaf7] p-3 shadow-[6px_6px_0_#171310] lg:sticky lg:top-[100px] lg:flex lg:flex-col">
                 <div className="mb-4 px-2 pt-2">
                   <p className="text-[0.62rem] font-black uppercase tracking-[0.14em] text-ink/60">
                     {subtitle}
@@ -224,7 +225,7 @@ function AccountLayout({
             </>
           )}
 
-          <div className="min-h-[500px] flex-1">{children}</div>
+          <div className="min-h-[500px] w-full min-w-0 flex-1">{children}</div>
         </div>
       </div>
 
