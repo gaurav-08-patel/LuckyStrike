@@ -53,6 +53,8 @@ Completed features:
 - draw banner `image` field in DB
 - local schema updates including `profile_image` support
 - frontend toast system for success and error feedback across major actions
+- support ticket form with backend persistence to MySQL via `support_requests` table
+- admin support review API for listing requests and updating status values to received / in_review / resolved / closed
 
 Current working state:
 
@@ -254,6 +256,26 @@ CREATE TABLE IF NOT EXISTS winners (
     ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 ```
+
+### support_requests
+
+```sql
+CREATE TABLE IF NOT EXISTS support_requests (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  issue_type VARCHAR(50) NOT NULL,
+  subject VARCHAR(200) NOT NULL,
+  message TEXT NOT NULL,
+  status ENUM('received', 'in_review', 'resolved', 'closed') NOT NULL DEFAULT 'received',
+  created_at DATETIME DEFAULT UTC_TIMESTAMP,
+  updated_at DATETIME DEFAULT UTC_TIMESTAMP ON UPDATE UTC_TIMESTAMP,
+  CONSTRAINT fk_support_requests_user
+    FOREIGN KEY (user_id) REFERENCES users(id)
+    ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB;
+```
+
+This table stores support tickets submitted from the account Support tab. Each request is associated with a user and can later be reviewed in an admin console or exported for email automation.
 
 ---
 
