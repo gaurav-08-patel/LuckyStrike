@@ -110,10 +110,10 @@ function AccountLayout({
           </div>
         )}
 
-        <div className="mt-4 flex gap-5 lg:mt-6">
+        <div className="mt-4 flex items-start gap-5 lg:mt-6">
           {sidebar && (
             <>
-              <aside className="hidden w-[260px] shrink-0 rounded-[24px] border-[3px] border-ink bg-[#fffaf7] p-3 shadow-[6px_6px_0_#171310] lg:flex lg:flex-col">
+              <aside className="hidden w-[260px] shrink-0 self-start rounded-[24px] border-[3px] border-ink bg-[#fffaf7] p-3 shadow-[6px_6px_0_#171310] lg:flex lg:flex-col">
                 <div className="mb-4 px-2 pt-2">
                   <p className="text-[0.62rem] font-black uppercase tracking-[0.14em] text-ink/60">
                     {subtitle}
