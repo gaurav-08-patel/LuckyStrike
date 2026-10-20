@@ -1,5 +1,6 @@
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import AccountLayout from "../components/AccountLayout";
+import AdminOverviewTab from "../components/AdminOverviewTab";
 import ActivityTab from "../components/ActivityTab";
 import ProfileTab from "../components/ProfileTab";
 import SupportTab from "../components/SupportTab";
@@ -81,16 +82,7 @@ function AccountPage({ role }: AccountPageProps) {
     if (role === "admin" && isActualAdmin) {
       switch (currentTab) {
         case "overview":
-          return (
-            <div className="rounded-[24px] border-[3px] border-ink bg-[#fffaf7] p-6 shadow-[5px_5px_0_#171310]">
-              <h2 className="font-display text-[2rem] uppercase leading-none tracking-[-0.05em] text-ink">
-                Overview
-              </h2>
-              <p className="mt-3 text-sm text-ink/70">
-                Admin dashboard summary and key metrics live here.
-              </p>
-            </div>
-          );
+          return <AdminOverviewTab />;
         case "draws":
           return (
             <div className="rounded-[24px] border-[3px] border-ink bg-[#f4f6ff] p-6 shadow-[5px_5px_0_#171310]">
