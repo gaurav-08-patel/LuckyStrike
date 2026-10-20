@@ -2,6 +2,7 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 import AccountLayout from "../components/AccountLayout";
 import AdminOverviewTab from "../components/AdminOverviewTab";
 import ActivityTab from "../components/ActivityTab";
+import DrawsTab from "../components/DrawsTab";
 import ProfileTab from "../components/ProfileTab";
 import SupportTab from "../components/SupportTab";
 import { useAuth } from "../context/AuthContext";
@@ -84,16 +85,7 @@ function AccountPage({ role }: AccountPageProps) {
         case "overview":
           return <AdminOverviewTab />;
         case "draws":
-          return (
-            <div className="rounded-[24px] border-[3px] border-ink bg-[#f4f6ff] p-6 shadow-[5px_5px_0_#171310]">
-              <h2 className="font-display text-[2rem] uppercase leading-none tracking-[-0.05em] text-ink">
-                Draws
-              </h2>
-              <p className="mt-3 text-sm text-ink/70">
-                Manage campaign schedules, prize pools, and draw states here.
-              </p>
-            </div>
-          );
+          return <DrawsTab />;
         case "users":
           return (
             <div className="rounded-[24px] border-[3px] border-ink bg-[#f0fff5] p-6 shadow-[5px_5px_0_#171310]">
