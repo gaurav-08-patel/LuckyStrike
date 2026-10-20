@@ -6,6 +6,7 @@ import adminDrawRoutes from "./routes/adminDraws";
 import drawsRoutes from "./routes/draws";
 import ticketsRoutes from "./routes/tickets";
 import userRoutes from "./routes/users";
+import supportRoutes from "./routes/support";
 import walletRoutes from "./routes/wallet";
 import winnersRoutes from "./routes/winners";
 
@@ -26,6 +27,7 @@ app.get("/api/health", (_req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/support", supportRoutes);
 app.use("/api", walletRoutes);
 app.use("/api", adminDrawRoutes);
 app.use("/api", drawsRoutes);
