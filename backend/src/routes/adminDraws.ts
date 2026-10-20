@@ -41,32 +41,12 @@ interface AdminRow extends RowDataPacket {
   is_admin: number | boolean;
 }
 
-interface DrawRow extends RowDataPacket {
-  id: number;
-  draw_code: string;
-  draw_type: "daily" | "weekly" | "monthly";
-  title: string;
-  prize_title: string;
-  prize_amount: string | number;
-  ticket_price: string | number;
-  max_tickets: number;
-  tickets_sold: number;
-  draw_at: Date | string;
-  expires_at: Date | string;
-  status: string;
-  winner_user_id: number | null;
-  rng_seed_hash: string | null;
-  rng_seed: string | null;
-  created_at: Date | string;
-}
-
-interface TicketRow extends RowDataPacket {
-  id: number;
-  ticket_code: string;
-  draw_id: number;
-  user_id: number;
-  status: string;
-  created_at: Date | string;
+interface OverviewSummaryRow extends RowDataPacket {
+  total_users: string | number;
+  active_draws: string | number;
+  tickets_sold_7d: string | number;
+  open_support_requests: string | number;
+  wallet_volume_30d: string | number;
 }
 
 const requireAdmin = async (
@@ -95,6 +75,143 @@ const requireAdmin = async (
 
   next();
 };
+
+router.get("/admin/overview", requireAuth, requireAdmin, async (_req, res) => {
+  try {
+    const [summaryRows] = await dbPool.query<OverviewSummaryRow[]>(
+      `SELECT
+        (SELECT COUNT(*) FROM users) AS total_users,
+        (SELECT COUNT(*) FROM draws WHERE status = 'active') AS active_draws,
+        (SELECT COUNT(*) FROM tickets WHERE created_at >= NOW() - INTERVAL 7 DAY) AS tickets_sold_7d,
+        (SELECT COUNT(*) FROM support_requests WHERE status IN ('received', 'in_review')) AS open_support_requests,
+        (SELECT COALESCE(SUM(amount), 0) FROM wallet_transaction_history WHERE type = 'topup' AND created_at >= NOW() - INTERVAL 30 DAY) AS wallet_volume_30d`,
+    );
+
+    const summary = summaryRows[0] ?? {
+      total_users: 0,
+      active_draws: 0,
+      tickets_sold_7d: 0,
+      open_support_requests: 0,
+      wallet_volume_30d: 0,
+    };
+
+    const [activeDrawRows] = await dbPool.query<RowDataPacket[]>(
+      `SELECT id, draw_code, title, prize_title, prize_amount, ticket_price, max_tickets, tickets_sold, draw_at, expires_at, status
+       FROM draws
+       ORDER BY created_at DESC
+       LIMIT 5`,
+    );
+
+    const [recentTicketRows] = await dbPool.query<RowDataPacket[]>(
+      `SELECT
+         t.id,
+         t.ticket_code,
+         t.user_id,
+         t.created_at,
+         u.first_name,
+         u.last_name,
+         d.draw_code,
+         d.title AS draw_title,
+         d.prize_amount,
+         d.ticket_price
+       FROM tickets t
+       LEFT JOIN users u ON u.id = t.user_id
+       LEFT JOIN draws d ON d.id = t.draw_id
+       ORDER BY t.created_at DESC
+       LIMIT 8`,
+    );
+
+    const [recentWinnerRows] = await dbPool.query<RowDataPacket[]>(
+      `SELECT
+         w.id,
+         w.draw_code,
+         w.winner_name,
+         w.prize_amount,
+         w.announced_at,
+         d.title AS draw_title
+       FROM winners w
+       LEFT JOIN draws d ON d.id = w.draw_id
+       ORDER BY w.announced_at DESC
+       LIMIT 5`,
+    );
+
+    const [recentSupportRows] = await dbPool.query<RowDataPacket[]>(
+      `SELECT
+         sr.id,
+         sr.issue_type,
+         sr.subject,
+         sr.status,
+         sr.created_at,
+         u.first_name,
+         u.last_name
+       FROM support_requests sr
+       LEFT JOIN users u ON u.id = sr.user_id
+       ORDER BY sr.created_at DESC
+       LIMIT 5`,
+    );
+
+    return res.status(200).json({
+      summary: {
+        totalUsers: Number(summary.total_users ?? 0),
+        activeDraws: Number(summary.active_draws ?? 0),
+        ticketsSoldLast7Days: Number(summary.tickets_sold_7d ?? 0),
+        openSupportRequests: Number(summary.open_support_requests ?? 0),
+        walletVolumeLast30Days: Number(summary.wallet_volume_30d ?? 0),
+      },
+      activeDraws: activeDrawRows.map((row) => ({
+        id: Number(row.id),
+        drawCode: row.draw_code,
+        title: row.title,
+        prizeTitle: row.prize_title,
+        prizeAmount: Number(row.prize_amount ?? 0),
+        ticketPrice: Number(row.ticket_price ?? 0),
+        maxTickets: Number(row.max_tickets ?? 0),
+        ticketsSold: Number(row.tickets_sold ?? 0),
+        drawAt: row.draw_at,
+        expiresAt: row.expires_at,
+        status: row.status,
+      })),
+      recentTicketPurchases: recentTicketRows.map((row) => ({
+        id: Number(row.id),
+        ticketCode: row.ticket_code,
+        userId: Number(row.user_id),
+        userName:
+          [row.first_name, row.last_name].filter(Boolean).join(" ") ||
+          "Unknown user",
+        drawCode: row.draw_code,
+        drawTitle: row.draw_title,
+        prizeAmount: Number(row.prize_amount ?? 0),
+        ticketPrice: Number(row.ticket_price ?? 0),
+        createdAt: row.created_at,
+      })),
+      recentWinners: recentWinnerRows.map((row) => ({
+        id: Number(row.id),
+        drawCode: row.draw_code,
+        winnerName: row.winner_name,
+        prizeAmount: Number(row.prize_amount ?? 0),
+        announcedAt: row.announced_at,
+        drawTitle: row.draw_title,
+      })),
+      recentSupportRequests: recentSupportRows.map((row) => ({
+        id: Number(row.id),
+        issueType: row.issue_type,
+        subject: row.subject,
+        status: row.status,
+        createdAt: row.created_at,
+        userName:
+          [row.first_name, row.last_name].filter(Boolean).join(" ") ||
+          "Unknown user",
+      })),
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message:
+        error instanceof Error
+          ? error.message
+          : "Unable to load admin overview data.",
+    });
+  }
+});
 
 router.post("/admin/draws", requireAuth, requireAdmin, async (req, res) => {
   const {
