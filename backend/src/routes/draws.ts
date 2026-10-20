@@ -89,6 +89,9 @@ router.get("/draws", async (req, res) => {
 router.get("/admin/draws", requireAuth, async (req, res) => {
   const status = String(req.query.status || "all").toLowerCase();
   const drawType = String(req.query.drawType || "all").toLowerCase();
+  const rawLimit = Number(req.query.limit ?? 15);
+  const rawOffset = Number(req.query.offset ?? 0);
+  const search = String(req.query.search ?? "").trim();
 
   const allowedStatuses = ["active", "completed", "closed", "all"] as const;
 
@@ -104,9 +107,11 @@ router.get("/admin/draws", requireAuth, async (req, res) => {
     });
   }
 
-  let query = "SELECT * FROM draws";
-  const params: unknown[] = [];
+  const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 50) : 15;
+  const offset = Number.isFinite(rawOffset) && rawOffset >= 0 ? rawOffset : 0;
+
   const conditions: string[] = [];
+  const params: unknown[] = [];
 
   if (status !== "all") {
     conditions.push("status = ?");
@@ -118,22 +123,41 @@ router.get("/admin/draws", requireAuth, async (req, res) => {
     params.push(drawType);
   }
 
-  if (conditions.length > 0) {
-    query += ` WHERE ${conditions.join(" AND ")}`;
+  if (search) {
+    const searchValue = `%${search.toLowerCase()}%`;
+    conditions.push(
+      "(LOWER(title) LIKE ? OR LOWER(draw_code) LIKE ? OR CAST(id AS CHAR) LIKE ?)",
+    );
+    params.push(searchValue, searchValue, searchValue);
   }
 
-  query += " ORDER BY draw_at DESC";
+  const whereClause = conditions.length > 0 ? ` WHERE ${conditions.join(" AND ")}` : "";
 
-  const [rows] = await dbPool.query<DrawRow[]>(query, params);
+  const [countRows] = await dbPool.query<RowDataPacket[]>(
+    `SELECT COUNT(*) AS total FROM draws${whereClause}`,
+    params,
+  );
 
-  const response = rows.map((draw) => ({
+  const total = Number(countRows[0]?.total ?? 0);
+
+  const query = `SELECT * FROM draws${whereClause} ORDER BY draw_at DESC LIMIT ? OFFSET ?`;
+
+  const [rows] = await dbPool.query<DrawRow[]>(query, [...params, limit, offset]);
+
+  const draws = rows.map((draw) => ({
     ...draw,
     prize_amount: Number(draw.prize_amount),
     ticket_price: Number(draw.ticket_price),
     remaining_tickets: Number(draw.max_tickets) - Number(draw.tickets_sold),
   }));
 
-  return res.status(200).json(response);
+  return res.status(200).json({
+    draws,
+    total,
+    limit,
+    offset,
+    hasMore: offset + draws.length < total,
+  });
 });
 
 router.get("/draws/:id", async (req, res) => {
