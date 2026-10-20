@@ -33,9 +33,9 @@ function AccountLayout({
       .map((part) => part[0]?.toUpperCase() ?? "")
       .join("") || "U";
   const email = user?.email || "No email provided";
-  const roleLabel = user?.isAdmin ? "Admin account" : "User account";
+  const roleLabel = user?.isAdmin === true ? "Admin account" : "User account";
   const avatarUrl = user?.profileImage ?? null;
-  const roleBadgeClasses = user?.isAdmin
+  const roleBadgeClasses = user?.isAdmin === true
     ? "border-violet-700 bg-[linear-gradient(135deg,#f3e8ff_0%,#ede9fe_45%,#f5f3ff_100%)] text-violet-900 shadow-[2px_2px_0_#7c3aed]"
     : "border-emerald-700 bg-[linear-gradient(135deg,#ecfdf5_0%,#d1fae5_45%,#f0fdf4_100%)] text-emerald-900 shadow-[2px_2px_0_#059669]";
 

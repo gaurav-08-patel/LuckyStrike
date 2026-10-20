@@ -35,6 +35,43 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const TOKEN_STORAGE_KEY = "luckyStrikeToken";
 
+const parseBooleanFlag = (value: unknown): boolean => {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value === "number") {
+    return value === 1;
+  }
+
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["1", "true", "yes"].includes(normalized)) {
+      return true;
+    }
+    if (["0", "false", "no", ""].includes(normalized)) {
+      return false;
+    }
+  }
+
+  return false;
+};
+
+const normalizeAuthUser = (value: unknown): AuthUser | null => {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const user = value as Record<string, unknown>;
+
+  return {
+    ...user,
+    walletBalance: Number(user.walletBalance ?? 0),
+    isPhoneVerified: parseBooleanFlag(user.isPhoneVerified),
+    isAdmin: parseBooleanFlag(user.isAdmin),
+  } as AuthUser;
+};
+
 const clearStoredToken = () => {
   localStorage.removeItem(TOKEN_STORAGE_KEY);
 };
@@ -76,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         const data = await response.json();
-        setUserState(data.user ?? null);
+        setUserState(normalizeAuthUser(data.user));
       } catch {
         clearStoredToken();
         setUserState(null);
@@ -99,7 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    setUserState(nextUser);
+    setUserState(normalizeAuthUser(nextUser));
   };
 
   const logoutUser = () => {

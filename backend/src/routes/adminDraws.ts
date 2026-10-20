@@ -5,6 +5,7 @@ import { dbPool } from "../config/db";
 import { requireAuth } from "../middleware/auth";
 import { generateUniqueDisplayCode } from "../utils/displayCodes";
 import { settleDraw } from "../utils/drawSettlement";
+import { parseDbBooleanFlag } from "../utils/flags";
 
 const router = Router();
 
@@ -38,7 +39,7 @@ const resolveDrawImage = (prizeAmount: number): string => {
 };
 
 interface AdminRow extends RowDataPacket {
-  is_admin: number | boolean;
+  is_admin: number | boolean | string | null;
 }
 
 interface OverviewSummaryRow extends RowDataPacket {
@@ -66,7 +67,7 @@ const requireAdmin = async (
     [userId],
   );
 
-  const isAdmin = Boolean(rows[0]?.is_admin);
+  const isAdmin = parseDbBooleanFlag(rows[0]?.is_admin);
 
   if (!isAdmin) {
     res.status(403).json({ message: "Admin only." });

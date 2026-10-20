@@ -2,6 +2,7 @@ import { Router } from "express";
 import type { RowDataPacket } from "mysql2";
 import { dbPool } from "../config/db";
 import { requireAuth } from "../middleware/auth";
+import { parseDbBooleanFlag } from "../utils/flags";
 
 const router = Router();
 
@@ -29,7 +30,7 @@ interface UserRow extends RowDataPacket {
   first_name: string | null;
   last_name: string | null;
   email: string | null;
-  is_admin: number | boolean;
+  is_admin: number | boolean | string | null;
 }
 
 const requireAdmin = async (
@@ -49,7 +50,7 @@ const requireAdmin = async (
     [userId],
   );
 
-  const isAdmin = Boolean(rows[0]?.is_admin);
+  const isAdmin = parseDbBooleanFlag(rows[0]?.is_admin);
 
   if (!isAdmin) {
     res.status(403).json({ message: "Admin only." });

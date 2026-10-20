@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import type { RowDataPacket } from "mysql2";
 import { dbPool } from "../config/db";
 import { requireAuth } from "../middleware/auth";
+import { parseDbBooleanFlag } from "../utils/flags";
 
 const router = Router();
 const OTP_TTL_MS = 5 * 60 * 1000;
@@ -19,8 +20,8 @@ interface DbUserRow extends RowDataPacket {
   nationality: string | null;
   country_of_residence: string | null;
   wallet_balance: string | number | null;
-  is_phone_verified: number | boolean;
-  is_admin: number | boolean;
+  is_phone_verified: number | boolean | string | null;
+  is_admin: number | boolean | string | null;
   created_at: Date | string | null;
   updated_at: Date | string | null;
 }
@@ -44,8 +45,8 @@ const sanitizeUser = (user: DbUserRow) => ({
   nationality: user.nationality || "",
   countryOfResidence: user.country_of_residence || "",
   walletBalance: Number(user.wallet_balance ?? 0),
-  isPhoneVerified: Boolean(user.is_phone_verified),
-  isAdmin: Boolean(user.is_admin),
+  isPhoneVerified: parseDbBooleanFlag(user.is_phone_verified),
+  isAdmin: parseDbBooleanFlag(user.is_admin),
   createdAt: user.created_at,
   updatedAt: user.updated_at,
 });

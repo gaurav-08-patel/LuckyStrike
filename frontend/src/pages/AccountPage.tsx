@@ -22,7 +22,7 @@ function AccountPage({ role }: AccountPageProps) {
     return <Navigate to="/" replace />;
   }
 
-  const isActualAdmin = Boolean(user.isAdmin);
+  const isActualAdmin = user.isAdmin === true;
   const effectiveRole = isActualAdmin ? "admin" : "user";
 
   if (role === "admin" && !isActualAdmin) {
