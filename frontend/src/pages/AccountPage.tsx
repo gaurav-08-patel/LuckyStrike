@@ -1,7 +1,8 @@
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import AccountLayout from "../components/AccountLayout";
-import { useAuth } from "../context/AuthContext";
 import ProfileTab from "../components/ProfileTab";
+import SupportTab from "../components/SupportTab";
+import { useAuth } from "../context/AuthContext";
 
 type AccountPageProps = {
   role: "user" | "admin";
@@ -18,6 +19,7 @@ function AccountPage({ role }: AccountPageProps) {
     { key: "wallet", label: "Wallet", link: "/user/wallet" },
     { key: "tickets", label: "Tickets", link: "/my-tickets" },
     { key: "activity", label: "Activity", link: "/user/activity" },
+    { key: "support", label: "Support", link: "/user/support" },
   ];
 
   const adminTabs = [
@@ -167,6 +169,8 @@ function AccountPage({ role }: AccountPageProps) {
             </p>
           </div>
         );
+      case "support":
+        return <SupportTab />;
       default:
         return null;
     }
