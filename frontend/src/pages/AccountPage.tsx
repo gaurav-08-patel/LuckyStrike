@@ -1,5 +1,6 @@
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import AccountLayout from "../components/AccountLayout";
+import ActivityTab from "../components/ActivityTab";
 import ProfileTab from "../components/ProfileTab";
 import SupportTab from "../components/SupportTab";
 import { useAuth } from "../context/AuthContext";
@@ -135,16 +136,7 @@ function AccountPage({ role }: AccountPageProps) {
           </div>
         );
       case "activity":
-        return (
-          <div className="rounded-[24px] border-[3px] border-ink bg-[#f4fef7] p-6 shadow-[5px_5px_0_#171310]">
-            <h2 className="font-display text-[2rem] uppercase leading-none tracking-[-0.05em] text-ink">
-              Activity
-            </h2>
-            <p className="mt-3 text-sm text-ink/70">
-              User activity records, notices, and recent updates belong here.
-            </p>
-          </div>
-        );
+        return <ActivityTab />;
       case "support":
         return <SupportTab />;
       default:
