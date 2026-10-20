@@ -5,6 +5,7 @@ import ActivityTab from "../components/ActivityTab";
 import DrawsTab from "../components/DrawsTab";
 import ProfileTab from "../components/ProfileTab";
 import SupportTab from "../components/SupportTab";
+import UsersTab from "../components/UsersTab";
 import { useAuth } from "../context/AuthContext";
 
 type AccountPageProps = {
@@ -87,16 +88,7 @@ function AccountPage({ role }: AccountPageProps) {
         case "draws":
           return <DrawsTab />;
         case "users":
-          return (
-            <div className="rounded-[24px] border-[3px] border-ink bg-[#f0fff5] p-6 shadow-[5px_5px_0_#171310]">
-              <h2 className="font-display text-[2rem] uppercase leading-none tracking-[-0.05em] text-ink">
-                Users
-              </h2>
-              <p className="mt-3 text-sm text-ink/70">
-                Review accounts, permissions, and user-level activity.
-              </p>
-            </div>
-          );
+          return <UsersTab />;
         case "payments":
           return (
             <div className="rounded-[24px] border-[3px] border-ink bg-[#fff7dc] p-6 shadow-[5px_5px_0_#171310]">
