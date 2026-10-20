@@ -12,11 +12,22 @@ type AccountPageProps = {
 function AccountPage({ role }: AccountPageProps) {
   const { tab } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const isActualAdmin = Boolean(user?.isAdmin);
-  const effectiveRole =
-    role === "admin" ? (isActualAdmin ? "admin" : "user") : "user";
-  const allowedRole = role === "admin" ? "admin" : "user";
+  const { user, isAuthReady } = useAuth();
+
+  if (!isAuthReady) {
+    return null;
+  }
+
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
+  const isActualAdmin = Boolean(user.isAdmin);
+  const effectiveRole = isActualAdmin ? "admin" : "user";
+
+  if (role === "admin" && !isActualAdmin) {
+    return <Navigate to="/user/profile" replace />;
+  }
 
   const userTabs = [
     { key: "profile", label: "Profile", link: "/user/profile" },
@@ -37,17 +48,11 @@ function AccountPage({ role }: AccountPageProps) {
   const fallbackTab = tabs[0].key;
   const isKnownTab = Boolean(tab && tabs.some((item) => item.key === tab));
 
-  if (allowedRole === "admin" && !isActualAdmin) {
-    return <Navigate to="/user/profile" replace />;
-  }
+  const redirectPath =
+    effectiveRole === "admin" ? "/admin/overview" : "/user/profile";
 
   if (tab && !isKnownTab) {
-    return (
-      <Navigate
-        to={role === "admin" ? "/admin/overview" : "/user/profile"}
-        replace
-      />
-    );
+    return <Navigate to={redirectPath} replace />;
   }
 
   const currentTab = tab ?? fallbackTab;
@@ -148,10 +153,14 @@ function AccountPage({ role }: AccountPageProps) {
     }
   };
 
+  const headerTitle = effectiveRole === "admin" ? "Admin" : "User";
+  const headerSubtitle =
+    effectiveRole === "admin" ? "Admin account" : "My account";
+
   return (
     <AccountLayout
-      title={effectiveRole === "admin" ? "Admin" : "User"}
-      subtitle={effectiveRole === "admin" ? "Admin account" : "My account"}
+      title={headerTitle}
+      subtitle={headerSubtitle}
       sidebar={sidebar}
     >
       {renderTabContent()}
