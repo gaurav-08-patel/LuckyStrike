@@ -403,6 +403,86 @@ Key files:
 
 - GET /api/winners
 
+### Admin overview dashboard
+
+The admin overview tab is designed as a live operations dashboard. Its data is pulled from a single API so the frontend can render KPI cards, recent sales, current draws, recent winners, and open support tickets without multiple round-trips.
+
+Primary route:
+
+- GET /api/admin/overview
+
+Response shape:
+
+```json
+{
+  "summary": {
+    "totalUsers": 240,
+    "activeDraws": 8,
+    "ticketsSoldLast7Days": 450,
+    "openSupportRequests": 14,
+    "walletVolumeLast30Days": 18250.5
+  },
+  "activeDraws": [
+    {
+      "id": 12,
+      "drawCode": "DA-1001",
+      "title": "Weekend Rush",
+      "prizeTitle": "Tesla Model 3",
+      "prizeAmount": 35000,
+      "ticketPrice": 10,
+      "maxTickets": 200,
+      "ticketsSold": 162,
+      "drawAt": "2026-10-21T18:00:00.000Z",
+      "expiresAt": "2026-10-21T16:00:00.000Z",
+      "status": "active"
+    }
+  ],
+  "recentTicketPurchases": [
+    {
+      "id": 88,
+      "ticketCode": "TK-4091",
+      "userId": 22,
+      "userName": "Aisha Khan",
+      "drawCode": "DA-1001",
+      "drawTitle": "Weekend Rush",
+      "prizeAmount": 35000,
+      "ticketPrice": 10,
+      "createdAt": "2026-10-20T10:44:00.000Z"
+    }
+  ],
+  "recentWinners": [
+    {
+      "id": 5,
+      "drawCode": "DA-0999",
+      "winnerName": "Rafael Lewis",
+      "prizeAmount": 12000,
+      "announcedAt": "2026-10-19T12:00:00.000Z",
+      "drawTitle": "Gold Drop"
+    }
+  ],
+  "recentSupportRequests": [
+    {
+      "id": 9,
+      "issueType": "wallet",
+      "subject": "Top-up not reflecting",
+      "status": "in_review",
+      "createdAt": "2026-10-20T09:12:00.000Z",
+      "userName": "Nora Ahmed"
+    }
+  ]
+}
+```
+
+This backend contract feeds the Overview tab with:
+
+- KPI metrics at the top
+- recent active draws table
+- ticket purchase feed
+- recent winners feed
+- support queue feed
+
+The frontend should treat this as the source of truth for the dashboard cards and tables.
+
 ---
 
 ## 8. Public image hosting
