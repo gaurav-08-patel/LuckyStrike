@@ -24,45 +24,61 @@ The project is designed to stay generic and MySQL-compatible so it can work loca
 
 Completed features:
 
-- local MariaDB / MySQL compatibility
+- local MariaDB / MySQL compatibility with MySQL-safe SQL and UTC-aware time handling
 - backend bootstrap and API setup
 - JWT auth flow and protected routes
 - profile and user management routes
-- profile update flow using PATCH with auth refresh after save
-- avatar upload flow using Cloudinary and storing full remote URLs
+- profile update flow with auth refresh after save
+- avatar upload flow using Cloudinary-compatible remote URLs and persisted `profile_image`
 - user profile image support with placeholder initials and image fallback UI
-- wallet balance system and transaction history
-- wallet top-up flow with success toast feedback
-- top-up and transaction activity on the frontend wallet page
+- wallet balance system, transaction history, and wallet top-up flow
 - account/profile page with mobile-friendly dashboard layout
-- sidebar/account UX improvements and responsive mobile drawer behavior
-- mobile-safe profile action layout for Edit / Cancel / Save controls
-- draw creation and draw filtering routes
-- draw detail route supporting either id or draw_code
-- ticket purchase flow
-- my tickets route
-- draw settlement logic
-- winner selection logic using deterministic seed-based fairness
+- sidebar/account UX improvements, responsive mobile drawer behavior, and role-aware account layout
+- separate user/admin account shells and tab gating based on the real logged-in user state
+- draw creation, draw filtering, and draw detail routes
+- ticket purchase flow and `my tickets` history
+- draw settlement logic and winner selection using deterministic seeded fairness
 - cron scheduler for expired draw settlement
 - winner email notification flow
-- public winners API
-- frontend winners carousel and winners page
+- public winners API and frontend winners carousel / page
 - frontend home page with campaign cards and countdown UI
-- UTC-safe date conversion for database inserts
-- backend public asset serving for banner images
-- draw banner `image` field in DB
-- local schema updates including `profile_image` support
-- frontend toast system for success and error feedback across major actions
-- support ticket form with backend persistence to MySQL via `support_requests` table
-- admin support review API for listing requests and updating status values to received / in_review / resolved / closed
+- backend public asset serving for banner images and draw `image` field support
+- local schema updates including `profile_image`, `is_admin`, and wallet support
+- support ticket form with backend persistence to MySQL via `support_requests`
+- admin support review API with status updates: received / in_review / resolved / closed
+- user activity tab combining recent transaction history, recent ticket purchases, and recent won tickets
+- role checks now rely on the authenticated user’s actual `is_admin` flag rather than URL assumptions
 
 Current working state:
 
-- the app is functional end-to-end for auth, profile management, wallet flow, tickets, and winners
-- the profile avatar image is persisted as a full Cloudinary URL
-- the frontend is actively polished for mobile responsiveness and account UX
-- environment variables for Cloudinary and DB config must remain in sync with local `.env` files
-- production email and payment gateway integrations are still the remaining external-service work
+- the app is functionally end-to-end for auth, profile management, wallet flow, ticketing, winners, and support
+- the frontend UI is now more aligned with real account roles: user-only pages hide admin tabs, and admin-only pages require an actual admin session
+- the account shell and activity tab are implemented as separate components and keep empty states as placeholders when no data exists
+- sidebar labels and route access are now tied to the current user session instead of stale or path-based assumptions
+- the app remains MySQL/MariaDB compatible so local MariaDB can be swapped for a cloud-hosted MySQL instance without changing application logic
+- environment variables for DB, JWT, and optional Cloudinary/email services still need to stay in sync with local `.env` files
+- production email, payment gateway, and cloud storage integrations remain the next external-service work beyond local development
+
+### Role access status
+
+Role-based access is now treated as a server/session truth source rather than a UI-only guess.
+
+- the auth/session payload must include the actual admin state from the database (`user.is_admin`)
+- admin-only routes should only be considered accessible when the authenticated user is truly an admin
+- user account pages must not expose admin tabs or admin-only route navigation when the user is not an admin
+- the previous issue where stale account-role state caused /admin paths to redirect incorrectly has been addressed by validating the current user object before rendering role-specific UI
+
+### Activity tab status
+
+The account activity section is built as a dedicated component that shows:
+
+- recent wallet / transaction history
+- recent ticket purchases
+- recent won tickets
+- empty-state placeholders when there is no activity
+- direct links to the full activity pages: `/my-tickets` and `/wallet`
+
+This is designed to keep the dashboard compact while still giving users a clear and useful recent activity summary.
 
 ---
 
