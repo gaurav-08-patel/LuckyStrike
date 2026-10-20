@@ -34,12 +34,14 @@ const faqs = [
 ];
 
 export default function SupportTab() {
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
   const [openIndex, setOpenIndex] = useState<number | null>(0);
   const [issueType, setIssueType] = useState("ticket");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const contactCards = useMemo(
     () => [
@@ -70,13 +72,38 @@ export default function SupportTab() {
     }
 
     setIsSubmitting(true);
+    setSubmitError("");
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 700));
+      const token = localStorage.getItem("luckyStrikeToken");
+      const response = await fetch(`${API_BASE_URL}/api/support`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          issueType,
+          subject: subject.trim(),
+          message: message.trim(),
+        }),
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body?.message || "Unable to send support request.");
+      }
+
       setSubmitted(true);
       setSubject("");
       setMessage("");
       setIssueType("ticket");
+    } catch (error: any) {
+      setSubmitted(false);
+      setSubmitError(
+        error?.message ||
+          "Something went wrong while sending your support request.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -215,8 +242,9 @@ export default function SupportTab() {
             Report an issue
           </h3>
           <p className="mt-2 text-sm text-ink/70">
-            Use this form to share the problem. The API endpoint is left as a
-            placeholder for future integration.
+            Use this form to share the problem. The request is currently
+            accepted by the app and can be connected to a real database or
+            ticketing service later.
           </p>
         </div>
 
@@ -269,7 +297,7 @@ export default function SupportTab() {
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-ink/60">
-              API endpoint will be connected later.
+              Request is being processed in-app for now.
             </p>
 
             <button
@@ -281,6 +309,12 @@ export default function SupportTab() {
             </button>
           </div>
         </form>
+
+        {submitError && (
+          <div className="mt-4 rounded-xl border border-[#f5c0c4] bg-[#fff1f2] px-4 py-3 text-sm font-bold text-[#b42318]">
+            {submitError}
+          </div>
+        )}
 
         {submitted && (
           <div className="mt-4 rounded-xl border border-[#c8ead4] bg-[#edfdf3] px-4 py-3 text-sm font-bold text-[#1b7d51]">
