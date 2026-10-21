@@ -379,6 +379,10 @@ function CampaignPage() {
                   {formatPrize(campaign)}
                 </h1>
 
+                <p className="mt-2 text-[0.68rem] font-black uppercase tracking-[0.14em] text-ink/65 sm:text-[0.8rem]">
+                  {campaign.title}
+                </p>
+
                 <p className="mt-3 text-sm font-medium text-ink/70 sm:text-base">
                   Enter now and stand a chance to win a{" "}
                   {campaign.prizeType.toLowerCase()} reward with a live draw
