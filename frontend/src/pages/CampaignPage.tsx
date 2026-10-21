@@ -298,7 +298,9 @@ function CampaignPage() {
               Home
             </Link>
             <span>/</span>
-            <span className="break-all">DRAW CODE: {campaign.draw_code || campaign.id}</span>
+            <span className="break-all">
+              DRAW CODE: {campaign.draw_code || campaign.id}
+            </span>
           </div>
 
           <div className="campaign-hero-card relative overflow-hidden rounded-[30px] border-[3px] border-ink shadow-[8px_8px_0_#171310]">
@@ -341,19 +343,26 @@ function CampaignPage() {
 
                 <div className="mt-4 grid gap-2 sm:grid-cols-3">
                   <div className="campaign-stat-card rounded-[14px] border-[3px] border-ink p-2.5 shadow-[2px_2px_0_#171310]">
-                    <p className="text-[0.55rem] font-black uppercase tracking-[0.11em] text-ink/60">Price</p>
+                    <p className="text-[0.55rem] font-black uppercase tracking-[0.11em] text-ink/60">
+                      Price
+                    </p>
                     <p className="mt-2 font-display text-xl uppercase tracking-[-0.04em] text-ink">
-                      {campaign.currency} {Number(campaign.entryFrom || 0).toLocaleString("en-AE")}
+                      {campaign.currency}{" "}
+                      {Number(campaign.entryFrom || 0).toLocaleString("en-AE")}
                     </p>
                   </div>
                   <div className="campaign-stat-card rounded-[14px] border-[3px] border-ink p-2.5 shadow-[2px_2px_0_#171310]">
-                    <p className="text-[0.55rem] font-black uppercase tracking-[0.11em] text-ink/60">Type</p>
+                    <p className="text-[0.55rem] font-black uppercase tracking-[0.11em] text-ink/60">
+                      Type
+                    </p>
                     <p className="mt-2 font-display text-xl uppercase tracking-[-0.04em] text-ink">
                       {campaign.prizeType}
                     </p>
                   </div>
                   <div className="campaign-stat-card rounded-[14px] border-[3px] border-ink p-2.5 shadow-[2px_2px_0_#171310]">
-                    <p className="text-[0.55rem] font-black uppercase tracking-[0.11em] text-ink/60">Draw</p>
+                    <p className="text-[0.55rem] font-black uppercase tracking-[0.11em] text-ink/60">
+                      Draw
+                    </p>
                     <p className="mt-2 font-display text-xl uppercase tracking-[-0.04em] text-ink">
                       {campaign.campaignType}
                     </p>
@@ -371,19 +380,25 @@ function CampaignPage() {
                 </h1>
 
                 <p className="mt-3 text-sm font-medium text-ink/70 sm:text-base">
-                  Enter now and stand a chance to win a {campaign.prizeType.toLowerCase()} reward with a live draw that closes soon.
+                  Enter now and stand a chance to win a{" "}
+                  {campaign.prizeType.toLowerCase()} reward with a live draw
+                  that closes soon.
                 </p>
 
                 <div className="mt-5 grid gap-3 sm:grid-cols-2">
                   <div className="campaign-stat-card rounded-[18px] border-[3px] border-ink p-3 shadow-[3px_3px_0_#171310]">
-                    <p className="text-[0.62rem] font-black uppercase tracking-[0.12em] text-ink/60">Time left</p>
+                    <p className="text-[0.62rem] font-black uppercase tracking-[0.12em] text-ink/60">
+                      Time left
+                    </p>
                     <p className="mt-2 font-display text-[1.5rem] uppercase leading-none tracking-[-0.05em] text-ink sm:text-[1.8rem]">
                       {isExpired ? "Closed" : formatCountdown(deadline, now)}
                     </p>
                   </div>
 
                   <div className="campaign-stat-card rounded-[18px] border-[3px] border-ink p-3 shadow-[3px_3px_0_#171310]">
-                    <p className="text-[0.62rem] font-black uppercase tracking-[0.12em] text-ink/60">Available</p>
+                    <p className="text-[0.62rem] font-black uppercase tracking-[0.12em] text-ink/60">
+                      Available
+                    </p>
                     <p className="mt-2 font-display text-[1.3rem] uppercase leading-none tracking-[-0.05em] text-ink sm:text-[1.6rem]">
                       {isLoggedIn
                         ? `${campaign.currency} ${displayedWalletBalance.toLocaleString("en-AE")}`
@@ -399,11 +414,15 @@ function CampaignPage() {
                   </div>
                   <div className="mt-3 flex items-center justify-between gap-3 text-[0.7rem] font-black uppercase tracking-[0.12em] text-ink/70 sm:text-[0.8rem]">
                     <span>Sold</span>
-                    <span>{soldTicketsCount} / {totalTicketsAvailable}</span>
+                    <span>
+                      {soldTicketsCount} / {totalTicketsAvailable}
+                    </span>
                   </div>
                   <div className="mt-3 flex items-center justify-between gap-3 text-[0.7rem] font-black uppercase tracking-[0.12em] text-ink/70 sm:text-[0.8rem]">
                     <span>Code</span>
-                    <span className="break-all">{campaign.draw_code || campaign.id}</span>
+                    <span className="break-all">
+                      {campaign.draw_code || campaign.id}
+                    </span>
                   </div>
                 </div>
 
@@ -440,8 +459,12 @@ function CampaignPage() {
                         : "glow-entry-button text-white"
                     }`}
                   >
-                    {isExpired ? "Closed" : `Buy ticket • ${campaign.currency} ${campaign.entryFrom}`}
-                    {!isExpired && <span className="shine" aria-hidden="true" />}
+                    {isExpired
+                      ? "Closed"
+                      : `Buy ticket • ${campaign.currency} ${campaign.entryFrom}`}
+                    {!isExpired && (
+                      <span className="shine" aria-hidden="true" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -450,7 +473,10 @@ function CampaignPage() {
 
           <div className="mt-6 rounded-[22px] border-[3px] border-ink bg-[linear-gradient(135deg,#fffdf8_0%,#fff0f3_100%)] p-4 shadow-[4px_4px_0_#171310] sm:mt-8 sm:rounded-[28px] sm:p-6 sm:shadow-[5px_5px_0_#171310]">
             <p className="text-base leading-relaxed text-ink sm:text-lg">
-              Dream Big! The possibilities are endless. Whether you&apos;re dreaming of a holiday, making a statement purchase or starting a savings account, winning cash can go a long way towards making your dreams a reality. Participate now!
+              Dream Big! The possibilities are endless. Whether you&apos;re
+              dreaming of a holiday, making a statement purchase or starting a
+              savings account, winning cash can go a long way towards making
+              your dreams a reality. Participate now!
             </p>
           </div>
         </section>
