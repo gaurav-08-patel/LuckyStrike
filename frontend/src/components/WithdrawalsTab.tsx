@@ -7,13 +7,11 @@ type BankAccount = {
   accountHolderName: string;
   bankName: string;
   accountNumber: string;
-  bankCountry?: string | null;
   branchName?: string | null;
   ifscCode?: string | null;
   swiftCode?: string | null;
   iban?: string | null;
   isDefault?: boolean;
-  isVerified?: boolean;
 };
 
 type WithdrawalRequest = {
@@ -30,7 +28,6 @@ type WithdrawalRequest = {
     accountHolderName: string | null;
     bankName: string | null;
     accountNumber: string | null;
-    bankCountry?: string | null;
     ifscCode?: string | null;
   };
 };
