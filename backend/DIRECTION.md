@@ -22,6 +22,8 @@ The project is designed to stay generic and MySQL-compatible so it can work loca
 
 ## 2. Current status
 
+The project is now in a feature-complete phase for the main Lucky Strike product flow and is actively being polished for client presentation, payout workflow maturity, and page-level UX refinement.
+
 Completed features:
 
 - local MariaDB / MySQL compatibility with MySQL-safe SQL and UTC-aware time handling
@@ -48,16 +50,82 @@ Completed features:
 - admin support review API with status updates: received / in_review / resolved / closed
 - user activity tab combining recent transaction history, recent ticket purchases, and recent won tickets
 - role checks now rely on the authenticated user’s actual `is_admin` flag rather than URL assumptions
+- withdrawal workflow separation into wallet vs request lifecycle logic
+- saved bank account system as the source of truth for false-safe withdrawal requests
+- user-side withdrawal request creation and request history endpoints
+- admin withdrawal review, approval, rejection, and payout action flow
+- audit logs and actor visibility for payout decisions
+- custom account sidebar scrollbar styling with a slim pink/red look and rounded corners
+- SEO metadata component for page title / description / OG / Twitter / canonical tags
+- metadata rollout across major app pages
+- demo campaign seeder for 20 presentation-ready campaigns expiring within a few days
+- multiple visual redesign iterations for the campaign detail page while keeping the behavior unchanged
+- frontend build validation after latest layout passes
 
 Current working state:
 
-- the app is functionally end-to-end for auth, profile management, wallet flow, ticketing, winners, and support
-- the frontend UI is now more aligned with real account roles: user-only pages hide admin tabs, and admin-only pages require an actual admin session
-- the account shell and activity tab are implemented as separate components and keep empty states as placeholders when no data exists
-- sidebar labels and route access are now tied to the current user session instead of stale or path-based assumptions
-- the app remains MySQL/MariaDB compatible so local MariaDB can be swapped for a cloud-hosted MySQL instance without changing application logic
-- environment variables for DB, JWT, and optional Cloudinary/email services still need to stay in sync with local `.env` files
-- production email, payment gateway, and cloud storage integrations remain the next external-service work beyond local development
+- the app is functionally end-to-end for auth, profile management, wallet flow, ticketing, winners, support, and payout workflow
+- the withdrawal architecture follows the agreed business model: save bank details once, select a bank account, request withdrawal, admin approve, manual payout later, and pay as the final settlement event
+- the frontend UI is aligned with the account/profile aesthetic and includes polished sidebar, home CTA, and campaign detail styling
+- the reusable metadata component is in place and being used across public and account pages
+- the app remains MySQL/MariaDB compatible and can be used locally without breaking the core logic
+- the main remaining operational risk is local DB schema alignment for the payout lifecycle and transaction enum values
+- the campaign detail page is intentionally kept in design-exploration mode until the final visual direction is selected
+- environment variables for DB, JWT, email, and optional external services still need to remain synchronized with local `.env` files
+
+### Withdrawal workflow status
+
+The project now follows the intended withdrawal business flow:
+
+- users save bank accounts in a dedicated `user_bank_accounts` table
+- withdrawal requests reference a saved `bank_account_id`, not raw bank data
+- the request is created with `status = pending`
+- pending withdrawal amount is reserved on request creation
+- admin reviews the user, wallet, and bank account details
+- admin can approve or reject the request
+- actual wallet deduction happens only when the admin marks the request as paid
+- payout actions are kept separate from approval to reflect real manual payout timing
+
+This architecture matches the business rule and keeps the wallet logic cleanly separated from withdrawal lifecycle operations.
+
+### Metadata / SEO status
+
+A reusable `MetaData` component was added and uses React 19-compatible document tag hoisting.
+
+It provides:
+
+- page title
+- meta description
+- Open Graph data
+- Twitter card data
+- canonical URL
+- support for page-specific image values such as `campaign.image`
+
+This has been rolled out across the main public and account pages to improve shareability and page quality.
+
+### Admin / account UX status
+
+Role-based access remains server/session-truth driven.
+
+- admin-only routes depend on the actual `user.is_admin` value
+- user-only pages hide admin sections when not allowed
+- account sidebar and mobile drawer styling has been refined to remove browser-default scrollbar behavior
+- custom slim pink/red scrollbars are now applied to the account shell for a cleaner cross-browser experience
+
+### Presentation / demo-data status
+
+The app includes a Node.js seeder script that posts demo campaign data through the admin draw endpoint.
+
+It creates 20 campaign entries with near-term expiry dates so the app is presentation-ready for client demos.
+
+### Known follow-up items
+
+- verify local MySQL/MariaDB enum / schema values for payout transaction types against the app contract
+- finalize the final visual direction for the campaign detail page after evaluating the latest design iterations
+- complete any remaining metadata copy polish for pages that still need final brand wording
+- continue hardening the payout flow using a live DB instance to validate approve / pay / reject lifecycle end-to-end
+
+---
 
 ### Role access status
 
