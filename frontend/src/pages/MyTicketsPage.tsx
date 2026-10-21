@@ -237,8 +237,22 @@ function MyTicketsPage() {
       });
     });
 
-    return Array.from(groups.values()).sort((a, b) => {
-      return new Date(b.drawAt).getTime() - new Date(a.drawAt).getTime();
+    const sortedGroups = Array.from(groups.values()).map((group) => ({
+      ...group,
+      tickets: [...group.tickets].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      ),
+    }));
+
+    return sortedGroups.sort((a, b) => {
+      const aLatest = Math.max(
+        ...a.tickets.map((ticket) => new Date(ticket.createdAt).getTime()),
+      );
+      const bLatest = Math.max(
+        ...b.tickets.map((ticket) => new Date(ticket.createdAt).getTime()),
+      );
+
+      return bLatest - aLatest;
     });
   }, [tickets]);
 
