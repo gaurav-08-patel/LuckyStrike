@@ -74,6 +74,35 @@ function AccountLayout({
 
   return (
     <main className="flex min-h-screen flex-col bg-[#f3f0ee] text-ink">
+      <style>{`
+        .account-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: #ff4f97 rgba(255, 214, 225, 0.85);
+          -ms-overflow-style: auto;
+        }
+
+        .account-scrollbar::-webkit-scrollbar {
+          width: 9px;
+          height: 9px;
+        }
+
+        .account-scrollbar::-webkit-scrollbar-track {
+          background: rgba(255, 214, 225, 0.8);
+          border-radius: 999px;
+          border: 1px solid rgba(23, 19, 16, 0.08);
+        }
+
+        .account-scrollbar::-webkit-scrollbar-thumb {
+          background: linear-gradient(180deg, #ff73ad 0%, #ff3d8c 100%);
+          border: 1px solid rgba(23, 19, 16, 0.12);
+          border-radius: 999px;
+        }
+
+        .account-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(180deg, #ff5ea3 0%, #ef2f7d 100%);
+        }
+      `}</style>
+
       <SiteHeader
         brand={
           <>
@@ -123,7 +152,7 @@ function AccountLayout({
 
                 {profileCard}
 
-                <div className="flex-1 overflow-y-auto pt-2">{sidebar}</div>
+                <div className="account-scrollbar flex-1 overflow-y-auto pt-2">{sidebar}</div>
 
                 {user && (
                   <div className="mt-auto lg:mt-6 px-2 pb-3">
@@ -177,7 +206,7 @@ function AccountLayout({
                     {profileCard}
 
                     <div
-                      className="flex-1 overflow-auto"
+                      className="account-scrollbar flex-1 overflow-auto"
                       onClick={() => setSidebarOpen(false)}
                       style={{
                         paddingBottom:
