@@ -30,7 +30,6 @@ CREATE TABLE IF NOT EXISTS user_bank_accounts (
     user_id               INT NOT NULL,
     account_holder_name   VARCHAR(200) NOT NULL,
     bank_name             VARCHAR(200) NOT NULL,
-    bank_country         VARCHAR(100) NULL,
     account_number        VARCHAR(80) NOT NULL,
     iban                  VARCHAR(100) NULL,
     ifsc_code             VARCHAR(50) NULL,
@@ -38,8 +37,6 @@ CREATE TABLE IF NOT EXISTS user_bank_accounts (
     branch_name           VARCHAR(200) NULL,
     routing_number        VARCHAR(100) NULL,
     is_default            BOOLEAN NOT NULL DEFAULT FALSE,
-    is_verified           BOOLEAN NOT NULL DEFAULT TRUE,
-    verification_note     VARCHAR(255) NULL,
     created_at            DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at            DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_user_bank_accounts_user

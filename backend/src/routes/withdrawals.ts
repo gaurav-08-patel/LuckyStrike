@@ -21,7 +21,6 @@ interface BankAccountRow extends RowDataPacket {
   user_id: number;
   account_holder_name: string;
   bank_name: string;
-  bank_country: string | null;
   account_number: string;
   iban: string | null;
   ifsc_code: string | null;
@@ -29,8 +28,6 @@ interface BankAccountRow extends RowDataPacket {
   branch_name: string | null;
   routing_number: string | null;
   is_default: number | boolean | string | null;
-  is_verified: number | boolean | string | null;
-  verification_note: string | null;
   created_at: Date | string | null;
   updated_at: Date | string | null;
 }
@@ -53,7 +50,6 @@ interface WithdrawalRequestRow extends RowDataPacket {
   updated_at: Date | string | null;
   account_holder_name: string | null;
   bank_name: string | null;
-  bank_country: string | null;
   account_number: string | null;
   iban: string | null;
   ifsc_code: string | null;
@@ -103,7 +99,6 @@ const serializeBankAccount = (row: BankAccountRow) => ({
   userId: row.user_id,
   accountHolderName: row.account_holder_name,
   bankName: row.bank_name,
-  bankCountry: row.bank_country,
   accountNumber: row.account_number,
   iban: row.iban,
   ifscCode: row.ifsc_code,
@@ -111,8 +106,6 @@ const serializeBankAccount = (row: BankAccountRow) => ({
   branchName: row.branch_name,
   routingNumber: row.routing_number,
   isDefault: parseDbBooleanFlag(row.is_default),
-  isVerified: parseDbBooleanFlag(row.is_verified),
-  verificationNote: row.verification_note,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
@@ -136,7 +129,6 @@ const serializeWithdrawalRequest = (row: WithdrawalRequestRow) => ({
   bankAccount: {
     accountHolderName: row.account_holder_name,
     bankName: row.bank_name,
-    bankCountry: row.bank_country,
     accountNumber: row.account_number,
     iban: row.iban,
     ifscCode: row.ifsc_code,
@@ -200,7 +192,6 @@ router.post("/withdrawals/bank-accounts", requireAuth, async (req, res) => {
     return res.status(500).json({ message: "Unable to validate bank account payload." });
   }
 
-  const bankCountry = normalizeOptionalText(req.body?.bankCountry);
   const iban = normalizeOptionalText(req.body?.iban);
   const ifscCode = normalizeOptionalText(req.body?.ifscCode);
   const swiftCode = normalizeOptionalText(req.body?.swiftCode);
@@ -237,14 +228,13 @@ router.post("/withdrawals/bank-accounts", requireAuth, async (req, res) => {
 
       await connection.query(
         `UPDATE user_bank_accounts
-         SET account_holder_name = ?, bank_name = ?, bank_country = ?, account_number = ?,
+         SET account_holder_name = ?, bank_name = ?, account_number = ?,
              iban = ?, ifsc_code = ?, swift_code = ?, branch_name = ?, routing_number = ?,
-             is_default = ?, is_verified = TRUE, updated_at = UTC_TIMESTAMP()
+             is_default = ?, updated_at = UTC_TIMESTAMP()
          WHERE id = ? AND user_id = ?`,
         [
           accountHolderName,
           bankName,
-          bankCountry,
           accountNumber,
           iban,
           ifscCode,
@@ -274,13 +264,12 @@ router.post("/withdrawals/bank-accounts", requireAuth, async (req, res) => {
 
       const [insertResult] = await connection.query<ResultSetHeader>(
         `INSERT INTO user_bank_accounts
-          (user_id, account_holder_name, bank_name, bank_country, account_number, iban, ifsc_code, swift_code, branch_name, routing_number, is_default, is_verified)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)`,
+          (user_id, account_holder_name, bank_name, account_number, iban, ifsc_code, swift_code, branch_name, routing_number, is_default)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           userId,
           accountHolderName,
           bankName,
-          bankCountry,
           accountNumber,
           iban,
           ifscCode,
@@ -456,7 +445,7 @@ router.get("/withdrawals/my-requests", requireAuth, async (req, res) => {
   }
 
   let query = `SELECT wr.*,
-      uba.account_holder_name, uba.bank_name, uba.bank_country, uba.account_number,
+      uba.account_holder_name, uba.bank_name, uba.account_number,
       uba.iban, uba.ifsc_code, uba.swift_code, uba.branch_name, uba.routing_number, uba.is_default
     FROM withdrawal_requests wr
     LEFT JOIN user_bank_accounts uba ON uba.id = wr.bank_account_id
