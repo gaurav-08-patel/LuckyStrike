@@ -3,6 +3,7 @@ import HowItWorks from "../components/HowItWorks";
 import SiteHeader from "../components/SiteHeader";
 import WinnersCarousel from "../components/WinnersCarousel";
 import Footer from "../components/Footer";
+import MetaData from "../components/MetaData";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { normalizeCampaignData, type Campaign } from "../data/campaignsData";
@@ -164,8 +165,14 @@ function Home() {
   });
 
   return (
-    <main className="min-h-screen bg-paper text-ink">
-      <style>{`
+    <>
+      <MetaData
+        title="Home"
+        description="Discover live Lucky Strike prize draws, top campaigns, and the latest winner updates."
+        canonical="/"
+      />
+      <main className="min-h-screen bg-paper text-ink">
+        <style>{`
         @keyframes adminHeartbeat {
           0%, 100% {
             transform: translateY(0) scale(1);
@@ -501,8 +508,9 @@ function Home() {
       <HowItWorks />
       <WinnersCarousel />
       <div className="mt-10" />
-      <Footer />
-    </main>
+        <Footer />
+      </main>
+    </>
   );
 }
 

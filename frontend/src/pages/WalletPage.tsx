@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import MetaData from "../components/MetaData";
 import SiteHeader from "../components/SiteHeader";
 import { toast } from "../components/ui/Toast";
 import { useAuth } from "../context/AuthContext";
@@ -243,14 +244,20 @@ function WalletPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#eae7e5] text-ink">
-      <SiteHeader
-        brand={
-          <>
-            Lucky<span className="text-red">Strike</span>
-          </>
-        }
+    <>
+      <MetaData
+        title="Wallet"
+        description="Top up your Lucky Strike wallet, check your balance, and review your transaction history."
+        canonical="/wallet"
       />
+      <main className="min-h-screen bg-[#eae7e5] text-ink">
+        <SiteHeader
+          brand={
+            <>
+              Lucky<span className="text-red">Strike</span>
+            </>
+          }
+        />
 
       <section className="mx-auto max-w-[1400px] px-3 py-6 sm:px-6 lg:px-8 lg:py-10">
         <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
@@ -666,7 +673,8 @@ function WalletPage() {
           </div>
         </div>
       )}
-    </main>
+      </main>
+    </>
   );
 }
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Footer from "../components/Footer";
+import MetaData from "../components/MetaData";
 import SiteHeader from "../components/SiteHeader";
 import { normalizeCampaignData, type Campaign } from "../data/campaignsData";
 import {
@@ -86,8 +87,14 @@ function CampaignsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-paper text-ink">
-      <SiteHeader
+    <>
+      <MetaData
+        title="Campaigns"
+        description="Browse live Lucky Strike daily, weekly, and monthly prize campaigns and find your next opportunity to win."
+        canonical="/campaigns"
+      />
+      <main className="min-h-screen bg-paper text-ink">
+        <SiteHeader
         brand={
           <>
             Lucky<span className="text-red">Strike</span>
@@ -286,8 +293,9 @@ function CampaignsPage() {
         )}
       </section>
 
-      <Footer />
-    </main>
+        <Footer />
+      </main>
+    </>
   );
 }
 

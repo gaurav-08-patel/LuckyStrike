@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { toast } from "../components/ui/Toast";
 import Footer from "../components/Footer";
+import MetaData from "../components/MetaData";
 import SiteHeader from "../components/SiteHeader";
 import { useAuth } from "../context/AuthContext";
 import { normalizeCampaignData, type Campaign } from "../data/campaignsData";
@@ -66,19 +67,26 @@ function CampaignPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#f3f0ee] text-ink">
-        <SiteHeader
-          brand={
-            <>
-              Lucky<span className="text-red">Strike</span>
-            </>
-          }
+      <>
+        <MetaData
+          title="Loading campaign"
+          description="Loading the latest Lucky Strike campaign details."
+          canonical={id ? `/${id}` : "/"}
         />
-        <section className="mx-auto max-w-[1200px] px-4 py-16 text-center text-lg font-bold uppercase tracking-[0.12em] text-ink/70">
-          Loading draw...
-        </section>
-        <Footer />
-      </main>
+        <main className="min-h-screen bg-[#f3f0ee] text-ink">
+          <SiteHeader
+            brand={
+              <>
+                Lucky<span className="text-red">Strike</span>
+              </>
+            }
+          />
+          <section className="mx-auto max-w-[1200px] px-4 py-16 text-center text-lg font-bold uppercase tracking-[0.12em] text-ink/70">
+            Loading draw...
+          </section>
+          <Footer />
+        </main>
+      </>
     );
   }
 
@@ -108,6 +116,8 @@ function CampaignPage() {
   );
   const soldTicketsCount = Number(campaign.soldCount ?? 0);
   const hasTicketInventory = totalTicketsAvailable > 0;
+
+  const campaignCanonical = id ? `/${id}` : "/";
 
   const resetTicketModal = () => {
     setTicketModalOpen(false);
@@ -227,8 +237,16 @@ function CampaignPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#f3f0ee] text-ink">
-      <SiteHeader
+    <>
+      <MetaData
+        title={campaign.title}
+        description={`Join the ${campaign.title} Lucky Strike draw and discover ${campaign.currency} ${Number(campaign.entryFrom || 0).toLocaleString("en-AE")} entry opportunities.`}
+        image={campaign.image}
+        canonical={campaignCanonical}
+        type="article"
+      />
+      <main className="min-h-screen bg-[#f3f0ee] text-ink">
+        <SiteHeader
         brand={
           <>
             Lucky<span className="text-red">Strike</span>
@@ -578,8 +596,9 @@ function CampaignPage() {
         </div>
       ) : null}
 
-      <Footer />
-    </main>
+        <Footer />
+      </main>
+    </>
   );
 }
 

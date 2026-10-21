@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
+import MetaData from "../components/MetaData";
 import SiteHeader from "../components/SiteHeader";
 import { useAuth } from "../context/AuthContext";
 
@@ -272,8 +273,14 @@ function MyTicketsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#f8f4f1_0%,#fffaf7_100%)] text-ink">
-      <SiteHeader
+    <>
+      <MetaData
+        title="My Tickets"
+        description="View your active, won, and lost Lucky Strike tickets and track your entries across campaigns."
+        canonical="/my-tickets"
+      />
+      <main className="min-h-screen bg-[linear-gradient(180deg,#f8f4f1_0%,#fffaf7_100%)] text-ink">
+        <SiteHeader
         brand={
           <>
             Lucky<span className="text-red">Strike</span>
@@ -454,7 +461,8 @@ function MyTicketsPage() {
           </div>
         )}
       </section>
-    </main>
+      </main>
+    </>
   );
 }
 

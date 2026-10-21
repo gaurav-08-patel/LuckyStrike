@@ -1,5 +1,6 @@
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import AccountLayout from "../components/AccountLayout";
+import MetaData from "../components/MetaData";
 import AdminOverviewTab from "../components/AdminOverviewTab";
 import AdminSupportTab from "../components/AdminSupportTab";
 import AdminWithdrawalsTab from "../components/AdminWithdrawalsTab";
@@ -150,14 +151,62 @@ function AccountPage({ role }: AccountPageProps) {
   const headerSubtitle =
     effectiveRole === "admin" ? "Admin account" : "My account";
 
+  const accountMeta =
+    effectiveRole === "admin"
+      ? {
+          title:
+            currentTab === "overview"
+              ? "Admin Overview"
+              : currentTab === "draws"
+                ? "Manage Draws"
+                : currentTab === "users"
+                  ? "Manage Users"
+                  : currentTab === "withdrawals"
+                    ? "Withdrawal Reviews"
+                    : currentTab === "support-requests"
+                      ? "Support Requests"
+                      : currentTab === "payments"
+                        ? "Payments"
+                        : "Admin Settings",
+          description:
+            effectiveRole === "admin"
+              ? "Manage giveaways, users, withdrawals, and account activity from the Lucky Strike admin dashboard."
+              : "Review and update your Lucky Strike account details and activity.",
+          canonical: `/admin/${currentTab}`,
+        }
+      : {
+          title:
+            currentTab === "profile"
+              ? "My Profile"
+              : currentTab === "bank-accounts"
+                ? "Bank Accounts"
+                : currentTab === "withdrawls"
+                  ? "Withdrawal Requests"
+                  : currentTab === "tickets"
+                    ? "My Tickets"
+                    : currentTab === "activity"
+                      ? "My Activity"
+                      : "Support",
+          description:
+            "Manage your Lucky Strike profile, saved bank accounts, withdrawals, and support requests.",
+          canonical: `/user/${currentTab}`,
+        };
+
   return (
-    <AccountLayout
-      title={headerTitle}
-      subtitle={headerSubtitle}
-      sidebar={sidebar}
-    >
-      {renderTabContent()}
-    </AccountLayout>
+    <>
+      <MetaData
+        title={accountMeta.title}
+        description={accountMeta.description}
+        canonical={accountMeta.canonical}
+      />
+      <AccountLayout
+        title={headerTitle}
+        subtitle={headerSubtitle}
+        sidebar={sidebar}
+      >
+        {renderTabContent()}
+      </AccountLayout>
+    </>
   );
 }
 
