@@ -4,6 +4,7 @@ import SiteHeader from "../components/SiteHeader";
 import WinnersCarousel from "../components/WinnersCarousel";
 import Footer from "../components/Footer";
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import { normalizeCampaignData, type Campaign } from "../data/campaignsData";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -102,10 +103,12 @@ export const formatDrawDateTime = (value: string) => {
 };
 
 function Home() {
+  const { user } = useAuth();
   const [activeSlide, setActiveSlide] = useState(0);
   const [activeTab, setActiveTab] = useState<CampaignTab>("All campaigns");
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [now, setNow] = useState(() => new Date());
+  const isAdmin = user?.isAdmin === true;
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -162,6 +165,46 @@ function Home() {
 
   return (
     <main className="min-h-screen bg-paper text-ink">
+      <style>{`
+        @keyframes adminHeartbeat {
+          0%, 100% {
+            transform: translateY(0) scale(1);
+            box-shadow: 0 10px 24px rgba(168, 27, 34, 0.25), 0 0 0 0 rgba(216, 59, 69, 0.35);
+          }
+          12% {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 16px 30px rgba(168, 27, 34, 0.3), 0 0 0 8px rgba(216, 59, 69, 0.12);
+          }
+          22% {
+            transform: translateY(0) scale(0.98);
+            box-shadow: 0 12px 26px rgba(168, 27, 34, 0.28), 0 0 0 0 rgba(216, 59, 69, 0);
+          }
+          35% {
+            transform: translateY(-1px) scale(1.04);
+            box-shadow: 0 18px 36px rgba(168, 27, 34, 0.32), 0 0 0 10px rgba(216, 59, 69, 0.1);
+          }
+          55% {
+            transform: translateY(0) scale(1);
+            box-shadow: 0 12px 24px rgba(168, 27, 34, 0.26), 0 0 0 0 rgba(216, 59, 69, 0);
+          }
+        }
+
+        .admin-floating-button {
+          animation: adminHeartbeat 1.9s ease-in-out infinite;
+          transition: transform 220ms ease, box-shadow 220ms ease, filter 220ms ease;
+          will-change: transform, box-shadow;
+        }
+
+        .admin-floating-button:hover {
+          transform: translateY(-3px) scale(1.02);
+          filter: brightness(1.04);
+        }
+
+        .admin-floating-button:active {
+          transform: translateY(-1px) scale(0.98);
+        }
+      `}</style>
+
       <SiteHeader
         brand={
           <>
@@ -170,6 +213,15 @@ function Home() {
         }
         actionLabel="Login / Signup"
       />
+
+      {isAdmin ? (
+        <Link
+          to="/admin/overview"
+          className="admin-floating-button fixed right-4 top-[5.5rem] z-50 inline-flex items-center gap-2 rounded-[14px] border-2 border-[#d83b45] bg-gradient-to-r from-[#ff6b73] to-[#ff3b47] px-4 py-2.5 text-[0.62rem] font-black uppercase tracking-[0.08em] text-white shadow-[3px_3px_0_#7a1a1f] md:right-6"
+        >
+          Admin Panel
+        </Link>
+      ) : null}
 
       <section
         id="hero"
