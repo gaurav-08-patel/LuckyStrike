@@ -13,8 +13,6 @@ type BankAccount = {
   iban: string | null;
   routingNumber: string | null;
   isDefault: boolean;
-  isVerified: boolean;
-  verificationNote: string | null;
   createdAt?: string | Date | null;
   updatedAt?: string | Date | null;
 };
