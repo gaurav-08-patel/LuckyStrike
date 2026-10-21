@@ -2,6 +2,7 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 import AccountLayout from "../components/AccountLayout";
 import AdminOverviewTab from "../components/AdminOverviewTab";
 import AdminSupportTab from "../components/AdminSupportTab";
+import AdminWithdrawalsTab from "../components/AdminWithdrawalsTab";
 import ActivityTab from "../components/ActivityTab";
 import BankAccountsTab from "../components/BankAccountsTab";
 import DrawsTab from "../components/DrawsTab";
@@ -48,6 +49,7 @@ function AccountPage({ role }: AccountPageProps) {
     { key: "overview", label: "Overview", link: "/admin/overview" },
     { key: "draws", label: "Draws", link: "/admin/draws" },
     { key: "users", label: "Users", link: "/admin/users" },
+    { key: "withdrawals", label: "Withdrawals", link: "/admin/withdrawals" },
     { key: "support-requests", label: "Support", link: "/admin/support-requests" },
     { key: "payments", label: "Payments", link: "/admin/payments" },
     { key: "settings", label: "Settings", link: "/admin/settings" },
@@ -95,6 +97,8 @@ function AccountPage({ role }: AccountPageProps) {
           return <DrawsTab />;
         case "users":
           return <UsersTab />;
+        case "withdrawals":
+          return <AdminWithdrawalsTab />;
         case "support-requests":
           return <AdminSupportTab />;
         case "payments":
