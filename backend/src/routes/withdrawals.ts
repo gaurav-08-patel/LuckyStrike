@@ -239,7 +239,7 @@ router.post("/withdrawals/bank-accounts", requireAuth, async (req, res) => {
         `UPDATE user_bank_accounts
          SET account_holder_name = ?, bank_name = ?, bank_country = ?, account_number = ?,
              iban = ?, ifsc_code = ?, swift_code = ?, branch_name = ?, routing_number = ?,
-             is_default = ?, updated_at = UTC_TIMESTAMP()
+             is_default = ?, is_verified = TRUE, updated_at = UTC_TIMESTAMP()
          WHERE id = ? AND user_id = ?`,
         [
           accountHolderName,
@@ -274,8 +274,8 @@ router.post("/withdrawals/bank-accounts", requireAuth, async (req, res) => {
 
       const [insertResult] = await connection.query<ResultSetHeader>(
         `INSERT INTO user_bank_accounts
-          (user_id, account_holder_name, bank_name, bank_country, account_number, iban, ifsc_code, swift_code, branch_name, routing_number, is_default)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          (user_id, account_holder_name, bank_name, bank_country, account_number, iban, ifsc_code, swift_code, branch_name, routing_number, is_default, is_verified)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)`,
         [
           userId,
           accountHolderName,

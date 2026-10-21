@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS user_bank_accounts (
     branch_name           VARCHAR(200) NULL,
     routing_number        VARCHAR(100) NULL,
     is_default            BOOLEAN NOT NULL DEFAULT FALSE,
-    is_verified           BOOLEAN NOT NULL DEFAULT FALSE,
+    is_verified           BOOLEAN NOT NULL DEFAULT TRUE,
     verification_note     VARCHAR(255) NULL,
     created_at            DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at            DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
