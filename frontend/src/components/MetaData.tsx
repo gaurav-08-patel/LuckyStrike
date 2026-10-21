@@ -20,9 +20,10 @@ const MetaData = ({
     typeof window !== "undefined" ? window.location.origin : "";
   const defaultImage = `${BASE_URL}/og-default.png`;
 
-  const siteTitle = title ? `${title} | CIT Events` : "CIT Events Portal";
+  const siteTitle = title ? `${title} | LuckyStrike` : "LuckyStrike";
   const siteDescription =
-    description || "Discover and register for the latest events at CIT.";
+    description ||
+    "Play LuckyStrike draws, track tickets, and win cash prizes with trusted prize campaigns.";
   const imageUrl = image
     ? image.startsWith("http")
       ? image
