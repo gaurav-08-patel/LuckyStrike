@@ -115,6 +115,8 @@ router.get("/admin/withdrawals", requireAuth, requireAdmin, async (req, res) => 
   const statusFilter = rawStatus.trim().toLowerCase();
   const rawPage = typeof req.query.page === "string" ? req.query.page : "1";
   const rawLimit = typeof req.query.limit === "string" ? req.query.limit : "15";
+  const rawSearch = typeof req.query.search === "string" ? req.query.search : "";
+  const searchQuery = rawSearch.trim();
   const validStatuses = new Set([
     "all",
     "pending",
@@ -148,14 +150,41 @@ router.get("/admin/withdrawals", requireAuth, requireAdmin, async (req, res) => 
       LEFT JOIN users u ON u.id = wr.user_id
       LEFT JOIN user_bank_accounts uba ON uba.id = wr.bank_account_id`;
 
+    const whereClauses: string[] = [];
     const countParams: Array<string | number> = [];
-    let countQuery = `SELECT COUNT(*) AS total ${baseJoin}`;
 
     if (statusFilter !== "all") {
-      countQuery += " WHERE wr.status = ?";
+      whereClauses.push("wr.status = ?");
       countParams.push(statusFilter);
     }
 
+    if (searchQuery) {
+      whereClauses.push(`(
+        CAST(wr.id AS CHAR) LIKE ? OR
+        LOWER(COALESCE(u.first_name, '')) LIKE LOWER(?) OR
+        LOWER(COALESCE(u.last_name, '')) LIKE LOWER(?) OR
+        LOWER(COALESCE(u.email, '')) LIKE LOWER(?) OR
+        LOWER(COALESCE(u.phone_number, '')) LIKE LOWER(?) OR
+        LOWER(COALESCE(uba.account_holder_name, '')) LIKE LOWER(?) OR
+        LOWER(COALESCE(uba.bank_name, '')) LIKE LOWER(?) OR
+        LOWER(COALESCE(uba.account_number, '')) LIKE LOWER(?) OR
+        LOWER(COALESCE(uba.ifsc_code, '')) LIKE LOWER(?)
+      )`);
+      const likePattern = `%${searchQuery}%`;
+      countParams.push(
+        likePattern,
+        likePattern,
+        likePattern,
+        likePattern,
+        likePattern,
+        likePattern,
+        likePattern,
+        likePattern,
+        likePattern,
+      );
+    }
+
+    const countQuery = `SELECT COUNT(*) AS total ${baseJoin}${whereClauses.length ? ` WHERE ${whereClauses.join(" AND ")}` : ""}`;
     const [countRows] = await dbPool.query<RowDataPacket[]>(countQuery, countParams);
     const total = Number(countRows[0]?.total ?? 0);
     const offset = (page - 1) * limit;
@@ -166,9 +195,9 @@ router.get("/admin/withdrawals", requireAuth, requireAdmin, async (req, res) => 
 
     const params: Array<string | number> = [];
 
-    if (statusFilter !== "all") {
-      query += " WHERE wr.status = ?";
-      params.push(statusFilter);
+    if (whereClauses.length) {
+      query += ` WHERE ${whereClauses.join(" AND ")}`;
+      params.push(...countParams);
     }
 
     query += " ORDER BY wr.created_at DESC LIMIT ? OFFSET ?";
@@ -216,16 +245,25 @@ router.get("/admin/withdrawals/:id", requireAuth, requireAdmin, async (req, res)
     }
 
     const [auditRows] = await dbPool.query<RowDataPacket[]>(
-      `SELECT *
-       FROM withdrawal_audit_logs
-       WHERE withdrawal_request_id = ?
-       ORDER BY created_at ASC`,
+      `SELECT wal.*, u.first_name, u.last_name, u.email
+       FROM withdrawal_audit_logs wal
+       LEFT JOIN users u ON u.id = wal.actor_user_id
+       WHERE wal.withdrawal_request_id = ?
+       ORDER BY wal.created_at ASC`,
       [requestId],
     );
 
+    const normalizedAuditLogs = (auditRows || []).map((log: any) => ({
+      ...log,
+      actorName:
+       [log.first_name, log.last_name].filter(Boolean).join(" ") ||
+       (log.actor_user_id ? `User #${log.actor_user_id}` : "System"),
+      actorLabel: log.actor_role === "admin" ? "Admin" : "User",
+    }));
+
     return res.status(200).json({
       request: serializeWithdrawalRequest(rows[0]),
-      auditLogs: auditRows,
+      auditLogs: normalizedAuditLogs,
     });
   } catch (error) {
     return res.status(500).json({
