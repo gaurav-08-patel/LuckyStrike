@@ -113,6 +113,8 @@ const serializeWithdrawalRequest = (row: WithdrawalRequestRow) => ({
 router.get("/admin/withdrawals", requireAuth, requireAdmin, async (req, res) => {
   const rawStatus = typeof req.query.status === "string" ? req.query.status : "all";
   const statusFilter = rawStatus.trim().toLowerCase();
+  const rawPage = typeof req.query.page === "string" ? req.query.page : "1";
+  const rawLimit = typeof req.query.limit === "string" ? req.query.limit : "15";
   const validStatuses = new Set([
     "all",
     "pending",
@@ -129,12 +131,38 @@ router.get("/admin/withdrawals", requireAuth, requireAdmin, async (req, res) => 
     });
   }
 
+  const page = Number(rawPage);
+  const limit = Number(rawLimit);
+
+  if (!Number.isInteger(page) || page < 1) {
+    return res.status(400).json({ message: "page must be a positive integer." });
+  }
+
+  if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+    return res.status(400).json({ message: "limit must be between 1 and 100." });
+  }
+
   try {
-    let query = `SELECT wr.*, u.phone_number, u.first_name, u.last_name, u.email,
-        uba.account_holder_name, uba.bank_name, uba.account_number, uba.iban, uba.ifsc_code, uba.swift_code, uba.branch_name, uba.routing_number
+    const baseJoin = `
       FROM withdrawal_requests wr
       LEFT JOIN users u ON u.id = wr.user_id
       LEFT JOIN user_bank_accounts uba ON uba.id = wr.bank_account_id`;
+
+    const countParams: Array<string | number> = [];
+    let countQuery = `SELECT COUNT(*) AS total ${baseJoin}`;
+
+    if (statusFilter !== "all") {
+      countQuery += " WHERE wr.status = ?";
+      countParams.push(statusFilter);
+    }
+
+    const [countRows] = await dbPool.query<RowDataPacket[]>(countQuery, countParams);
+    const total = Number(countRows[0]?.total ?? 0);
+    const offset = (page - 1) * limit;
+
+    let query = `SELECT wr.*, u.phone_number, u.first_name, u.last_name, u.email,
+        uba.account_holder_name, uba.bank_name, uba.account_number, uba.iban, uba.ifsc_code, uba.swift_code, uba.branch_name, uba.routing_number
+      ${baseJoin}`;
 
     const params: Array<string | number> = [];
 
@@ -143,12 +171,18 @@ router.get("/admin/withdrawals", requireAuth, requireAdmin, async (req, res) => 
       params.push(statusFilter);
     }
 
-    query += " ORDER BY wr.created_at DESC";
+    query += " ORDER BY wr.created_at DESC LIMIT ? OFFSET ?";
+    params.push(limit, offset);
 
     const [rows] = await dbPool.query<WithdrawalRequestRow[]>(query, params);
+    const hasNextPage = offset + rows.length < total;
 
     return res.status(200).json({
+      total,
       count: rows.length,
+      hasNextPage,
+      page,
+      limit,
       requests: rows.map(serializeWithdrawalRequest),
     });
   } catch (error) {
