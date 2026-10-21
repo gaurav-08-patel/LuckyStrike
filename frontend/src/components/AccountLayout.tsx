@@ -114,7 +114,7 @@ function AccountLayout({
         <div className="mt-4 flex flex-col gap-4 lg:mt-6 lg:flex-row lg:items-start lg:gap-5">
           {sidebar && (
             <>
-              <aside className="hidden w-[260px] shrink-0 self-start rounded-[24px] border-[3px] border-ink bg-[#fffaf7] p-3 shadow-[6px_6px_0_#171310] lg:sticky lg:top-[100px] lg:flex lg:flex-col">
+              <aside className="hidden w-[260px] shrink-0 self-start rounded-[24px] border-[3px] border-ink bg-[#fffaf7] p-3 shadow-[6px_6px_0_#171310] lg:sticky lg:top-[100px] lg:flex lg:max-h-[calc(100vh-120px)] lg:min-h-0 lg:flex-col lg:overflow-hidden">
                 <div className="mb-4 px-2 pt-2">
                   <p className="text-[0.62rem] font-black uppercase tracking-[0.14em] text-ink/60">
                     {subtitle}
@@ -123,7 +123,7 @@ function AccountLayout({
 
                 {profileCard}
 
-                <div className="flex-1 overflow-auto pt-2">{sidebar}</div>
+                <div className="flex-1 overflow-y-auto pt-2">{sidebar}</div>
 
                 {user && (
                   <div className="mt-auto lg:mt-6 px-2 pb-3">

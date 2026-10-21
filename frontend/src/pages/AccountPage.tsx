@@ -1,6 +1,7 @@
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import AccountLayout from "../components/AccountLayout";
 import AdminOverviewTab from "../components/AdminOverviewTab";
+import AdminSupportTab from "../components/AdminSupportTab";
 import ActivityTab from "../components/ActivityTab";
 import DrawsTab from "../components/DrawsTab";
 import ProfileTab from "../components/ProfileTab";
@@ -43,6 +44,7 @@ function AccountPage({ role }: AccountPageProps) {
     { key: "overview", label: "Overview", link: "/admin/overview" },
     { key: "draws", label: "Draws", link: "/admin/draws" },
     { key: "users", label: "Users", link: "/admin/users" },
+    { key: "support-requests", label: "Support", link: "/admin/support-requests" },
     { key: "payments", label: "Payments", link: "/admin/payments" },
     { key: "settings", label: "Settings", link: "/admin/settings" },
   ];
@@ -89,6 +91,8 @@ function AccountPage({ role }: AccountPageProps) {
           return <DrawsTab />;
         case "users":
           return <UsersTab />;
+        case "support-requests":
+          return <AdminSupportTab />;
         case "payments":
           return (
             <div className="rounded-[24px] border-[3px] border-ink bg-[#fff7dc] p-6 shadow-[5px_5px_0_#171310]">

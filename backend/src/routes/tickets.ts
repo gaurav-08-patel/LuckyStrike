@@ -18,6 +18,7 @@ interface DrawRow extends RowDataPacket {
 
 interface UserBalanceRow extends RowDataPacket {
   wallet_balance: string | number;
+  pending_withdrawal_amount: string | number;
 }
 
 interface MyTicketRow extends RowDataPacket {
@@ -169,14 +170,18 @@ router.post("/draws/:id/buy", requireAuth, async (req, res) => {
     const totalCost = Number(draw.ticket_price) * quantity;
 
     const [userRows] = await connection.query<UserBalanceRow[]>(
-      "SELECT wallet_balance FROM users WHERE id = ? FOR UPDATE",
+      "SELECT wallet_balance, pending_withdrawal_amount FROM users WHERE id = ? FOR UPDATE",
       [userId],
     );
 
     const currentBalance = Number(userRows[0]?.wallet_balance ?? 0);
+    const pendingWithdrawalAmount = Number(userRows[0]?.pending_withdrawal_amount ?? 0);
+    const effectiveBalance = Math.max(currentBalance - pendingWithdrawalAmount, 0);
 
-    if (currentBalance < totalCost) {
-      throw new Error("Insufficient wallet balance.");
+    if (effectiveBalance < totalCost) {
+      throw new Error(
+        "You cannot buy tickets right now because some of your wallet balance is reserved for a pending withdrawal request.",
+      );
     }
 
     await updateWalletBalance(

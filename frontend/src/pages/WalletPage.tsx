@@ -78,6 +78,11 @@ function WalletPage() {
   const [topupError, setTopupError] = useState("");
 
   const walletBalance = Number(user?.walletBalance ?? 0);
+  const pendingWithdrawalBalance = Number(user?.pendingWithdrawalAmount ?? 0);
+  const availableBalance = Math.max(
+    walletBalance - pendingWithdrawalBalance,
+    0,
+  );
 
   useEffect(() => {
     const fetchWalletHistory = async (offset = 0, append = false) => {
@@ -293,6 +298,35 @@ function WalletPage() {
           </div>
         </div>
 
+        <div className="mt-5 grid grid-cols-3 gap-2 sm:gap-3">
+          <div className="rounded-[14px] border-[3px] border-ink bg-white p-2 shadow-[3px_3px_0_#171310] sm:rounded-[18px] sm:p-4 sm:shadow-[4px_4px_0_#171310]">
+            <p className="text-[0.46rem] font-black uppercase tracking-[0.12em] text-ink/60 sm:text-[0.62rem]">
+              Total balance
+            </p>
+            <p className="mt-1.5 font-display text-[0.9rem] leading-none text-ink sm:mt-2 sm:text-[1.4rem] lg:text-[1.7rem]">
+              {formatCurrency(walletBalance)}
+            </p>
+          </div>
+
+          <div className="rounded-[14px] border-[3px] border-ink bg-[#fff7dc] p-2 shadow-[3px_3px_0_#171310] sm:rounded-[18px] sm:p-4 sm:shadow-[4px_4px_0_#171310]">
+            <p className="text-[0.46rem] font-black uppercase tracking-[0.12em] text-ink/60 sm:text-[0.62rem]">
+              Pending
+            </p>
+            <p className="mt-1.5 font-display text-[0.9rem] leading-none text-ink sm:mt-2 sm:text-[1.4rem] lg:text-[1.7rem]">
+              {formatCurrency(pendingWithdrawalBalance)}
+            </p>
+          </div>
+
+          <div className="rounded-[14px] border-[3px] border-ink bg-[#eafaf3] p-2 shadow-[3px_3px_0_#171310] sm:rounded-[18px] sm:p-4 sm:shadow-[4px_4px_0_#171310]">
+            <p className="text-[0.46rem] font-black uppercase tracking-[0.12em] text-ink/60 sm:text-[0.62rem]">
+              Available
+            </p>
+            <p className="mt-1.5 font-display text-[0.9rem] leading-none text-ink sm:mt-2 sm:text-[1.4rem] lg:text-[1.7rem]">
+              {formatCurrency(availableBalance)}
+            </p>
+          </div>
+        </div>
+
         <div className="mt-6 min-h-[460px] overflow-hidden rounded-[22px] border-[3px] border-ink bg-[#f5f3f1] shadow-[6px_6px_0_#171310] sm:mt-8 sm:min-h-[520px] sm:rounded-[26px]">
           {activeTab === "topup" ? (
             <div className="grid min-h-[460px] gap-4 p-3 sm:min-h-[520px] sm:gap-6 sm:p-6 lg:grid-cols-2">
@@ -379,8 +413,12 @@ function WalletPage() {
 
                   <div className="mt-5 rounded-[16px] border-[3px] border-ink bg-[#fff7dc] px-3 py-3 shadow-[3px_3px_0_#171310] sm:mt-6 sm:px-4 sm:py-4">
                     <div className="flex items-center justify-between gap-3 text-xs font-bold uppercase tracking-[0.08em] text-ink/70 sm:text-sm">
-                      <span>Curr. balance</span>
-                      <span>{formatCurrency(walletBalance)}</span>
+                      <span>Available balance</span>
+                      <span>{formatCurrency(availableBalance)}</span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between gap-3 text-[0.7rem] font-bold uppercase tracking-[0.08em] text-ink/70 sm:text-xs">
+                      <span>Pending withdrawal</span>
+                      <span>{formatCurrency(pendingWithdrawalBalance)}</span>
                     </div>
                     <div className="mt-2 flex items-center justify-between gap-3 text-base font-black text-ink sm:text-lg">
                       <span>Top-up</span>

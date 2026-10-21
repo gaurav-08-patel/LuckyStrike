@@ -149,6 +149,8 @@ router.get("/admin/requests", requireAuth, requireAdmin, async (req, res) => {
   const rawStatus =
     typeof req.query.status === "string" ? req.query.status : "all";
   const statusFilter = rawStatus.trim().toLowerCase();
+  const searchTerm =
+    typeof req.query.search === "string" ? req.query.search.trim() : "";
   const sortDirection =
     typeof req.query.sort === "string" &&
     ["asc", "desc"].includes(req.query.sort.toLowerCase())
@@ -187,6 +189,29 @@ router.get("/admin/requests", requireAuth, requireAdmin, async (req, res) => {
       params.push(statusFilter);
     }
 
+    if (searchTerm.length > 0) {
+      conditions.push(`(
+       LOWER(sr.issue_type) LIKE ? OR
+       LOWER(sr.subject) LIKE ? OR
+       LOWER(sr.message) LIKE ? OR
+       LOWER(u.first_name) LIKE ? OR
+       LOWER(u.last_name) LIKE ? OR
+       LOWER(u.email) LIKE ? OR
+       LOWER(CAST(u.phone_number AS CHAR)) LIKE ?
+      )`);
+
+      const searchPattern = `%${searchTerm.toLowerCase()}%`;
+      params.push(
+        searchPattern,
+        searchPattern,
+        searchPattern,
+        searchPattern,
+        searchPattern,
+        searchPattern,
+        searchPattern,
+      );
+    }
+
     const whereClause = conditions.length
       ? `WHERE ${conditions.join(" AND ")}`
       : "";
@@ -194,6 +219,7 @@ router.get("/admin/requests", requireAuth, requireAdmin, async (req, res) => {
     const [countRows] = await dbPool.query<RowDataPacket[]>(
       `SELECT COUNT(*) AS total
        FROM support_requests sr
+       INNER JOIN users u ON u.id = sr.user_id
        ${whereClause}`,
       params,
     );

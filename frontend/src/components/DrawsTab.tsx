@@ -357,37 +357,35 @@ export default function DrawsTab() {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-[24px] border-[3px] border-ink bg-warm p-5 shadow-[6px_6px_0_#171310] sm:p-6">
-        <div className="rounded-[18px] border-[3px] border-ink bg-paper px-4 py-4 shadow-[3px_3px_0_#171310]">
-          <p className="text-sm font-bold text-pink">Admin tools</p>
-          <h2 className="mt-2 font-display text-[2rem] leading-none tracking-[-0.05em] text-ink">
-            Draws
-          </h2>
-          <p className="mt-2 text-sm text-ink/70">
-            Create new raffles and settle active draws when the time is complete.
-          </p>
+      <div className="rounded-[28px] border-[3px] border-ink bg-[radial-gradient(circle_at_top_left,#fff5f7_0%,#fff9ef_35%,#fffdfb_100%)] p-4 shadow-[7px_7px_0_#171310] sm:p-6">
+        <div className="flex flex-col gap-4 rounded-[22px] border-[3px] border-ink bg-[linear-gradient(135deg,#fff3f8_0%,#fff8de_100%)] p-4 shadow-[4px_4px_0_#171310] sm:flex-row sm:items-end sm:justify-between sm:p-5">
+          <div className="max-w-xl">
+            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-pink">Admin tools</p>
+            <h2 className="mt-2 font-display text-[2.1rem] leading-none tracking-[-0.06em] text-ink sm:text-[2.7rem]">
+              Draws
+            </h2>
+            <p className="mt-2 text-sm text-ink/70 sm:text-[15px]">
+              Create new raffles and settle active draws when the time is complete.
+            </p>
+          </div>
+          <div className="rounded-full border-[3px] border-ink bg-[#fff] px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-ink shadow-[2px_2px_0_#171310]">
+            Live setup
+          </div>
         </div>
 
         <form
           onSubmit={handleCreateDraw}
-          className="mt-5 rounded-[20px] border-[3px] border-ink bg-[#fffaf5] p-4 shadow-[4px_4px_0_#171310]"
+          className="mt-5 rounded-[24px] border-[3px] border-ink bg-[#fffefc] p-4 shadow-[7px_7px_0_#171310] sm:p-5"
         >
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-pink">
-                Create new draw
-              </p>
-              <h3 className="mt-1 font-display text-[1.5rem] leading-none text-ink">
-                Draw details
-              </h3>
-            </div>
-            <span className="rounded-full border-[3px] border-ink bg-yellow px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-ink">
-              Live setup
-            </span>
+          <div className="mb-5">
+            <p className="text-[10px] font-black uppercase tracking-[0.12em] text-pink">Create new draw</p>
+            <h3 className="mt-2 font-display text-[1.8rem] leading-none tracking-[-0.05em] text-ink">
+              Draw details
+            </h3>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <label className="rounded-[14px] border-[3px] border-ink bg-[#fffdfb] p-2.5 text-sm font-bold text-ink shadow-[2px_2px_0_#171310]">
+            <label className="group rounded-[18px] border-[3px] border-ink bg-[linear-gradient(180deg,#ffffff_0%,#fff9fb_100%)] p-3 text-sm font-bold text-ink shadow-[3px_3px_0_#171310] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#171310] focus-within:-translate-y-0.5 focus-within:shadow-[4px_4px_0_#171310]">
               <span className="block text-[10px] uppercase tracking-[0.08em] text-ink/70">
                 Title
               </span>
@@ -400,7 +398,7 @@ export default function DrawsTab() {
               />
             </label>
 
-            <label className="rounded-[14px] border-[3px] border-ink bg-[#fffdfb] p-2.5 text-sm font-bold text-ink shadow-[2px_2px_0_#171310]">
+            <label className="group rounded-[18px] border-[3px] border-ink bg-[linear-gradient(180deg,#ffffff_0%,#fffaf3_100%)] p-3 text-sm font-bold text-ink shadow-[3px_3px_0_#171310] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#171310] focus-within:-translate-y-0.5 focus-within:shadow-[4px_4px_0_#171310]">
               <span className="block text-[10px] uppercase tracking-[0.08em] text-ink/70">
                 Prize title
               </span>
@@ -413,7 +411,7 @@ export default function DrawsTab() {
               />
             </label>
 
-            <label className="rounded-[14px] border-[3px] border-ink bg-[#fffdfb] p-2.5 text-sm font-bold text-ink shadow-[2px_2px_0_#171310]">
+            <label className="group rounded-[18px] border-[3px] border-ink bg-[linear-gradient(180deg,#ffffff_0%,#fff6ee_100%)] p-3 text-sm font-bold text-ink shadow-[3px_3px_0_#171310] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#171310] focus-within:-translate-y-0.5 focus-within:shadow-[4px_4px_0_#171310]">
               <span className="block text-[10px] uppercase tracking-[0.08em] text-ink/70">
                 Prize amount
               </span>
@@ -428,7 +426,7 @@ export default function DrawsTab() {
               />
             </label>
 
-            <label className="rounded-[14px] border-[3px] border-ink bg-[#fffdfb] p-2.5 text-sm font-bold text-ink shadow-[2px_2px_0_#171310]">
+            <label className="group rounded-[18px] border-[3px] border-ink bg-[linear-gradient(180deg,#ffffff_0%,#fffaf5_100%)] p-3 text-sm font-bold text-ink shadow-[3px_3px_0_#171310] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#171310] focus-within:-translate-y-0.5 focus-within:shadow-[4px_4px_0_#171310]">
               <span className="block text-[10px] uppercase tracking-[0.08em] text-ink/70">
                 Ticket price
               </span>
@@ -443,7 +441,7 @@ export default function DrawsTab() {
               />
             </label>
 
-            <label className="rounded-[14px] border-[3px] border-ink bg-[#fffdfb] p-2.5 text-sm font-bold text-ink shadow-[2px_2px_0_#171310]">
+            <label className="group rounded-[18px] border-[3px] border-ink bg-[linear-gradient(180deg,#ffffff_0%,#fffdf9_100%)] p-3 text-sm font-bold text-ink shadow-[3px_3px_0_#171310] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#171310] focus-within:-translate-y-0.5 focus-within:shadow-[4px_4px_0_#171310]">
               <span className="block text-[10px] uppercase tracking-[0.08em] text-ink/70">
                 Max tickets
               </span>
@@ -458,7 +456,7 @@ export default function DrawsTab() {
               />
             </label>
 
-            <label className="rounded-[14px] border-[3px] border-ink bg-[#fffdfb] p-2.5 text-sm font-bold text-ink shadow-[2px_2px_0_#171310]">
+            <label className="group rounded-[18px] border-[3px] border-ink bg-[linear-gradient(180deg,#ffffff_0%,#fff7f1_100%)] p-3 text-sm font-bold text-ink shadow-[3px_3px_0_#171310] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#171310] focus-within:-translate-y-0.5 focus-within:shadow-[4px_4px_0_#171310]">
               <span className="block text-[10px] uppercase tracking-[0.08em] text-ink/70">
                 Draw type
               </span>
@@ -473,7 +471,7 @@ export default function DrawsTab() {
               </select>
             </label>
 
-            <label className="rounded-[14px] border-[3px] border-ink bg-[#fffdfb] p-2.5 text-sm font-bold text-ink shadow-[2px_2px_0_#171310]">
+            <label className="group rounded-[18px] border-[3px] border-ink bg-[linear-gradient(180deg,#ffffff_0%,#fffaf2_100%)] p-3 text-sm font-bold text-ink shadow-[3px_3px_0_#171310] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#171310] focus-within:-translate-y-0.5 focus-within:shadow-[4px_4px_0_#171310]">
               <span className="block text-[10px] uppercase tracking-[0.08em] text-ink/70">
                 Draw at
               </span>
@@ -485,7 +483,7 @@ export default function DrawsTab() {
               />
             </label>
 
-            <label className="rounded-[14px] border-[3px] border-ink bg-[#fffdfb] p-2.5 text-sm font-bold text-ink shadow-[2px_2px_0_#171310]">
+            <label className="group rounded-[18px] border-[3px] border-ink bg-[linear-gradient(180deg,#ffffff_0%,#fff8f8_100%)] p-3 text-sm font-bold text-ink shadow-[3px_3px_0_#171310] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#171310] focus-within:-translate-y-0.5 focus-within:shadow-[4px_4px_0_#171310]">
               <span className="block text-[10px] uppercase tracking-[0.08em] text-ink/70">
                 Expires at
               </span>
@@ -498,11 +496,11 @@ export default function DrawsTab() {
             </label>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-3">
+          <div className="mt-5 flex flex-wrap items-center gap-3">
             <button
               type="submit"
               disabled={creating}
-              className="rounded-full border-[3px] border-ink bg-pink px-4 py-2 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[3px_3px_0_#171310] transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+              className="cursor-pointer rounded-full border-[3px] border-ink bg-gradient-to-r from-[#ff5c8a] via-[#ff3d8c] to-[#ff6d52] px-5 py-2.5 text-sm font-black uppercase tracking-[0.12em] text-white shadow-[4px_4px_0_#171310] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[5px_5px_0_#171310] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {creating ? "Creating..." : "Create draw"}
             </button>
@@ -613,7 +611,7 @@ export default function DrawsTab() {
                           type="button"
                           disabled={draw.status !== "active" || settlingId === draw.id}
                           onClick={() => setDrawToSettle(draw)}
-                          className="rounded-full border-[3px] border-ink bg-yellow px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-ink shadow-[2px_2px_0_#171310] disabled:cursor-not-allowed disabled:opacity-50"
+                          className="cursor-pointer rounded-full border-[3px] border-ink bg-yellow px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-ink shadow-[2px_2px_0_#171310] disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           {settlingId === draw.id ? "Settling..." : "Settle"}
                         </button>
@@ -630,7 +628,7 @@ export default function DrawsTab() {
                   type="button"
                   onClick={() => void loadDraws(true, searchTerm)}
                   disabled={isLoadingMore}
-                  className="rounded-full border-[3px] border-ink bg-pink px-4 py-2 text-xs font-black uppercase tracking-[0.08em] text-white shadow-[3px_3px_0_#171310] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="cursor-pointer rounded-full border-[3px] border-ink bg-pink px-4 py-2 text-xs font-black uppercase tracking-[0.08em] text-white shadow-[3px_3px_0_#171310] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isLoadingMore ? "Loading more..." : "Show more"}
                 </button>
@@ -660,7 +658,7 @@ export default function DrawsTab() {
               <button
                 type="button"
                 onClick={() => setDrawToSettle(null)}
-                className="rounded-md px-3 py-2 text-sm font-bold text-ink/80"
+                className="cursor-pointer rounded-md px-3 py-2 text-sm font-bold text-ink/80"
               >
                 Cancel
               </button>
@@ -670,7 +668,7 @@ export default function DrawsTab() {
                 onClick={() => {
                   void handleSettleDraw(drawToSettle.id);
                 }}
-                className="rounded-md bg-gradient-to-r from-[#ff6b73] to-[#ff3b47] px-4 py-2 text-sm font-black text-white"
+                className="cursor-pointer rounded-md bg-gradient-to-r from-[#ff6b73] to-[#ff3b47] px-4 py-2 text-sm font-black text-white"
               >
                 Settle draw
               </button>

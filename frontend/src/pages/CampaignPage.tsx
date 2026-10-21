@@ -99,8 +99,10 @@ function CampaignPage() {
       ? "bg-red text-white"
       : "bg-[#3ACF7E] text-[#0d2a20]";
   const walletBalance = Number(user?.walletBalance ?? 0);
+  const pendingWithdrawalAmount = Number(user?.pendingWithdrawalAmount ?? 0);
+  const availableBalance = Math.max(walletBalance - pendingWithdrawalAmount, 0);
   const totalTicketCost = ticketQuantity * Number(campaign.entryFrom || 0);
-  const displayedWalletBalance = isLoggedIn ? walletBalance : 0;
+  const displayedWalletBalance = isLoggedIn ? availableBalance : 0;
   const totalTicketsAvailable = Number(
     campaign.soldTotal ?? campaign.max_tickets ?? 0,
   );
@@ -132,9 +134,9 @@ function CampaignPage() {
       return;
     }
 
-    if (walletBalance < totalTicketCost) {
+    if (availableBalance < totalTicketCost) {
       setTicketError(
-        `You need ${campaign.currency} ${totalTicketCost.toLocaleString("en-AE")} in your wallet to continue.`,
+        `You need ${campaign.currency} ${totalTicketCost.toLocaleString("en-AE")} available to spend to continue.`,
       );
       return;
     }
@@ -318,7 +320,7 @@ function CampaignPage() {
 
               <div className="mb-5 grid gap-2 sm:grid-cols-2">
                 <div className="flex items-center justify-between gap-2 rounded-full border-[3px] border-ink bg-[#f7f7f7] px-2.5 py-1.5 text-[0.58rem] font-black uppercase tracking-[0.12em] text-ink/80 shadow-[2px_2px_0_#171310] sm:px-3 sm:text-[0.68rem]">
-                  <span>Wallet</span>
+                  <span>Available balance</span>
                   <span className="text-ink">
                     {isLoggedIn
                       ? `${campaign.currency} ${displayedWalletBalance.toLocaleString("en-AE")}`
@@ -486,7 +488,7 @@ function CampaignPage() {
 
                 <div className="rounded-[16px] border-[3px] border-ink bg-[#f5f3ef] p-4">
                   <div className="flex items-center justify-between text-sm font-bold text-ink/70">
-                    <span>Wallet balance</span>
+                    <span>Available balance</span>
                     <span>
                       {campaign.currency}{" "}
                       {displayedWalletBalance.toLocaleString("en-AE")}

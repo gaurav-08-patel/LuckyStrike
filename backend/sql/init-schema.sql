@@ -18,16 +18,82 @@ CREATE TABLE IF NOT EXISTS users (
     country_of_residence  VARCHAR(100) NULL,
     profile_image         VARCHAR(500) NULL,
     wallet_balance        DECIMAL(10,2) NOT NULL DEFAULT 0,
+    pending_withdrawal_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
     is_phone_verified     BOOLEAN NOT NULL DEFAULT FALSE,
     is_admin              BOOLEAN NOT NULL DEFAULT FALSE,
     created_at            DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at            DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS user_bank_accounts (
+    id                    INT AUTO_INCREMENT PRIMARY KEY,
+    user_id               INT NOT NULL,
+    account_holder_name   VARCHAR(200) NOT NULL,
+    bank_name             VARCHAR(200) NOT NULL,
+    bank_country         VARCHAR(100) NULL,
+    account_number        VARCHAR(80) NOT NULL,
+    iban                  VARCHAR(100) NULL,
+    ifsc_code             VARCHAR(50) NULL,
+    swift_code            VARCHAR(50) NULL,
+    branch_name           VARCHAR(200) NULL,
+    routing_number        VARCHAR(100) NULL,
+    is_default            BOOLEAN NOT NULL DEFAULT FALSE,
+    is_verified           BOOLEAN NOT NULL DEFAULT FALSE,
+    verification_note     VARCHAR(255) NULL,
+    created_at            DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at            DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_user_bank_accounts_user
+        FOREIGN KEY (user_id) REFERENCES users(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS withdrawal_requests (
+    id                    INT AUTO_INCREMENT PRIMARY KEY,
+    user_id               INT NOT NULL,
+    bank_account_id       INT NOT NULL,
+    amount                DECIMAL(10,2) NOT NULL,
+    currency              VARCHAR(10) NOT NULL DEFAULT 'INR',
+    status                ENUM('pending', 'under_review', 'approved', 'rejected', 'paid', 'cancelled') NOT NULL DEFAULT 'pending',
+    request_note          TEXT NULL,
+    admin_note            TEXT NULL,
+    reviewed_by_admin_id  INT NULL,
+    reviewed_at           DATETIME NULL,
+    paid_at               DATETIME NULL,
+    payment_reference     VARCHAR(200) NULL,
+    rejection_reason      TEXT NULL,
+    created_at            DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at            DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_withdrawal_requests_user
+        FOREIGN KEY (user_id) REFERENCES users(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    CONSTRAINT fk_withdrawal_requests_bank_account
+        FOREIGN KEY (bank_account_id) REFERENCES user_bank_accounts(id)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS withdrawal_audit_logs (
+    id                    INT AUTO_INCREMENT PRIMARY KEY,
+    withdrawal_request_id INT NOT NULL,
+    actor_user_id         INT NULL,
+    actor_role            ENUM('user', 'admin') NOT NULL,
+    action               VARCHAR(100) NOT NULL,
+    old_status           VARCHAR(50) NULL,
+    new_status           VARCHAR(50) NULL,
+    note                 TEXT NULL,
+    created_at           DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_withdrawal_audit_request
+        FOREIGN KEY (withdrawal_request_id) REFERENCES withdrawal_requests(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS wallet_transaction_history (
     id              INT AUTO_INCREMENT PRIMARY KEY,
     user_id         INT NOT NULL,
-    type            ENUM('topup', 'withdrawal', 'prize_credit', 'ticket_purchase') NOT NULL,
+    type            ENUM('topup', 'withdrawal', 'withdrawal_request', 'withdrawal_approved', 'withdrawal_paid', 'withdrawal_rejected', 'withdrawal_cancelled', 'prize_credit', 'ticket_purchase') NOT NULL,
     amount          DECIMAL(10,2) NOT NULL,
     balance_after   DECIMAL(10,2) NOT NULL,
     reference_type  VARCHAR(30) NULL,

@@ -19,6 +19,7 @@ export type AuthUser = {
   nationality?: string;
   countryOfResidence?: string;
   walletBalance?: number;
+  pendingWithdrawalAmount?: number;
   isPhoneVerified?: boolean;
   isAdmin?: boolean;
 };
@@ -67,6 +68,7 @@ const normalizeAuthUser = (value: unknown): AuthUser | null => {
   return {
     ...user,
     walletBalance: Number(user.walletBalance ?? 0),
+    pendingWithdrawalAmount: Number(user.pendingWithdrawalAmount ?? 0),
     isPhoneVerified: parseBooleanFlag(user.isPhoneVerified),
     isAdmin: parseBooleanFlag(user.isAdmin),
   } as AuthUser;
