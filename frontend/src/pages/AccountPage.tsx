@@ -8,6 +8,7 @@ import DrawsTab from "../components/DrawsTab";
 import ProfileTab from "../components/ProfileTab";
 import SupportTab from "../components/SupportTab";
 import UsersTab from "../components/UsersTab";
+import WithdrawalsTab from "../components/WithdrawalsTab";
 import { useAuth } from "../context/AuthContext";
 
 type AccountPageProps = {
@@ -37,6 +38,7 @@ function AccountPage({ role }: AccountPageProps) {
   const userTabs = [
     { key: "profile", label: "Profile", link: "/user/profile" },
     { key: "bank-accounts", label: "Bank Accounts", link: "/user/bank-accounts" },
+    { key: "withdrawls", label: "Withdrawals", link: "/user/withdrawls" },
     { key: "tickets", label: "Tickets", link: "/my-tickets" },
     { key: "activity", label: "Activity", link: "/user/activity" },
     { key: "support", label: "Support", link: "/user/support" },
@@ -128,6 +130,9 @@ function AccountPage({ role }: AccountPageProps) {
         return <ProfileTab />;
       case "bank-accounts":
         return <BankAccountsTab />;
+      case "withdrawls":
+      case "withdrawals":
+        return <WithdrawalsTab />;
       case "activity":
         return <ActivityTab />;
       case "support":
