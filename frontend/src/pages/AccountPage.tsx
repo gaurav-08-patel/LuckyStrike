@@ -3,6 +3,7 @@ import AccountLayout from "../components/AccountLayout";
 import AdminOverviewTab from "../components/AdminOverviewTab";
 import AdminSupportTab from "../components/AdminSupportTab";
 import ActivityTab from "../components/ActivityTab";
+import BankAccountsTab from "../components/BankAccountsTab";
 import DrawsTab from "../components/DrawsTab";
 import ProfileTab from "../components/ProfileTab";
 import SupportTab from "../components/SupportTab";
@@ -35,6 +36,7 @@ function AccountPage({ role }: AccountPageProps) {
 
   const userTabs = [
     { key: "profile", label: "Profile", link: "/user/profile" },
+    { key: "bank-accounts", label: "Bank Accounts", link: "/user/bank-accounts" },
     { key: "tickets", label: "Tickets", link: "/my-tickets" },
     { key: "activity", label: "Activity", link: "/user/activity" },
     { key: "support", label: "Support", link: "/user/support" },
@@ -124,6 +126,8 @@ function AccountPage({ role }: AccountPageProps) {
     switch (currentTab) {
       case "profile":
         return <ProfileTab />;
+      case "bank-accounts":
+        return <BankAccountsTab />;
       case "activity":
         return <ActivityTab />;
       case "support":
