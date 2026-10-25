@@ -78,11 +78,14 @@ export default function WithdrawalsTab() {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/withdrawals/bank-accounts`, {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : "",
+      const response = await fetch(
+        `${API_BASE_URL}/api/withdrawals/bank-accounts`,
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
@@ -90,7 +93,9 @@ export default function WithdrawalsTab() {
       }
 
       const data = await response.json();
-      setBankAccounts(Array.isArray(data?.bankAccounts) ? data.bankAccounts : []);
+      setBankAccounts(
+        Array.isArray(data?.bankAccounts) ? data.bankAccounts : [],
+      );
     } catch (err: any) {
       setError(err?.message || "Unable to load your saved bank accounts.");
     }
@@ -105,11 +110,14 @@ export default function WithdrawalsTab() {
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/withdrawals/my-requests`, {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : "",
+      const response = await fetch(
+        `${API_BASE_URL}/api/withdrawals/my-requests`,
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
@@ -173,10 +181,15 @@ export default function WithdrawalsTab() {
       const responseBody = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(responseBody?.message || "Unable to submit withdrawal request.");
+        throw new Error(
+          responseBody?.message || "Unable to submit withdrawal request.",
+        );
       }
 
-      toast.success("Withdrawal request submitted", "Your withdrawal request has been created.");
+      toast.success(
+        "Withdrawal request submitted",
+        "Your withdrawal request has been created.",
+      );
       setForm(initialForm);
       await loadData();
     } catch (err: any) {
@@ -191,17 +204,19 @@ export default function WithdrawalsTab() {
   );
 
   return (
-    <div className="space-y-6 rounded-[24px] border border-[#ffe7ec] bg-gradient-to-br from-[#fff7f8] to-[#fffdfa] p-6 shadow-[0_10px_30px_rgba(255,93,160,0.08)]">
+    <div className="max-w-full space-y-6 overflow-hidden rounded-[24px] border border-[#ffe7ec] bg-gradient-to-br from-[#fff7f8] to-[#fffdfa] p-4 shadow-[0_10px_30px_rgba(255,93,160,0.08)] sm:p-6">
       <div className="flex flex-col gap-2">
-        <h2 className="font-display text-[2rem] font-black text-pink-600">Withdrawals</h2>
+        <h2 className="font-display text-[1.7rem] font-black text-pink-600 sm:text-[2rem]">
+          Withdrawals
+        </h2>
         <p className="text-sm text-ink/70">
           Choose one of your saved accounts and submit a withdrawal request.
         </p>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[0.95fr_1.4fr]">
-        <div className="rounded-[20px] border border-[#ffe7ec] bg-white p-5 shadow-[0_8px_18px_rgba(255,93,160,0.06)]">
-          <h3 className="mb-4 font-display text-[1.5rem] font-black text-pink-600">
+      <div className="grid gap-4 xl:grid-cols-[0.95fr_1.4fr] xl:gap-6">
+        <div className="min-w-0 rounded-[20px] border border-[#ffe7ec] bg-white p-4 shadow-[0_8px_18px_rgba(255,93,160,0.06)] sm:p-5">
+          <h3 className="mb-4 font-display text-[1.3rem] font-black text-pink-600 sm:text-[1.5rem]">
             New withdrawal
           </h3>
 
@@ -213,21 +228,28 @@ export default function WithdrawalsTab() {
 
           {bankAccounts.length === 0 ? (
             <div className="rounded-[18px] border border-dashed border-pink-200 bg-[#fffafc] p-4 text-sm text-ink/70">
-              No saved bank accounts yet. Add one in the Bank Accounts tab first.
+              No saved bank accounts yet. Add one in the Bank Accounts tab
+              first.
             </div>
           ) : (
             <div className="space-y-4">
-              <label className="block space-y-2 text-xs font-black uppercase tracking-[0.08em] text-pink-600">
+              <label className="block space-y-2 text-[10px] font-black uppercase tracking-[0.08em] text-pink-600 sm:text-xs">
                 <span>Bank account</span>
                 <select
                   value={form.bankAccountId}
-                  onChange={(event) => setForm((current) => ({ ...current, bankAccountId: event.target.value }))}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      bankAccountId: event.target.value,
+                    }))
+                  }
                   className="mt-1 w-full rounded-md border border-pink-200 bg-[#fffafc] px-3 py-2.5 text-sm font-medium text-ink outline-none transition-all focus:border-pink-400 focus:ring-2 focus:ring-pink-100"
                 >
                   <option value="">Select a saved account</option>
                   {bankAccounts.map((account) => (
                     <option key={account.id} value={account.id}>
-                      {account.accountHolderName} • {account.bankName} • {account.accountNumber}
+                      {account.accountHolderName} • {account.bankName} •{" "}
+                      {account.accountNumber}
                     </option>
                   ))}
                 </select>
@@ -243,24 +265,34 @@ export default function WithdrawalsTab() {
                 </div>
               ) : null}
 
-              <label className="block space-y-2 text-xs font-black uppercase tracking-[0.08em] text-pink-600">
+              <label className="block space-y-2 text-[10px] font-black uppercase tracking-[0.08em] text-pink-600 sm:text-xs">
                 <span>Amount</span>
                 <input
                   type="number"
                   min="1"
                   step="0.01"
                   value={form.amount}
-                  onChange={(event) => setForm((current) => ({ ...current, amount: event.target.value }))}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      amount: event.target.value,
+                    }))
+                  }
                   placeholder="Enter amount"
                   className="mt-1 w-full rounded-md border border-pink-200 bg-[#fffafc] px-3 py-2.5 text-sm font-medium text-ink outline-none transition-all focus:border-pink-400 focus:ring-2 focus:ring-pink-100"
                 />
               </label>
 
-              <label className="block space-y-2 text-xs font-black uppercase tracking-[0.08em] text-pink-600">
+              <label className="block space-y-2 text-[10px] font-black uppercase tracking-[0.08em] text-pink-600 sm:text-xs">
                 <span>Note (optional)</span>
                 <textarea
                   value={form.note}
-                  onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      note: event.target.value,
+                    }))
+                  }
                   rows={4}
                   placeholder="Add an optional note for the admin"
                   className="mt-1 w-full rounded-md border border-pink-200 bg-[#fffafc] px-3 py-2.5 text-sm font-medium text-ink outline-none transition-all focus:border-pink-400 focus:ring-2 focus:ring-pink-100"
@@ -279,70 +311,151 @@ export default function WithdrawalsTab() {
           )}
         </div>
 
-        <div className="rounded-[20px] border border-[#ffe7ec] bg-white p-5 shadow-[0_8px_18px_rgba(255,93,160,0.06)]">
+        <div className="min-w-0 rounded-[20px] border border-[#ffe7ec] bg-white p-4 shadow-[0_8px_18px_rgba(255,93,160,0.06)] sm:p-5">
           <div className="mb-4 flex items-center justify-between gap-3">
-            <h3 className="font-display text-[1.5rem] font-black text-pink-600">History</h3>
+            <h3 className="font-display text-[1.3rem] font-black text-pink-600 sm:text-[1.5rem]">
+              History
+            </h3>
             <button
               type="button"
               onClick={loadData}
-              className="rounded-md border border-pink-200 bg-pink-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-pink-700"
+              className="rounded-md border border-pink-200 bg-pink-50 px-3 py-2 text-[10px] font-black uppercase tracking-[0.08em] text-pink-700 sm:text-xs"
             >
               Refresh
             </button>
           </div>
 
           {loading ? (
-            <div className="text-sm text-ink/70">Loading withdrawal history...</div>
+            <div className="text-sm text-ink/70">
+              Loading withdrawal history...
+            </div>
           ) : requests.length === 0 ? (
             <div className="rounded-[18px] border border-dashed border-pink-200 bg-[#fffafc] p-4 text-sm text-ink/70">
               No withdrawal requests yet.
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-[18px] border border-[#ffe7ec]">
-              <table className="min-w-full divide-y divide-[#ffe7ec] text-left text-sm">
-                <thead className="bg-[#fff7f8] text-pink-700">
-                  <tr>
-                    <th className="px-3 py-3 font-black uppercase tracking-[0.08em]">ID</th>
-                    <th className="px-3 py-3 font-black uppercase tracking-[0.08em]">Amount</th>
-                    <th className="px-3 py-3 font-black uppercase tracking-[0.08em]">Bank</th>
-                    <th className="px-3 py-3 font-black uppercase tracking-[0.08em]">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#ffe7ec] bg-white">
+            <>
+              <div className="block overflow-x-auto rounded-[18px] border border-[#ffe7ec] md:hidden">
+                <div className="divide-y divide-[#ffe7ec] bg-white">
                   {requests.map((request) => (
-                    <tr key={request.id} className="align-top">
-                      <td className="px-3 py-3 font-bold text-ink">#{request.id}</td>
-                      <td className="px-3 py-3 text-ink">
-                        <div className="font-black">₹{Number(request.amount).toFixed(2)}</div>
-                        <div className="text-xs text-ink/60">
-                          {new Date(request.createdAt ?? Date.now()).toLocaleDateString()}
-                        </div>
-                      </td>
-                      <td className="px-3 py-3 text-ink/75">
-                        <div className="font-medium">{request.bankAccount?.bankName || "-"}</div>
-                        <div className="text-xs">{request.bankAccount?.accountNumber || "-"}</div>
-                      </td>
-                      <td className="px-3 py-3">
+                    <div key={request.id} className="p-3 text-sm text-ink/80">
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <div className="font-black text-ink">#{request.id}</div>
                         <span
                           className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] ${getStatusClasses(request.status)}`}
                         >
                           {request.status}
                         </span>
-                        {request.status?.toLowerCase() === "rejected" && (request.rejectionReason || request.adminNote) ? (
-                          <div className="mt-2 max-w-[240px] rounded-md border border-red-100 bg-red-50 p-2 text-[11px] text-red-700">
-                            <span className="font-black uppercase tracking-[0.06em]">Reason:</span>{" "}
-                            {request.rejectionReason || request.adminNote}
-                          </div>
-                        ) : null}
-                        {request.requestNote && request.status?.toLowerCase() !== "rejected" ? (
-                          <div className="mt-2 max-w-[220px] text-xs text-ink/60">{request.requestNote}</div>
-                        ) : null}
-                      </td>
-                    </tr>
+                      </div>
+
+                      <div className="space-y-1">
+                        <div className="font-black text-ink">
+                          ₹{Number(request.amount).toFixed(2)}
+                        </div>
+                        <div className="text-xs text-ink/60">
+                          {new Date(
+                            request.createdAt ?? Date.now(),
+                          ).toLocaleDateString()}
+                        </div>
+                        <div className="text-ink/75">
+                          {request.bankAccount?.bankName || "-"}
+                        </div>
+                        <div className="text-xs text-ink/60">
+                          {request.bankAccount?.accountNumber || "-"}
+                        </div>
+                      </div>
+
+                      {request.status?.toLowerCase() === "rejected" &&
+                      (request.rejectionReason || request.adminNote) ? (
+                        <div className="mt-2 rounded-md border border-red-100 bg-red-50 p-2 text-[11px] text-red-700">
+                          <span className="font-black uppercase tracking-[0.06em]">
+                            Reason:
+                          </span>{" "}
+                          {request.rejectionReason || request.adminNote}
+                        </div>
+                      ) : null}
+
+                      {request.requestNote &&
+                      request.status?.toLowerCase() !== "rejected" ? (
+                        <div className="mt-2 text-xs text-ink/60">
+                          {request.requestNote}
+                        </div>
+                      ) : null}
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </div>
+              </div>
+
+              <div className="hidden overflow-x-auto rounded-[18px] border border-[#ffe7ec] md:block">
+                <table className="min-w-full divide-y divide-[#ffe7ec] text-left text-sm">
+                  <thead className="bg-[#fff7f8] text-pink-700">
+                    <tr>
+                      <th className="px-3 py-3 font-black uppercase tracking-[0.08em]">
+                        ID
+                      </th>
+                      <th className="px-3 py-3 font-black uppercase tracking-[0.08em]">
+                        Amount
+                      </th>
+                      <th className="px-3 py-3 font-black uppercase tracking-[0.08em]">
+                        Bank
+                      </th>
+                      <th className="px-3 py-3 font-black uppercase tracking-[0.08em]">
+                        Status
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#ffe7ec] bg-white">
+                    {requests.map((request) => (
+                      <tr key={request.id} className="align-top">
+                        <td className="px-3 py-3 font-bold text-ink">
+                          #{request.id}
+                        </td>
+                        <td className="px-3 py-3 text-ink">
+                          <div className="font-black">
+                            ₹{Number(request.amount).toFixed(2)}
+                          </div>
+                          <div className="text-xs text-ink/60">
+                            {new Date(
+                              request.createdAt ?? Date.now(),
+                            ).toLocaleDateString()}
+                          </div>
+                        </td>
+                        <td className="px-3 py-3 text-ink/75">
+                          <div className="font-medium">
+                            {request.bankAccount?.bankName || "-"}
+                          </div>
+                          <div className="text-xs">
+                            {request.bankAccount?.accountNumber || "-"}
+                          </div>
+                        </td>
+                        <td className="px-3 py-3">
+                          <span
+                            className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] ${getStatusClasses(request.status)}`}
+                          >
+                            {request.status}
+                          </span>
+                          {request.status?.toLowerCase() === "rejected" &&
+                          (request.rejectionReason || request.adminNote) ? (
+                            <div className="mt-2 max-w-[240px] rounded-md border border-red-100 bg-red-50 p-2 text-[11px] text-red-700">
+                              <span className="font-black uppercase tracking-[0.06em]">
+                                Reason:
+                              </span>{" "}
+                              {request.rejectionReason || request.adminNote}
+                            </div>
+                          ) : null}
+                          {request.requestNote &&
+                          request.status?.toLowerCase() !== "rejected" ? (
+                            <div className="mt-2 max-w-[220px] text-xs text-ink/60">
+                              {request.requestNote}
+                            </div>
+                          ) : null}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       </div>
