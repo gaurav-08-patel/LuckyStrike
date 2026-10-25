@@ -248,20 +248,24 @@ export default function AdminOverviewTab() {
 
       {!isLoading && !errorMessage ? (
         <div className="space-y-5">
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-            {statCards.map((item) => (
-              <div
-                key={item.label}
-                className={`rounded-[16px] border-[3px] border-ink px-3 py-3 shadow-[3px_3px_0_#171310] ${item.tone}`}
-              >
-                <p className="text-[0.78rem] font-bold text-ink/75">
-                  {item.label}
-                </p>
-                <p className="mt-2 font-display text-[1.8rem] leading-none text-ink">
-                  {item.value}
-                </p>
-              </div>
-            ))}
+          <div className="grid gap-3 grid-cols-2 sm:grid-cols-2 xl:grid-cols-5">
+            {statCards.map((item, index) => {
+              const isLastCard = index === statCards.length - 1;
+
+              return (
+                <div
+                  key={item.label}
+                  className={`rounded-[16px] border-[3px] border-ink px-2.5 py-3 shadow-[3px_3px_0_#171310] ${item.tone} ${isLastCard ? "col-span-2 sm:col-span-2 xl:col-span-1" : ""}`}
+                >
+                  <p className="text-[0.62rem] font-bold uppercase tracking-[0.08em] text-ink/70 sm:text-[0.78rem] sm:normal-case sm:tracking-normal">
+                    {item.label}
+                  </p>
+                  <p className="mt-2 font-display text-[1.2rem] leading-none text-ink sm:text-[1.8rem]">
+                    {item.value}
+                  </p>
+                </div>
+              );
+            })}
           </div>
 
           <section className="rounded-[18px] border-[3px] border-ink bg-paper p-4 shadow-[5px_5px_0_#171310]">
