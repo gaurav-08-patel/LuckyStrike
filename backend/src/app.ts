@@ -20,10 +20,23 @@ app.use(cors());
 app.use(express.json());
 app.use("/public", express.static("public"));
 
+app.get("/health", (_req, res) => {
+  res.status(200).json({
+    status: "ok",
+    service: "lucky-strike-backend",
+    message: "Lucky Strike backend is running",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.get("/api/health", (_req, res) => {
   res.status(200).json({
     status: "ok",
+    service: "lucky-strike-backend",
     message: "Lucky Strike backend is running",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
   });
 });
 
