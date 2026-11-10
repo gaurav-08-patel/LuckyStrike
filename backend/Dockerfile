@@ -7,8 +7,7 @@ RUN npm ci
 
 COPY tsconfig.json ./
 COPY src ./src
-RUN mkdir -p public
-
+COPY public ./public
 RUN npm run build
 
 FROM node:22-alpine AS production
