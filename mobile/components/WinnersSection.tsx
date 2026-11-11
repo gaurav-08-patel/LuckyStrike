@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 0,
   },
   scrollView: {
-    marginHorizontal: 20,
+    marginHorizontal: 0,
   },
   scrollContent: {
     paddingHorizontal: 8,
