@@ -70,6 +70,8 @@ const normalizeCampaign = (raw: any): Campaign => {
   const ticketPrice = Number(raw.ticket_price ?? 0);
   const title = String(raw.title ?? 'Untitled draw');
   const subtitle = drawType === 'weekly' ? 'Weekly draw' : drawType === 'monthly' ? 'Monthly draw' : 'Daily draw';
+  const fallbackImage = 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=900&q=80';
+  const imageUri = typeof raw.image === 'string' && raw.image.trim() ? raw.image.trim() : fallbackImage;
 
   return {
     id: String(raw.id ?? ''),
@@ -78,8 +80,13 @@ const normalizeCampaign = (raw: any): Campaign => {
     prize: formatPrize(raw),
     entryFrom: Number.isFinite(ticketPrice) ? ticketPrice : 0,
     status: formatCountdown(raw.expires_at ?? raw.last_registration ?? null, new Date()),
-    image: String(raw.image ?? 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=900&q=80'),
+    image: imageUri,
     drawCode: String(raw.draw_code ?? raw.id ?? 'N/A'),
+    campaignType: drawType === 'weekly' ? 'weekly' : drawType === 'monthly' ? 'monthly' : 'daily',
+    drawDate: String(raw.draw_at ?? raw.drawDate ?? ''),
+    lastRegistration: raw.expires_at ? String(raw.expires_at) : raw.last_registration ? String(raw.last_registration) : null,
+    currency: 'INR',
+    entriesMultiplier: raw.entries_multiplier ? String(raw.entries_multiplier) : null,
   };
 };
 
