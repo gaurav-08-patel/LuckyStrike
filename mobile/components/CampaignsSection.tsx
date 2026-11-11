@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export type Campaign = {
@@ -59,7 +59,9 @@ const formatDrawDateTime = (value?: string) => {
 };
 
 export function CampaignsSection({ campaigns, tabs, activeTab, onTabChange }: CampaignsSectionProps) {
+  const router = useRouter();
   const [now, setNow] = useState(() => new Date());
+  const [pressedCardId, setPressedCardId] = useState<string | null>(null);
 
   useEffect(() => {
     const clock = setInterval(() => setNow(new Date()), 1000);
@@ -79,11 +81,9 @@ export function CampaignsSection({ campaigns, tabs, activeTab, onTabChange }: Ca
           <Text style={styles.title}>Campaigns</Text>
         </View>
 
-        <Link href='/campaigns' asChild>
-          <TouchableOpacity style={styles.showAllButton}>
-            <Text style={styles.showAllText}>Show all</Text>
-          </TouchableOpacity>
-        </Link>
+        <TouchableOpacity style={styles.showAllButton} onPress={() => router.push('/campaigns')}>
+          <Text style={styles.showAllText}>Show all</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.tabArea}>
@@ -131,9 +131,18 @@ export function CampaignsSection({ campaigns, tabs, activeTab, onTabChange }: Ca
             else if (showCountdown) badgeLabel = 'Closing in';
             else if (isJustLaunched) badgeLabel = 'Just launched';
 
+            const isPressed = pressedCardId === campaign.id;
+
             return (
-              <Link key={campaign.id} href={`/campaign/${campaign.id}`} asChild>
-               <TouchableOpacity style={styles.cardShell}>
+              <TouchableOpacity
+               key={campaign.id}
+               style={[styles.cardShell, isPressed && styles.cardShellPressed]}
+               activeOpacity={1}
+               pressRetentionOffset={{ top: 10, left: 10, right: 10, bottom: 10 }}
+               onPress={() => router.push(`/campaign/${campaign.id}`)}
+               onPressIn={() => setPressedCardId(campaign.id)}
+               onPressOut={() => setPressedCardId(null)}
+              >
                  <View style={[styles.registrationPill, productTone]}>
                    <Text style={styles.registrationPillText}>{badgeLabel}</Text>
                    {showCountdown ? (
@@ -166,7 +175,6 @@ export function CampaignsSection({ campaigns, tabs, activeTab, onTabChange }: Ca
                    </View>
                  </View>
                </TouchableOpacity>
-              </Link>
             );
           })
         )}
@@ -259,6 +267,10 @@ const styles = StyleSheet.create({
   },
   cardShell: {
     marginTop: 12,
+    transform: [{ scale: 1 }],
+  },
+  cardShellPressed: {
+    transform: [{ scale: 0.98 }],
   },
   registrationPill: {
     alignSelf: 'flex-start',
