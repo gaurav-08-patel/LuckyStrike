@@ -6,6 +6,7 @@ import { StatusBar } from 'react-native';
 import 'react-native-reanimated';
 
 import '../global.css';
+import { AuthProvider } from '../context/AuthContext';
 
 export {
   ErrorBoundary,
@@ -44,15 +45,17 @@ function RootLayoutNav() {
     <>
       <StatusBar barStyle='dark-content' backgroundColor='#F8F9FA' />
       <ThemeProvider value={DefaultTheme}>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: '#F8F9FA' },
-          }}
-        >
-          <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
-          <Stack.Screen name='modal' options={{ presentation: 'modal' }} />
-        </Stack>
+        <AuthProvider>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: '#F8F9FA' },
+            }}
+          >
+            <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
+            <Stack.Screen name='modal' options={{ presentation: 'modal' }} />
+          </Stack>
+        </AuthProvider>
       </ThemeProvider>
     </>
   );
