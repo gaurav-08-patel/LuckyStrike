@@ -119,9 +119,12 @@ const normalizeCampaign = (raw: any): Campaign => {
 
 const normalizeWinner = (raw: any): Winner => ({
   id: String(raw.id ?? Math.random().toString()),
-  name: String(raw.name ?? 'Lucky Winner'),
-  prize: `INR ${Number(raw.cash ?? 0).toLocaleString('en-IN')}`,
-  badge: String(raw.drawType ?? raw.draw_title ?? 'Winner'),
+  name: String(raw.name ?? raw.winner_name ?? 'Lucky Winner'),
+  prize: `INR ${Number(raw.cash ?? raw.prize_amount ?? 0).toLocaleString('en-IN')}`,
+  badge: String(raw.drawType ?? raw.draw_type ?? raw.drawTitle ?? raw.draw_title ?? 'Winner'),
+  image: String(raw.image ?? raw.image_url ?? ''),
+  entryNo: String(raw.entry_no ?? raw.ticket_code ?? raw.draw_code ?? 'N/A'),
+  announcedOn: raw.announced_on ? String(raw.announced_on) : raw.announced_at ? String(raw.announced_at) : undefined,
 });
 
 export default function HomeScreen() {
@@ -159,7 +162,7 @@ export default function HomeScreen() {
             : Array.isArray(winnersData?.winners)
               ? winnersData.winners
               : [];
-          setWinners(winnersList.slice(0, 3).map(normalizeWinner));
+          setWinners(winnersList.slice(0, 12).map(normalizeWinner));
         }
       } catch (error) {
         console.warn('Failed to load Lucky Strike mobile home data', error);

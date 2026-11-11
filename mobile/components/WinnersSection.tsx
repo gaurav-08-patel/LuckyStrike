@@ -1,17 +1,66 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 export type Winner = {
   id: string;
   name: string;
   prize: string;
   badge: string;
+  image?: string;
+  entryNo?: string;
+  announcedOn?: string;
 };
 
 type WinnersSectionProps = {
   winners: Winner[];
 };
 
+const formatDate = (value?: string) => {
+  if (!value) return 'N/A';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(date);
+};
+
 export function WinnersSection({ winners }: WinnersSectionProps) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const scrollRef = useRef<ScrollView>(null);
+  const cardWidth = 270;
+  const gap = 12;
+
+  const validWinners = useMemo(() => winners.filter(Boolean), [winners]);
+  const maxIndex = Math.max(0, validWinners.length - 1);
+
+  const scrollToIndex = (index: number) => {
+    const nextIndex = Math.min(maxIndex, Math.max(0, index));
+    setActiveIndex(nextIndex);
+    scrollRef.current?.scrollTo({
+      x: nextIndex * (cardWidth + gap),
+      animated: true,
+    });
+  };
+
+  useEffect(() => {
+    if (validWinners.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setActiveIndex((current) => {
+        const nextIndex = current >= maxIndex ? 0 : current + 1;
+        scrollRef.current?.scrollTo({
+          x: nextIndex * (cardWidth + gap),
+          animated: true,
+        });
+        return nextIndex;
+      });
+    }, 2200);
+
+    return () => clearInterval(interval);
+  }, [validWinners.length, maxIndex]);
+
   return (
     <View style={styles.section}>
       <View style={styles.badgeWrap}>
@@ -20,102 +69,287 @@ export function WinnersSection({ winners }: WinnersSectionProps) {
         </View>
       </View>
 
-      <View style={styles.list}>
-        {winners.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>No winners yet</Text>
-            <Text style={styles.emptyText}>The latest lucky winner will appear here as soon as the draw is settled.</Text>
+      {validWinners.length === 0 ? (
+        <View style={styles.emptyCard}>
+          <Text style={styles.emptyTitle}>No winners yet</Text>
+          <Text style={styles.emptyText}>The latest lucky winner will appear here as soon as the draw is settled.</Text>
+        </View>
+      ) : (
+        <>
+          <View style={styles.carouselWrap}>
+            <TouchableOpacity
+              style={[styles.navButton, styles.navButtonLeft, activeIndex === 0 && styles.navButtonDisabled]}
+              onPress={() => scrollToIndex(activeIndex - 1)}
+              disabled={activeIndex === 0}
+            >
+              <Text style={styles.navButtonText}>{'‹'}</Text>
+            </TouchableOpacity>
+
+            <ScrollView
+              ref={scrollRef}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContent}
+              snapToInterval={cardWidth + gap}
+              decelerationRate="fast"
+              style={styles.scrollView}
+              onScroll={(event) => {
+                const x = event.nativeEvent.contentOffset.x;
+                const nextIndex = Math.round(x / (cardWidth + gap));
+                setActiveIndex(Math.min(maxIndex, Math.max(0, nextIndex)));
+              }}
+              scrollEventThrottle={16}
+            >
+              {validWinners.map((winner) => (
+                <View key={winner.id} style={[styles.card, { width: cardWidth }]}>
+                  <View style={styles.topBar}>
+                    <View style={styles.pill}>
+                      <Text style={styles.pillText}>Winner</Text>
+                    </View>
+                    <Text style={styles.idText}>{winner.id}</Text>
+                  </View>
+
+                  <View style={styles.imageWrap}>
+                    <Image
+                      source={{
+                        uri:
+                          winner.image ||
+                          'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=900&q=80',
+                      }}
+                      style={styles.image}
+                      resizeMode="cover"
+                    />
+                  </View>
+
+                  <View style={styles.body}>
+                    <View style={styles.nameRow}>
+                      <Text style={styles.name}>{winner.name}</Text>
+                      <Text style={styles.prize}>{winner.prize}</Text>
+                    </View>
+
+                    <View style={styles.meta}>
+                      <Text style={styles.metaText}>Entry no: {winner.entryNo || 'N/A'}</Text>
+                      <Text style={styles.metaText}>Announced: {formatDate(winner.announcedOn)}</Text>
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+
+            <TouchableOpacity
+              style={[styles.navButton, styles.navButtonRight, activeIndex >= maxIndex && styles.navButtonDisabled]}
+              onPress={() => scrollToIndex(activeIndex + 1)}
+              disabled={activeIndex >= maxIndex}
+            >
+              <Text style={styles.navButtonText}>{'›'}</Text>
+            </TouchableOpacity>
           </View>
-        ) : (
-          winners.map((winner) => (
-            <View key={winner.id} style={styles.card}>
-              <View style={styles.row}>
-                <View>
-                  <Text style={styles.name}>{winner.name}</Text>
-                  <Text style={styles.badgeLine}>{winner.badge}</Text>
-                </View>
-                <View style={styles.prizeChip}>
-                  <Text style={styles.prizeText}>{winner.prize}</Text>
-                </View>
-              </View>
-            </View>
-          ))
-        )}
-      </View>
+
+          <View style={styles.footerRow}>
+            <TouchableOpacity style={styles.seeAllButton}>
+              <Text style={styles.seeAllText}>See all winners</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   section: {
-    marginTop: 32,
-    marginHorizontal: 16,
+    marginTop: 30,
+    marginHorizontal: 0,
+    width: '100%',
+    paddingBottom: 16,
   },
   badgeWrap: {
     alignItems: 'center',
+    marginBottom: 18,
   },
   badge: {
     borderRadius: 999,
     borderWidth: 3,
     borderColor: '#171310',
     backgroundColor: '#f43d7e',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    shadowColor: '#171310',
+    shadowOffset: { width: 5, height: 5 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 6,
   },
   badgeText: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: '900',
     letterSpacing: 2,
     textTransform: 'uppercase',
     color: '#fff',
   },
-  list: {
-    marginTop: 16,
+  carouselWrap: {
+    position: 'relative',
+    paddingHorizontal: 0,
+    marginHorizontal: 0,
+  },
+  scrollView: {
+    marginHorizontal: 20,
+  },
+  scrollContent: {
+    paddingHorizontal: 8,
     gap: 12,
+    paddingVertical: 4,
+  },
+  navButton: {
+    position: 'absolute',
+    top: '50%',
+    marginTop: -21,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    borderWidth: 3,
+    borderColor: '#171310',
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#171310',
+    shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 5,
+    zIndex: 2,
+  },
+  navButtonLeft: {
+    left: 4,
+  },
+  navButtonRight: {
+    right: 4,
+  },
+  navButtonDisabled: {
+    opacity: 0.45,
+  },
+  navButtonText: {
+    fontSize: 30,
+    lineHeight: 30,
+    color: '#171310',
+    fontWeight: '900',
   },
   card: {
     borderWidth: 3,
     borderColor: '#171310',
     borderRadius: 22,
     backgroundColor: '#fff',
-    padding: 16,
+    overflow: 'hidden',
     shadowColor: '#171310',
-    shadowOffset: { width: 4, height: 4 },
+    shadowOffset: { width: 6, height: 6 },
     shadowOpacity: 1,
     shadowRadius: 0,
-    elevation: 4,
+    elevation: 7,
   },
-  row: {
+  topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: '#fff0f5',
+    borderBottomWidth: 3,
+    borderBottomColor: '#171310',
+  },
+  pill: {
+    borderWidth: 2,
+    borderColor: '#171310',
+    backgroundColor: '#f4ce45',
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+  },
+  pillText: {
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1.6,
+    textTransform: 'uppercase',
+    color: '#171310',
+  },
+  idText: {
+    fontSize: 16,
+    fontWeight: '900',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: '#171310',
+  },
+  imageWrap: {
+    padding: 12,
+    backgroundColor: '#fff0f5',
+  },
+  image: {
+    width: '100%',
+    height: 210,
+    borderWidth: 3,
+    borderColor: '#171310',
+    borderRadius: 18,
+  },
+  body: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    paddingBottom: 14,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    borderBottomWidth: 2,
+    borderBottomColor: '#171310',
+    paddingBottom: 10,
   },
   name: {
-    fontSize: 18,
+    flex: 1,
+    fontSize: 22,
     fontWeight: '900',
     color: '#171310',
     textTransform: 'uppercase',
   },
-  badgeLine: {
-    marginTop: 4,
-    fontSize: 12,
+  prize: {
+    fontSize: 18,
     fontWeight: '900',
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
     color: '#ff2d78',
+    textTransform: 'uppercase',
   },
-  prizeChip: {
-    borderRadius: 999,
+  meta: {
+    marginTop: 10,
+    gap: 4,
+  },
+  metaText: {
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    color: '#171310',
+    opacity: 0.8,
+  },
+  footerRow: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  seeAllButton: {
     borderWidth: 3,
     borderColor: '#171310',
-    backgroundColor: '#3acf7e',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: '#f7f7f7',
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    shadowColor: '#171310',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 5,
   },
-  prizeText: {
-    fontSize: 10,
+  seeAllText: {
+    fontSize: 12,
     fontWeight: '900',
-    letterSpacing: 2,
+    letterSpacing: 1.8,
     textTransform: 'uppercase',
     color: '#171310',
   },
