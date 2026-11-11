@@ -23,12 +23,14 @@ type AuthContextType = {
   user: AuthUser | null;
   isLoggedIn: boolean;
   isAuthReady: boolean;
-  setUser: (user: AuthUser | null, token?: string | null) => void;
-  logoutUser: () => void;
+  setUser: (user: AuthUser | null, token?: string | null) => Promise<void>;
+  logoutUser: () => Promise<void>;
 };
 
 const TOKEN_STORAGE_KEY = 'luckyStrikeToken';
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || (Platform.OS === 'android' ? 'http://10.0.2.2:5000' : 'http://localhost:5000');
+const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL ||
+  (Platform.OS === 'android' ? 'http://10.0.2.2:5000' : 'http://localhost:5000');
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -53,7 +55,9 @@ const normalizeAuthUser = (value: unknown): AuthUser | null => {
   return {
     ...user,
     walletBalance: Number(user.walletBalance ?? user.wallet_balance ?? 0),
-    pendingWithdrawalAmount: Number(user.pendingWithdrawalAmount ?? user.pending_withdrawal_amount ?? 0),
+    pendingWithdrawalAmount: Number(
+      user.pendingWithdrawalAmount ?? user.pending_withdrawal_amount ?? 0,
+    ),
     isPhoneVerified: parseBooleanFlag(user.isPhoneVerified ?? user.is_phone_verified),
     isAdmin: parseBooleanFlag(user.isAdmin ?? user.is_admin),
   } as AuthUser;
@@ -91,9 +95,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+        const response = await fetch(API_BASE_URL + '/api/auth/me', {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: 'Bearer ' + token,
           },
         });
 
