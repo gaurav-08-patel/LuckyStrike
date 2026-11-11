@@ -144,10 +144,14 @@ export function CampaignsSection({ campaigns, tabs, activeTab, onTabChange }: Ca
                onPressOut={() => setPressedCardId(null)}
               >
                  <View style={[styles.registrationPill, productTone]}>
-                   <Text style={styles.registrationPillText}>{badgeLabel}</Text>
                    {showCountdown ? (
-                     <Text style={styles.registrationPillTime}>{formatCountdown(deadline, now)}</Text>
-                   ) : null}
+                     <>
+                       <Text style={styles.registrationPillLabel}>{badgeLabel}</Text>
+                       <Text style={styles.registrationPillTime}>{formatCountdown(deadline, now)}</Text>
+                     </>
+                   ) : (
+                     <Text style={styles.registrationPillText}>{badgeLabel}</Text>
+                   )}
                  </View>
 
                  <View style={styles.card}>
@@ -274,19 +278,23 @@ const styles = StyleSheet.create({
   },
   registrationPill: {
     alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     borderWidth: 3,
     borderColor: '#171310',
-    borderRadius: 18,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginBottom: -16,
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: -18,
     marginLeft: 12,
     shadowColor: '#171310',
     shadowOffset: { width: 4, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 0,
     elevation: 6,
-    minWidth: 170,
+    minWidth: 150,
     zIndex: 3,
   },
   statusOpen: {
@@ -298,18 +306,25 @@ const styles = StyleSheet.create({
   statusClosed: {
     backgroundColor: '#171310',
   },
+  registrationPillLabel: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 1.6,
+    textTransform: 'uppercase',
+    textAlign: 'center',
+  },
   registrationPillText: {
     color: '#171310',
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '900',
-    letterSpacing: 1.5,
+    letterSpacing: 1.6,
     textTransform: 'uppercase',
     textAlign: 'center',
   },
   registrationPillTime: {
-    marginTop: 3,
-    color: '#171310',
-    fontSize: 18,
+    color: '#fff',
+    fontSize: 22,
     fontWeight: '900',
     letterSpacing: 1,
     textAlign: 'center',
