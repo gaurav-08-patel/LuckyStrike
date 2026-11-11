@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 import { CampaignsSection, type Campaign } from '../../components/CampaignsSection';
 import { HeroSection, type HeroSlide } from '../../components/HeroSection';
@@ -27,10 +27,21 @@ const getApiBaseUrl = () => {
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
   if (envUrl) return envUrl.replace(/\/$/, '');
 
-  const hostUri = Constants.expoConfig?.hostUri;
+  const hostUri =
+    Constants.expoConfig?.hostUri ??
+    Constants.expoGoConfig?.hostUri ??
+    Constants.manifest2?.extra?.expoGo?.debuggerHost ??
+    Constants.manifest?.debuggerHost;
+
   if (hostUri) {
-    const [host] = hostUri.split(':');
-    return `http://${host}:5000`;
+    const host = hostUri.split(':')[0];
+    if (host && host !== 'localhost') {
+      return `http://${host}:5000`;
+    }
+  }
+
+  if (Platform.OS === 'android') {
+    return 'http://10.0.2.2:5000';
   }
 
   return 'http://localhost:5000';
@@ -65,13 +76,29 @@ const formatCountdown = (expiresAt: string | null, now: Date) => {
   return [hours, minutes, seconds].map((v) => String(v).padStart(2, '0')).join(':');
 };
 
+const resolveImageUri = (imageValue: unknown) => {
+  const fallbackImage = 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=900&q=80';
+
+  if (typeof imageValue !== 'string' || !imageValue.trim()) return fallbackImage;
+
+  const normalized = imageValue.trim();
+  if (/^https?:\/\//i.test(normalized) || /^data:/i.test(normalized)) {
+    return normalized;
+  }
+
+  if (normalized.startsWith('/')) {
+    return `${API_BASE_URL}${normalized}`;
+  }
+
+  return normalized;
+};
+
 const normalizeCampaign = (raw: any): Campaign => {
   const drawType = String(raw.draw_type ?? 'daily').toLowerCase();
   const ticketPrice = Number(raw.ticket_price ?? 0);
   const title = String(raw.title ?? 'Untitled draw');
   const subtitle = drawType === 'weekly' ? 'Weekly draw' : drawType === 'monthly' ? 'Monthly draw' : 'Daily draw';
-  const fallbackImage = 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=900&q=80';
-  const imageUri = typeof raw.image === 'string' && raw.image.trim() ? raw.image.trim() : fallbackImage;
+  const imageUri = resolveImageUri(raw.image);
 
   return {
     id: String(raw.id ?? ''),

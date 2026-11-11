@@ -116,44 +116,53 @@ export function CampaignsSection({ campaigns, tabs, activeTab, onTabChange }: Ca
             const deadline = getCampaignDeadline(campaign);
             const remainingMs = deadline.getTime() - now.getTime();
             const isExpired = remainingMs <= 0;
-            const showCountdown = !isExpired && remainingMs <= 2 * 24 * 60 * 60 * 1000;
+            const dayMs = 24 * 60 * 60 * 1000;
+            const showCountdown = !isExpired && remainingMs <= 2 * dayMs;
+            const isJustLaunched = !isExpired && remainingMs > 2 * dayMs && remainingMs <= 7 * dayMs;
+
+            const productTone = isExpired
+              ? styles.statusClosed
+              : showCountdown
+               ? styles.statusClosing
+               : styles.statusOpen;
+
+            let badgeLabel = 'Registration open';
+            if (isExpired) badgeLabel = 'Closed';
+            else if (showCountdown) badgeLabel = 'Closing in';
+            else if (isJustLaunched) badgeLabel = 'Just launched';
 
             return (
               <Link key={campaign.id} href={`/campaign/${campaign.id}`} asChild>
-               <TouchableOpacity style={styles.card}>
-                 <View style={styles.badgeParent}>
-                   <View style={styles.badgeBox}>
-                     <Text style={styles.badgeText}>
-                       {campaign.entriesMultiplier || (showCountdown ? 'closing in' : 'registration open')}
-                     </Text>
-                     {showCountdown && !campaign.entriesMultiplier ? (
-                       <Text style={styles.badgeTime}>{formatCountdown(deadline, now)}</Text>
-                     ) : null}
-                   </View>
+               <TouchableOpacity style={styles.cardShell}>
+                 <View style={[styles.registrationPill, productTone]}>
+                   <Text style={styles.registrationPillText}>{badgeLabel}</Text>
+                   {showCountdown ? (
+                     <Text style={styles.registrationPillTime}>{formatCountdown(deadline, now)}</Text>
+                   ) : null}
                  </View>
 
-                 <View style={styles.mediaWrap}>
-                   <Image source={{ uri: campaign.image }} style={styles.image} resizeMode='cover' />
-                 </View>
-
-                 <View style={styles.body}>
-                   <Text style={styles.titleRow}>Win {campaign.prize}</Text>
-                   <Text style={styles.subtitle}>{campaign.title}</Text>
-
-                   <TouchableOpacity style={styles.entryButton} activeOpacity={0.9}>
-                     <Text style={styles.entryButtonText}>Entry from {campaign.entryFrom}</Text>
-                   </TouchableOpacity>
-
-                   <View style={styles.metaRow}>
-                     <Text style={styles.metaText}>Draw date: {formatDrawDateTime(campaign.drawDate)} or earlier</Text>
-                     <Text style={styles.drawCode}>DRAW CODE: {campaign.drawCode}</Text>
+                 <View style={styles.card}>
+                   <View style={styles.mediaWrap}>
+                     <Image source={{ uri: campaign.image || 'https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=900&q=80' }} style={styles.image} resizeMode='cover' />
                    </View>
 
-                   <View style={styles.footerRow}>
-                     <View style={[styles.countdownBox, isExpired && styles.countdownClosed]}>
-                       <Text style={styles.countdownText}>{isExpired ? 'Closed' : formatCountdown(deadline, now)}</Text>
+                   <View style={styles.body}>
+                     <Text style={styles.winText}>Win <Text style={styles.prizeText}>{campaign.prize}</Text></Text>
+                     <Text style={styles.offerText}>{campaign.title.toUpperCase()}</Text>
+
+                     <View style={styles.entryButton}>
+                       <Text style={styles.entryButtonText}>Entry from {campaign.entryFrom}</Text>
                      </View>
-                     <Text style={styles.currencyText}>{campaign.currency || 'INR'}</Text>
+
+                     <View style={styles.metaRow}>
+                       <Text style={styles.metaText}>Draw date: {formatDrawDateTime(campaign.drawDate)} or earlier</Text>
+                       <Text style={styles.drawCode}>DRAW CODE: {campaign.drawCode}</Text>
+                     </View>
+
+                     <View style={styles.footerRow}>
+                       <Text style={styles.footerLeft}>{isExpired ? 'Closed' : 'Open registration'}</Text>
+                       <Text style={styles.footerRight}>{campaign.currency || 'INR'}</Text>
+                     </View>
                    </View>
                  </View>
                </TouchableOpacity>
@@ -248,95 +257,111 @@ const styles = StyleSheet.create({
     marginTop: 18,
     gap: 18,
   },
-  card: {
-    position: 'relative',
+  cardShell: {
     marginTop: 12,
+  },
+  registrationPill: {
+    alignSelf: 'flex-start',
     borderWidth: 3,
     borderColor: '#171310',
-    borderRadius: 26,
-    backgroundColor: '#f5f5f5',
+    borderRadius: 18,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: -16,
+    marginLeft: 12,
+    shadowColor: '#171310',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 6,
+    minWidth: 170,
+    zIndex: 3,
+  },
+  statusOpen: {
+    backgroundColor: '#53c765',
+  },
+  statusClosing: {
+    backgroundColor: '#ff3b30',
+  },
+  statusClosed: {
+    backgroundColor: '#171310',
+  },
+  registrationPillText: {
+    color: '#171310',
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    textAlign: 'center',
+  },
+  registrationPillTime: {
+    marginTop: 3,
+    color: '#171310',
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: 1,
+    textAlign: 'center',
+  },
+  card: {
+    position: 'relative',
+    backgroundColor: '#f3f2f2',
+    borderWidth: 3,
+    borderColor: '#171310',
+    borderRadius: 28,
     overflow: 'visible',
     shadowColor: '#171310',
     shadowOffset: { width: 6, height: 6 },
     shadowOpacity: 1,
     shadowRadius: 0,
-    elevation: 6,
-  },
-  badgeParent: {
-    position: 'absolute',
-    top: -18,
-    left: 16,
-    zIndex: 5,
-  },
-  badgeBox: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#ff3b30',
-    borderWidth: 3,
-    borderColor: '#171310',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    shadowColor: '#171310',
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 4,
-  },
-  badgeText: {
-    fontSize: 9,
-    fontWeight: '900',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    color: '#171310',
-  },
-  badgeTime: {
-    marginTop: 2,
-    fontSize: 18,
-    fontWeight: '900',
-    color: '#171310',
-    textTransform: 'uppercase',
+    elevation: 8,
+    paddingBottom: 12,
   },
   mediaWrap: {
-    borderWidth: 3,
-    borderColor: '#171310',
-    borderRadius: 24,
-    overflow: 'hidden',
     margin: 10,
     marginTop: 18,
-    backgroundColor: '#fff',
+    borderWidth: 3,
+    borderColor: '#171310',
+    borderRadius: 22,
+    overflow: 'hidden',
+    backgroundColor: '#dfe8ef',
   },
   image: {
     width: '100%',
-    height: 180,
+    height: 200,
   },
   body: {
-    paddingHorizontal: 12,
-    paddingBottom: 12,
-    paddingTop: 8,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
   },
-  titleRow: {
-    fontSize: 30,
-    lineHeight: 30,
+  winText: {
+    marginTop: 4,
+    fontSize: 28,
     fontWeight: '900',
-    color: '#171310',
+    lineHeight: 30,
+    color: '#ff3b30',
     textTransform: 'uppercase',
   },
-  subtitle: {
-    marginTop: 4,
-    fontSize: 13,
-    fontWeight: '900',
-    letterSpacing: 1,
+  prizeText: {
     color: '#171310',
-    opacity: 0.7,
+  },
+  offerText: {
+    marginTop: 2,
+    fontSize: 14,
+    color: '#171310',
+    fontWeight: '900',
+    opacity: 0.8,
+    letterSpacing: 1,
     textTransform: 'uppercase',
   },
   entryButton: {
-    marginTop: 12,
+    marginTop: 16,
     width: '100%',
+    backgroundColor: '#3d4fd1',
     borderWidth: 3,
     borderColor: '#171310',
-    backgroundColor: '#4b5bdc',
-    paddingHorizontal: 10,
+    borderRadius: 0,
     paddingVertical: 14,
+    paddingHorizontal: 10,
     shadowColor: '#171310',
     shadowOffset: { width: 3, height: 3 },
     shadowOpacity: 1,
@@ -352,7 +377,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   metaRow: {
-    marginTop: 14,
+    marginTop: 16,
     paddingTop: 10,
     borderTopWidth: 3,
     borderTopColor: '#171310',
@@ -360,59 +385,41 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 8,
+    gap: 10,
   },
   metaText: {
     flex: 1,
-    fontSize: 11,
-    fontWeight: '700',
     color: '#171310',
-    opacity: 0.75,
+    opacity: 0.8,
+    fontSize: 12,
+    fontWeight: '700',
   },
   drawCode: {
-    fontSize: 10,
+    color: '#ff3b30',
+    fontSize: 11,
     fontWeight: '900',
     letterSpacing: 1.2,
-    color: '#ff3b30',
     textTransform: 'uppercase',
   },
   footerRow: {
-    marginTop: 12,
+    marginTop: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 8,
   },
-  countdownBox: {
-    flex: 1,
-    borderWidth: 3,
-    borderColor: '#171310',
-    backgroundColor: '#ff3b30',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    shadowColor: '#171310',
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 3,
+  footerLeft: {
+    color: '#171310',
+    fontSize: 12,
+    fontWeight: '700',
+    opacity: 0.8,
   },
-  countdownClosed: {
-    backgroundColor: '#171310',
-  },
-  countdownText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '900',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    textAlign: 'center',
-  },
-  currencyText: {
+  footerRight: {
+    color: '#171310',
     fontSize: 12,
     fontWeight: '900',
-    color: '#171310',
-    opacity: 0.7,
     textTransform: 'uppercase',
+    opacity: 0.8,
   },
   emptyCard: {
     borderWidth: 3,
