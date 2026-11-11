@@ -1,45 +1,53 @@
 import { Link, useRouter } from 'expo-router';
+import { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+import { AuthModal } from './AuthModal';
 import { useAuth } from '../context/AuthContext';
 
 export function SiteHeader() {
   const router = useRouter();
   const { isLoggedIn, user } = useAuth();
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
   const accountLabel = user?.firstName ? user.firstName : 'Account';
   const accountInitial = (user?.firstName?.[0] ?? user?.lastName?.[0] ?? 'A').toUpperCase();
 
   return (
-    <View style={styles.headerShell}>
-      <Link href='/' asChild>
-        <TouchableOpacity>
-          <Text style={styles.brand}>
-            Lucky<Text style={styles.brandAccent}>Strike</Text>
-          </Text>
-        </TouchableOpacity>
-      </Link>
+    <>
+      <View style={styles.headerShell}>
+        <Link href='/' asChild>
+          <TouchableOpacity>
+            <Text style={styles.brand}>
+              Lucky<Text style={styles.brandAccent}>Strike</Text>
+            </Text>
+          </TouchableOpacity>
+        </Link>
 
-      {isLoggedIn ? (
-        <TouchableOpacity activeOpacity={0.96} onPress={() => router.push('/(tabs)/account')}>
-          <View style={styles.accountButtonShadow}>
-            <View style={styles.accountButton}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{accountInitial}</Text>
+        {isLoggedIn ? (
+          <TouchableOpacity activeOpacity={0.96} onPress={() => router.push('/(tabs)/account')}>
+            <View style={styles.accountButtonShadow}>
+              <View style={styles.accountButton}>
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>{accountInitial}</Text>
+                </View>
+                <Text style={styles.accountText} numberOfLines={1}>{accountLabel}</Text>
               </View>
-              <Text style={styles.accountText} numberOfLines={1}>{accountLabel}</Text>
             </View>
-          </View>
-        </TouchableOpacity>
-      ) : (
-        <TouchableOpacity activeOpacity={0.96} onPress={() => router.push('/(tabs)/account')}>
-          <View style={styles.loginButtonShadow}>
-            <View style={styles.loginButton}>
-              <Text style={styles.loginText}>Login / Signup</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity activeOpacity={0.96} onPress={() => setIsAuthModalOpen(true)}>
+            <View style={styles.loginButtonShadow}>
+              <View style={styles.loginButton}>
+                <Text style={styles.loginText}>Login / Signup</Text>
+              </View>
             </View>
-          </View>
-        </TouchableOpacity>
-      )}
-    </View>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+    </>
   );
 }
 
