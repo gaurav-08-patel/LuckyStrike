@@ -5,15 +5,20 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        paper: '#F5F0EB',
+        paper: '#fffaf6',
+        warm: '#fff7ef',
         ink: '#171310',
-        pink: '#FF3D8C',
-        red: '#F24B4B',
-        gold: '#FFD769',
-        mint: '#3ACF7E',
+        pink: '#ff2d78',
+        red: '#ff3b30',
+        yellow: '#ffd400',
+        mint: '#3acf7e',
       },
       boxShadow: {
         punch: '4px 4px 0 #171310',
+      },
+      fontFamily: {
+        display: ['Anton', 'sans-serif'],
+        sans: ['DM Sans', 'sans-serif'],
       },
     },
   },

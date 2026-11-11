@@ -1,3 +1,23 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --color-paper: #fffaf6;
+  --color-ink: #171310;
+  --color-pink: #ff2d78;
+  --color-red: #ff3b30;
+  --color-yellow: #ffd400;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  background: #fffaf6;
+}
+
+body {
+  color: #171310;
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+}
