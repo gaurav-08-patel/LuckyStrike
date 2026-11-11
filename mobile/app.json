@@ -8,7 +8,12 @@
     "scheme": "mobile",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -17,6 +22,7 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "usesCleartextTraffic": true,
       "predictiveBackGestureEnabled": false
     },
     "web": {
