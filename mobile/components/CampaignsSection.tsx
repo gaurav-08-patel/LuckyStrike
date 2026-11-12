@@ -25,6 +25,7 @@ type CampaignsSectionProps = {
   tabs: readonly TabName[];
   activeTab: TabName;
   onTabChange: (tab: TabName) => void;
+  isOffline?: boolean;
 };
 
 const getCampaignDeadline = (campaign: Campaign) => {
@@ -58,7 +59,7 @@ const formatDrawDateTime = (value?: string) => {
   }).format(date);
 };
 
-export function CampaignsSection({ campaigns, tabs, activeTab, onTabChange }: CampaignsSectionProps) {
+export function CampaignsSection({ campaigns, tabs, activeTab, onTabChange, isOffline = false }: CampaignsSectionProps) {
   const router = useRouter();
   const [now, setNow] = useState(() => new Date());
   const [pressedCardId, setPressedCardId] = useState<string | null>(null);
@@ -112,7 +113,7 @@ export function CampaignsSection({ campaigns, tabs, activeTab, onTabChange }: Ca
             <Text style={styles.emptyText}>There are no active draws right now. Please check back soon for the next lucky draw.</Text>
           </View>
         ) : (
-          visibleCampaigns.slice(0, 3).map((campaign) => {
+          visibleCampaigns.slice(0, 5).map((campaign) => {
             const deadline = getCampaignDeadline(campaign);
             const remainingMs = deadline.getTime() - now.getTime();
             const isExpired = remainingMs <= 0;
@@ -120,16 +121,18 @@ export function CampaignsSection({ campaigns, tabs, activeTab, onTabChange }: Ca
             const showCountdown = !isExpired && remainingMs <= 2 * dayMs;
             const isJustLaunched = !isExpired && remainingMs > 2 * dayMs && remainingMs <= 7 * dayMs;
 
-            const productTone = isExpired
-              ? styles.statusClosed
-              : showCountdown
-               ? styles.statusClosing
-               : styles.statusOpen;
+            const productTone = isOffline
+              ? styles.statusCached
+              : isExpired
+                ? styles.statusClosed
+                : showCountdown
+                  ? styles.statusClosing
+                  : styles.statusOpen;
 
-            let badgeLabel = 'Registration open';
-            if (isExpired) badgeLabel = 'Closed';
-            else if (showCountdown) badgeLabel = 'Closing in';
-            else if (isJustLaunched) badgeLabel = 'Just launched';
+            let badgeLabel = isOffline ? 'Cached data' : 'Registration open';
+            if (!isOffline && isExpired) badgeLabel = 'Closed';
+            else if (!isOffline && showCountdown) badgeLabel = 'Closing in';
+            else if (!isOffline && isJustLaunched) badgeLabel = 'Just launched';
 
             const isPressed = pressedCardId === campaign.id;
 
@@ -144,7 +147,9 @@ export function CampaignsSection({ campaigns, tabs, activeTab, onTabChange }: Ca
                onPressOut={() => setPressedCardId(null)}
               >
                  <View style={[styles.registrationPill, productTone]}>
-                   {showCountdown ? (
+                   {isOffline ? (
+                     <Text style={[styles.registrationPillText, styles.registrationPillTextClosed]}>{badgeLabel}</Text>
+                   ) : showCountdown ? (
                      <>
                        <Text style={styles.registrationPillLabel}>{badgeLabel}</Text>
                        <Text style={styles.registrationPillTime}>{formatCountdown(deadline, now)}</Text>
@@ -305,6 +310,9 @@ const styles = StyleSheet.create({
   },
   statusClosed: {
     backgroundColor: '#171310',
+  },
+  statusCached: {
+    backgroundColor: '#5d5856',
   },
   registrationPillLabel: {
     color: '#fff',

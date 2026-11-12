@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
@@ -11,6 +12,32 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
+import { OfflineBanner, OfflineState } from '../components/OfflineState';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
+
+const CAMPAIGNS_CACHE_KEY = 'lucky-strike-campaigns-page';
+
+const readCachedCampaigns = async (): Promise<Campaign[]> => {
+  try {
+    const raw = await AsyncStorage.getItem(CAMPAIGNS_CACHE_KEY);
+    if (!raw) return [];
+
+    const parsed = JSON.parse(raw) as Array<Record<string, unknown>>;
+    return Array.isArray(parsed) ? parsed.map((campaign) => normalizeCampaign(campaign)) : [];
+  } catch (error) {
+    console.warn('Failed to read cached campaigns page data:', error);
+    return [];
+  }
+};
+
+const saveCachedCampaigns = async (campaigns: Campaign[]) => {
+  try {
+    await AsyncStorage.setItem(CAMPAIGNS_CACHE_KEY, JSON.stringify(campaigns));
+  } catch (error) {
+    console.warn('Failed to save campaigns page cache:', error);
+  }
+};
 
 const tabs = ['All campaigns', 'Daily', 'Weekly', 'Monthly'] as const;
 type TabName = (typeof tabs)[number];
@@ -142,6 +169,7 @@ export default function CampaignsScreen() {
   const [offset, setOffset] = useState(0);
   const [now, setNow] = useState(() => new Date());
   const [pressedCardId, setPressedCardId] = useState<string | null>(null);
+  const { isOffline } = useNetworkStatus(true);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
@@ -159,11 +187,27 @@ export default function CampaignsScreen() {
         setIsLoading(true);
       }
 
+      const cachedCampaigns = await readCachedCampaigns();
+      if (cachedCampaigns.length > 0 && !append) {
+        setCampaigns(cachedCampaigns);
+      }
+
+      if (isOffline) {
+        setHasMore(false);
+        return;
+      }
+
       const response = await fetch(
         `${API_BASE_URL}/api/draws?limit=${limit}&offset=${nextOffset}${tabValue === 'all' ? '' : `&drawType=${tabValue}`}`,
       );
 
-      if (!response.ok) return;
+      if (!response.ok) {
+        if (cachedCampaigns.length > 0) {
+          setCampaigns(cachedCampaigns);
+        }
+        setHasMore(false);
+        return;
+      }
 
       const payload = (await response.json()) as {
         draws?: Array<Record<string, unknown>>;
@@ -175,9 +219,17 @@ export default function CampaignsScreen() {
       setCampaigns((current) => (append ? [...current, ...normalized] : normalized));
       setHasMore(Boolean(payload?.hasMore));
       setOffset(nextOffset + normalized.length);
+      if (normalized.length > 0) {
+        await saveCachedCampaigns(normalized);
+      }
     } catch (error) {
       console.warn('Failed to load campaigns:', error);
-      setCampaigns([]);
+      const cachedCampaigns = await readCachedCampaigns();
+      if (cachedCampaigns.length > 0) {
+        setCampaigns(cachedCampaigns);
+      } else {
+        setCampaigns([]);
+      }
       setHasMore(false);
     } finally {
       setIsLoading(false);
@@ -190,7 +242,7 @@ export default function CampaignsScreen() {
   }, [activeTab]);
 
   const handleShowMore = () => {
-    if (!hasMore || loadingMore) return;
+    if (isOffline || !hasMore || loadingMore) return;
     void loadCampaigns(offset, true);
   };
 
@@ -205,6 +257,7 @@ export default function CampaignsScreen() {
 
   return (
     <View style={styles.screen}>
+      {isOffline ? <OfflineBanner label='Offline mode' /> : null}
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.topRow}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -247,10 +300,18 @@ export default function CampaignsScreen() {
             ))}
           </View>
         ) : visibleCampaigns.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>No campaigns available</Text>
-            <Text style={styles.emptyText}>There are no draws in this category right now. Please check back soon.</Text>
-          </View>
+          isOffline ? (
+            <OfflineState
+              title='No campaigns available'
+              message='You are offline, so fresh campaign data is unavailable right now.'
+              onRetry={() => void loadCampaigns(0, false)}
+            />
+          ) : (
+            <View style={styles.emptyCard}>
+              <Text style={styles.emptyTitle}>No campaigns available</Text>
+              <Text style={styles.emptyText}>There are no draws in this category right now. Please check back soon.</Text>
+            </View>
+          )
         ) : (
           <View style={styles.list}>
             {visibleCampaigns.map((campaign) => {
@@ -261,16 +322,18 @@ export default function CampaignsScreen() {
               const showCountdown = !isExpired && remainingMs <= 2 * dayMs;
               const isJustLaunched = !isExpired && remainingMs > 2 * dayMs && remainingMs <= 7 * dayMs;
 
-              const productTone = isExpired
-                ? styles.statusClosed
-                : showCountdown
-                  ? styles.statusClosing
-                  : styles.statusOpen;
-
-              let badgeLabel = 'Registration open';
-              if (isExpired) badgeLabel = 'Closed';
-              else if (showCountdown) badgeLabel = 'Closing in';
-              else if (isJustLaunched) badgeLabel = 'Just launched';
+              const productTone = isOffline
+                ? styles.statusCached
+                : isExpired
+                  ? styles.statusClosed
+                  : showCountdown
+                    ? styles.statusClosing
+                    : styles.statusOpen;
+ 
+              let badgeLabel = isOffline ? 'Cached data' : 'Registration open';
+              if (!isOffline && isExpired) badgeLabel = 'Closed';
+              else if (!isOffline && showCountdown) badgeLabel = 'Offline';
+              else if (!isOffline && isJustLaunched) badgeLabel = 'Just launched';
 
               const isPressed = pressedCardId === campaign.id;
 
@@ -285,7 +348,9 @@ export default function CampaignsScreen() {
                   onPressOut={() => setPressedCardId(null)}
                 >
                   <View style={[styles.registrationPill, productTone]}>
-                    {showCountdown ? (
+                    {isOffline ? (
+                      <Text style={[styles.registrationPillText, styles.registrationPillTextClosed]}>{badgeLabel}</Text>
+                    ) : showCountdown ? (
                       <>
                         <Text style={styles.registrationPillLabel}>{badgeLabel}</Text>
                         <Text style={styles.registrationPillTime}>{formatCountdown(deadline, now)}</Text>
@@ -327,7 +392,7 @@ export default function CampaignsScreen() {
               );
             })}
 
-            {hasMore && !isLoading && (
+            {hasMore && !isLoading && !isOffline && (
               <TouchableOpacity
                 style={[styles.showMoreButton, loadingMore && styles.showMoreButtonDisabled]}
                 onPress={handleShowMore}
@@ -449,6 +514,9 @@ const styles = StyleSheet.create({
   },
   statusClosed: {
     backgroundColor: '#171310',
+  },
+  statusCached: {
+    backgroundColor: '#5d5856',
   },
   registrationPillLabel: {
     fontSize: 9,

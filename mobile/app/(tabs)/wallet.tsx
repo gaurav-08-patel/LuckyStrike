@@ -12,7 +12,9 @@ import {
   View,
 } from "react-native";
 import { AuthModal } from "../../components/AuthModal";
+import { OfflineBanner, OfflineState } from "../../components/OfflineState";
 import { useAuth } from "../../context/AuthContext";
+import { useNetworkStatus } from "../../hooks/useNetworkStatus";
 
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL ||
@@ -72,6 +74,7 @@ export default function WalletScreen() {
   const [isTopupModalOpen, setIsTopupModalOpen] = useState(false);
   const [isProcessingTopup, setIsProcessingTopup] = useState(false);
   const [topupError, setTopupError] = useState("");
+  const { isOffline } = useNetworkStatus(true);
 
   const walletBalance = Number(user?.walletBalance ?? 0);
   const pendingWithdrawalBalance = Number(user?.pendingWithdrawalAmount ?? 0);
@@ -282,6 +285,7 @@ export default function WalletScreen() {
   return (
     <>
       <View style={styles.screen}>
+      {isOffline ? <OfflineBanner label='Offline mode' /> : null}
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -475,19 +479,35 @@ export default function WalletScreen() {
               </View>
 
               {loadingHistory ? (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyStateText}>
-                    Loading wallet history...
-                  </Text>
-                </View>
+                isOffline ? (
+                  <OfflineState
+                    title='Wallet offline'
+                    message='Your wallet is temporarily offline. Connect to the internet to sync the latest balance and transactions.'
+                    onRetry={() => void fetchWalletHistory(0, false)}
+                  />
+                ) : (
+                  <View style={styles.emptyState}>
+                    <Text style={styles.emptyStateText}>
+                      Loading wallet history...
+                    </Text>
+                  </View>
+                )
               ) : walletHistory.length === 0 ? (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyStateText}>
-                    {hasWalletBalance
-                      ? "Wallet balance is available, but no transaction entries were found yet."
-                      : "No transactions yet"}
-                  </Text>
-                </View>
+                isOffline ? (
+                  <OfflineState
+                    title='Wallet offline'
+                    message='You are offline. The wallet will show cached data when available, and new history syncs when the connection is restored.'
+                    onRetry={() => void fetchWalletHistory(0, false)}
+                  />
+                ) : (
+                  <View style={styles.emptyState}>
+                    <Text style={styles.emptyStateText}>
+                      {hasWalletBalance
+                        ? "Wallet balance is available, but no transaction entries were found yet."
+                        : "No transactions yet"}
+                    </Text>
+                  </View>
+                )
               ) : (
                 <>
                   <View style={styles.historyList}>

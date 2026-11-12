@@ -1,12 +1,15 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { CampaignsSection, type Campaign } from '../../components/CampaignsSection';
 import { HeroSection, type HeroSlide } from '../../components/HeroSection';
-import { SiteHeader } from '../../components/SiteHeader';
 import { HowItWorksSection } from '../../components/HowItWorksSection';
+import { OfflineBanner, OfflineState } from '../../components/OfflineState';
+import { SiteHeader } from '../../components/SiteHeader';
 import { WinnersSection, type Winner } from '../../components/WinnersSection';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 
 const tabs = ['All campaigns', 'Daily', 'Weekly', 'Monthly'] as const;
 
@@ -48,6 +51,28 @@ const getApiBaseUrl = () => {
 };
 
 const API_BASE_URL = getApiBaseUrl();
+const CAMPAIGNS_CACHE_KEY = 'lucky-strike-home-campaigns';
+
+const readCachedCampaigns = async (): Promise<Campaign[]> => {
+  try {
+    const raw = await AsyncStorage.getItem(CAMPAIGNS_CACHE_KEY);
+    if (!raw) return [];
+
+    const parsed = JSON.parse(raw) as Array<Record<string, unknown>>;
+    return Array.isArray(parsed) ? parsed.map(normalizeCampaign) : [];
+  } catch (error) {
+    console.warn('Failed to read cached campaigns:', error);
+    return [];
+  }
+};
+
+const saveCachedCampaigns = async (campaigns: Campaign[]) => {
+  try {
+    await AsyncStorage.setItem(CAMPAIGNS_CACHE_KEY, JSON.stringify(campaigns));
+  } catch (error) {
+    console.warn('Failed to save cached campaigns:', error);
+  }
+};
 
 const formatPrize = (campaign: any) => {
   const prizeAmount = Number(campaign.prize_amount ?? 0);
@@ -134,6 +159,10 @@ export default function HomeScreen() {
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>('All campaigns');
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [winners, setWinners] = useState<Winner[]>([]);
+  const [showOfflineFallback, setShowOfflineFallback] = useState(false);
+  const [isLoadingCampaigns, setIsLoadingCampaigns] = useState(true);
+  const { isOffline: offlineMode, isConnected } = useNetworkStatus(true);
+  const effectiveOfflineState = offlineMode || showOfflineFallback;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -143,36 +172,62 @@ export default function HomeScreen() {
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [drawsRes, winnersRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/api/draws?limit=5&offset=0`),
-          fetch(`${API_BASE_URL}/api/winners?limit=6`),
-        ]);
+  const loadData = async () => {
+    setIsLoadingCampaigns(true);
 
-        if (drawsRes.ok) {
-          const drawsData = await drawsRes.json();
-          const draws = Array.isArray(drawsData?.draws) ? drawsData.draws : [];
-          setCampaigns(draws.map(normalizeCampaign));
-        }
-
-        if (winnersRes.ok) {
-          const winnersData = await winnersRes.json();
-          const winnersList = Array.isArray(winnersData)
-            ? winnersData
-            : Array.isArray(winnersData?.winners)
-              ? winnersData.winners
-              : [];
-          setWinners(winnersList.slice(0, 12).map(normalizeWinner));
-        }
-      } catch (error) {
-        console.warn('Failed to load Lucky Strike mobile home data', error);
+    try {
+      const cachedCampaigns = await readCachedCampaigns();
+      if (cachedCampaigns.length > 0) {
+        setCampaigns(cachedCampaigns);
       }
-    };
 
+      if (offlineMode) {
+        setShowOfflineFallback(true);
+        return;
+      }
+
+      const [drawsRes, winnersRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/draws?limit=5&offset=0`),
+        fetch(`${API_BASE_URL}/api/winners?limit=6`),
+      ]);
+
+      if (drawsRes.ok) {
+        const drawsData = await drawsRes.json();
+        const draws = Array.isArray(drawsData?.draws) ? drawsData.draws : [];
+        const nextCampaigns = draws.map(normalizeCampaign);
+        setCampaigns(nextCampaigns);
+        await saveCachedCampaigns(nextCampaigns);
+        setShowOfflineFallback(false);
+      } else if (cachedCampaigns.length === 0) {
+        setShowOfflineFallback(true);
+      }
+
+      if (winnersRes.ok) {
+        const winnersData = await winnersRes.json();
+        const winnersList = Array.isArray(winnersData)
+          ? winnersData
+          : Array.isArray(winnersData?.winners)
+            ? winnersData.winners
+            : [];
+        setWinners(winnersList.slice(0, 12).map(normalizeWinner));
+      }
+    } catch (error) {
+      console.warn('Failed to load Lucky Strike mobile home data', error);
+      const cachedCampaigns = await readCachedCampaigns();
+      if (cachedCampaigns.length > 0) {
+        setCampaigns(cachedCampaigns);
+      } else {
+        setCampaigns([]);
+      }
+      setShowOfflineFallback(true);
+    } finally {
+      setIsLoadingCampaigns(false);
+    }
+  };
+
+  useEffect(() => {
     void loadData();
-  }, []);
+  }, [isConnected]);
 
   const visibleCampaigns = useMemo(() => {
     return campaigns.filter((campaign) => {
@@ -191,27 +246,42 @@ export default function HomeScreen() {
   };
 
   return (
-    <ScrollView ref={scrollRef} style={styles.screen} showsVerticalScrollIndicator={false}>
-      <View style={styles.container}>
-        <SiteHeader />
-        <HeroSection
-          slides={heroSlides}
-          activeSlide={activeSlide}
-          onChange={setActiveSlide}
-          onPressHowItWorks={handleScrollToHowItWorks}
-        />
-        <CampaignsSection
-          campaigns={visibleCampaigns}
-          tabs={[...tabs]}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
-        <HowItWorksSection onLayout={(event) => {
-          howItWorksYRef.current = event.nativeEvent.layout.y;
-        }} />
-        <WinnersSection winners={winners} />
-      </View>
-    </ScrollView>
+    <View style={styles.screen}>
+      {effectiveOfflineState ? <OfflineBanner label={offlineMode ? 'Offline mode' : 'Showing cached campaigns'} /> : null}
+
+      <ScrollView ref={scrollRef} style={styles.screen} showsVerticalScrollIndicator={false}>
+        <View style={styles.container}>
+          <SiteHeader />
+          <HeroSection
+            slides={heroSlides}
+            activeSlide={activeSlide}
+            onChange={setActiveSlide}
+            onPressHowItWorks={handleScrollToHowItWorks}
+          />
+
+          {showOfflineFallback && campaigns.length === 0 ? (
+            <OfflineState
+              title="No campaigns available"
+              message="You’re offline or there are no live draws right now."
+              onRetry={() => void loadData()}
+            />
+          ) : (
+            <CampaignsSection
+              campaigns={visibleCampaigns}
+              tabs={[...tabs]}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              isOffline={effectiveOfflineState}
+            />
+          )}
+
+          <HowItWorksSection onLayout={(event) => {
+            howItWorksYRef.current = event.nativeEvent.layout.y;
+          }} />
+          <WinnersSection winners={winners} />
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -223,5 +293,65 @@ const styles = StyleSheet.create({
   container: {
     paddingBottom: 40,
     backgroundColor: '#fffaf6',
+  },
+  offlineBanner: {
+    backgroundColor: '#171310',
+    borderBottomWidth: 3,
+    borderBottomColor: '#171310',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  offlineText: {
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
+    color: '#fff',
+  },
+  offlineCard: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    borderWidth: 3,
+    borderColor: '#171310',
+    backgroundColor: '#fff',
+    padding: 18,
+    shadowColor: '#171310',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 4,
+  },
+  offlineCardTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    color: '#171310',
+  },
+  offlineCardText: {
+    marginTop: 8,
+    fontSize: 12,
+    lineHeight: 18,
+    color: '#4e4a47',
+  },
+  retryButton: {
+    marginTop: 16,
+    alignSelf: 'flex-start',
+    borderWidth: 3,
+    borderColor: '#171310',
+    backgroundColor: '#ff3b30',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    shadowColor: '#171310',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 4,
+  },
+  retryButtonText: {
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
+    color: '#fff',
   },
 });
