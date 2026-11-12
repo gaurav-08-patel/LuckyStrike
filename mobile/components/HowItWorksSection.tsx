@@ -1,3 +1,4 @@
+import type { ForwardedRef, RefObject } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 type Step = {
@@ -54,9 +55,14 @@ const steps: Step[] = [
   },
 ];
 
-export function HowItWorksSection() {
+type HowItWorksSectionProps = {
+  sectionRef?: RefObject<View>;
+  onLayout?: (event: { nativeEvent: { layout: { y: number } } }) => void;
+};
+
+export function HowItWorksSection({ sectionRef, onLayout }: HowItWorksSectionProps) {
   return (
-    <View style={styles.section}>
+    <View ref={sectionRef} style={styles.section} onLayout={onLayout}>
       <View style={styles.badgeWrap}>
         <View style={styles.badge}>
           <Text style={styles.badgeText}>How it works</Text>

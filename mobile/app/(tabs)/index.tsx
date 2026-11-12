@@ -1,5 +1,5 @@
 import Constants from 'expo-constants';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 import { CampaignsSection, type Campaign } from '../../components/CampaignsSection';
@@ -128,6 +128,8 @@ const normalizeWinner = (raw: any): Winner => ({
 });
 
 export default function HomeScreen() {
+  const scrollRef = useRef<ScrollView | null>(null);
+  const howItWorksYRef = useRef(0);
   const [activeSlide, setActiveSlide] = useState(0);
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>('All campaigns');
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -180,18 +182,33 @@ export default function HomeScreen() {
     });
   }, [campaigns, activeTab]);
 
+  const handleScrollToHowItWorks = () => {
+    if (!scrollRef.current) return;
+    scrollRef.current.scrollTo({
+      y: howItWorksYRef.current,
+      animated: true,
+    });
+  };
+
   return (
-    <ScrollView style={styles.screen} showsVerticalScrollIndicator={false}>
+    <ScrollView ref={scrollRef} style={styles.screen} showsVerticalScrollIndicator={false}>
       <View style={styles.container}>
         <SiteHeader />
-        <HeroSection slides={heroSlides} activeSlide={activeSlide} onChange={setActiveSlide} />
+        <HeroSection
+          slides={heroSlides}
+          activeSlide={activeSlide}
+          onChange={setActiveSlide}
+          onPressHowItWorks={handleScrollToHowItWorks}
+        />
         <CampaignsSection
           campaigns={visibleCampaigns}
           tabs={[...tabs]}
           activeTab={activeTab}
           onTabChange={setActiveTab}
         />
-        <HowItWorksSection />
+        <HowItWorksSection onLayout={(event) => {
+          howItWorksYRef.current = event.nativeEvent.layout.y;
+        }} />
         <WinnersSection winners={winners} />
       </View>
     </ScrollView>
