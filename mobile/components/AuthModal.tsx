@@ -14,6 +14,7 @@ import {
 } from "react-native";
 
 import { useAuth } from "../context/AuthContext";
+import { toast } from "./Toast";
 
 const countryCodes = [
   { label: "India (+91)", value: "+91" },
@@ -141,8 +142,10 @@ export function AuthModal({
       setStep("otp");
       setResendCountdown(52);
       setPreviewOtp(data?.otp ?? null);
+      toast.success("OTP sent", "Verification code sent to your phone.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
+      toast.error("Couldn’t send OTP", err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setLoading(false);
     }
@@ -177,6 +180,7 @@ export function AuthModal({
 
       await setUser(data.user, data.token ?? null);
       onClose();
+      toast.success("Welcome", "You are now logged in.");
 
       if (redirectAfterLogin) {
         router.push(redirectAfterLogin as any);
@@ -187,7 +191,9 @@ export function AuthModal({
         router.push(data.redirectUrl as any);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Verification failed.");
+      const message = err instanceof Error ? err.message : "Verification failed.";
+      setError(message);
+      toast.error("Login failed", message);
     } finally {
       setLoading(false);
     }

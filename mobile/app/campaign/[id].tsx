@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 
 import { AuthModal } from '../../components/AuthModal';
+import { toast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext';
 
 const getApiBaseUrl = () => {
@@ -157,7 +158,6 @@ export default function CampaignDetailScreen() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [isConfirmPurchaseOpen, setIsConfirmPurchaseOpen] = useState(false);
-  const [notice, setNotice] = useState<{ title: string; message: string } | null>(null);
   const [ticketQuantity, setTicketQuantity] = useState(1);
   const [isBuying, setIsBuying] = useState(false);
   const [purchaseError, setPurchaseError] = useState('');
@@ -231,7 +231,7 @@ export default function CampaignDetailScreen() {
 
     if (!campaign) return;
     if (campaign.status !== 'active') {
-      setNotice({ title: 'Ticket purchase unavailable', message: 'This draw is not currently active.' });
+      toast.error('Ticket purchase unavailable', 'This draw is not currently active.');
       return;
     }
 
@@ -242,7 +242,7 @@ export default function CampaignDetailScreen() {
 
   const handleBuyTickets = async () => {
     if (!campaign || !id) {
-      setNotice({ title: 'Purchase failed', message: 'Campaign details are unavailable.' });
+      toast.error('Purchase failed', 'Campaign details are unavailable.');
       return;
     }
 
@@ -297,14 +297,15 @@ export default function CampaignDetailScreen() {
         };
       });
 
-      setNotice({
-        title: 'Tickets bought',
-        message: `You bought ${ticketQuantity} ticket${ticketQuantity > 1 ? 's' : ''} successfully.`,
-      });
+      toast.success(
+        'Tickets bought',
+        `You bought ${ticketQuantity} ticket${ticketQuantity > 1 ? 's' : ''} successfully.`,
+      );
       resetPurchaseModal();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Something went wrong while buying tickets.';
       setPurchaseError(message);
+      toast.error('Purchase failed', message);
     } finally {
       setIsBuying(false);
     }
@@ -485,21 +486,6 @@ export default function CampaignDetailScreen() {
                 disabled={isBuying}
               >
                 <Text style={[styles.primaryButtonText, styles.primaryButtonTextCentered]}>{isBuying ? 'Buying...' : 'Confirm'}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal visible={Boolean(notice)} transparent animationType='fade' onRequestClose={() => setNotice(null)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>{notice?.title ?? 'Notice'}</Text>
-            <Text style={styles.modalSubtitle}>{notice?.message ?? ''}</Text>
-
-            <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.primaryButtonSmall} onPress={() => setNotice(null)}>
-                <Text style={[styles.primaryButtonText, styles.primaryButtonTextCentered]}>Okay</Text>
               </TouchableOpacity>
             </View>
           </View>
