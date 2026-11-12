@@ -118,13 +118,6 @@ const getTicketCardTone = (status: string) => {
   return styles.ticketCardActive;
 };
 
-const getTicketCardBackground = (status: string) => {
-  const normalized = status.toLowerCase();
-  if (normalized === 'won') return '#edfff4';
-  if (normalized === 'lost') return '#fff1f1';
-  return '#fffef6';
-};
-
 export default function MyTicketsScreen() {
   const { isLoggedIn, isAuthReady } = useAuth();
   const [selectedStatus, setSelectedStatus] = useState<TicketStatusFilter>('all');
@@ -658,10 +651,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#fffef6',
   },
   ticketCardWon: {
-    backgroundColor: '#edfff4',
+    backgroundColor: '#cfeee0',
   },
   ticketCardLost: {
-    backgroundColor: '#fff1f1',
+    backgroundColor: '#f2d1d6',
   },
   ticketHeader: {
     flexDirection: 'row',
@@ -738,12 +731,12 @@ const styles = StyleSheet.create({
     color: '#8d1d59',
   },
   ticketWon: {
-    backgroundColor: '#dff7e7',
-    color: '#16714a',
+    backgroundColor: '#bfe7d0',
+    color: '#0f5839',
   },
   ticketLost: {
-    backgroundColor: '#ffe2e2',
-    color: '#a92525',
+    backgroundColor: '#eab7c0',
+    color: '#882332',
   },
   ticketActive: {
     backgroundColor: '#fff1b8',
