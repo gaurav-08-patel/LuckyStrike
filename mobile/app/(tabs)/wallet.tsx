@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { AuthModal } from "../../components/AuthModal";
 import { useAuth } from "../../context/AuthContext";
 
 const API_BASE_URL =
@@ -57,9 +58,10 @@ const formatDateTime = (value?: string) => {
 };
 
 export default function WalletScreen() {
-  const { user, setUser } = useAuth();
+  const { user, isAuthReady, isLoggedIn, setUser } = useAuth();
   const [activeTab, setActiveTab] = useState<WalletTab>("topup");
   const [selectedAmount, setSelectedAmount] = useState<number>(50);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [customAmount, setCustomAmount] = useState("");
   const [paymentMethod, setPaymentMethod] =
     useState<"netbanking">("netbanking");
@@ -87,6 +89,14 @@ export default function WalletScreen() {
   }, [customAmount, selectedAmount]);
 
   const formattedAmount = formatCurrency(activeAmount);
+
+  useEffect(() => {
+    if (!isAuthReady) return;
+
+    if (!isLoggedIn || !user) {
+      return;
+    }
+  }, [isAuthReady, isLoggedIn, user]);
 
   const fetchWalletHistory = async () => {
     try {
@@ -192,8 +202,64 @@ export default function WalletScreen() {
     }
   };
 
+  if (!isAuthReady) {
+    return (
+      <View style={styles.screen}>
+        <View style={styles.loginRequiredCard}>
+          <Text style={styles.loginRequiredTitle}>Loading...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (!isLoggedIn || !user) {
+    return (
+      <>
+        <View style={styles.screen}>
+          <View style={styles.loginRequiredCard}>
+            <View style={styles.lockBadge}>
+              <Text style={styles.lockBadgeText}>Locked</Text>
+            </View>
+
+            <Text style={styles.loginRequiredTitle}>Unlock your wallet</Text>
+            <Text style={styles.loginRequiredText}>
+              Sign in to check your balance, add funds, and track every wallet transaction in one place.
+            </Text>
+
+            <View style={styles.featureList}>
+              <View style={styles.featureRow}>
+                <Text style={styles.featureDot}>•</Text>
+                <Text style={styles.featureText}>View balance and payout status</Text>
+              </View>
+              <View style={styles.featureRow}>
+                <Text style={styles.featureDot}>•</Text>
+                <Text style={styles.featureText}>Top up instantly with secure payment</Text>
+              </View>
+              <View style={styles.featureRow}>
+                <Text style={styles.featureDot}>•</Text>
+                <Text style={styles.featureText}>Track every transaction in your history</Text>
+              </View>
+            </View>
+
+            <View style={styles.actionRow}>
+              <TouchableOpacity
+                style={styles.primaryLoginButton}
+                onPress={() => setIsAuthModalOpen(true)}
+              >
+                <Text style={styles.primaryLoginButtonText}>Login / Signup</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+      </>
+    );
+  }
+
   return (
-    <View style={styles.screen}>
+    <>
+      <View style={styles.screen}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -519,6 +585,7 @@ export default function WalletScreen() {
         </View>
       </Modal>
     </View>
+    </>
   );
 }
 
@@ -941,6 +1008,118 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "800",
     color: "#17131088",
+  },
+  loginRequiredCard: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    backgroundColor: "#fffaf7",
+  },
+  loginRequiredTitle: {
+    fontSize: 26,
+    fontWeight: "900",
+    color: "#171310",
+    textTransform: "uppercase",
+    letterSpacing: 1.5,
+  },
+  loginRequiredText: {
+    marginTop: 10,
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#17131099",
+    textAlign: "center",
+  },
+  loginButton: {
+    marginTop: 18,
+    borderWidth: 3,
+    borderColor: "#171310",
+    borderRadius: 14,
+    backgroundColor: "#ff3c8c",
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    shadowColor: "#171310",
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 5,
+  },
+  loginButtonText: {
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 1.4,
+    textTransform: "uppercase",
+    color: "#fff",
+  },
+  lockBadge: {
+    backgroundColor: "#171310",
+    borderWidth: 3,
+    borderColor: "#171310",
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginBottom: 14,
+    shadowColor: "#171310",
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 6,
+  },
+  lockBadgeText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 1.8,
+    textTransform: "uppercase",
+  },
+  featureList: {
+    width: "100%",
+    marginTop: 18,
+    gap: 10,
+  },
+  featureRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 4,
+  },
+  featureDot: {
+    fontSize: 22,
+    lineHeight: 22,
+    color: "#ff3c8c",
+    fontWeight: "900",
+  },
+  featureText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#171310",
+    fontWeight: "700",
+  },
+  actionRow: {
+    width: "100%",
+    marginTop: 22,
+  },
+  primaryLoginButton: {
+    backgroundColor: "#ff3c8c",
+    borderWidth: 3,
+    borderColor: "#171310",
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#171310",
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 6,
+  },
+  primaryLoginButtonText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 1.8,
+    textTransform: "uppercase",
   },
   historyAmount: {
     fontSize: 12,
