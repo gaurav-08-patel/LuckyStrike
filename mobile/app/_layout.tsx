@@ -7,6 +7,7 @@ import 'react-native-reanimated';
 
 import '../global.css';
 import { AuthProvider } from '../context/AuthContext';
+import { ToastProvider } from '../components/Toast';
 
 export {
   ErrorBoundary,
@@ -46,15 +47,17 @@ function RootLayoutNav() {
       <StatusBar barStyle='dark-content' backgroundColor='#F8F9FA' />
       <ThemeProvider value={DefaultTheme}>
         <AuthProvider>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: '#F8F9FA' },
-            }}
-          >
-            <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
-            <Stack.Screen name='modal' options={{ presentation: 'modal' }} />
-          </Stack>
+          <ToastProvider>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: '#F8F9FA' },
+              }}
+            >
+              <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
+              <Stack.Screen name='modal' options={{ presentation: 'modal' }} />
+            </Stack>
+          </ToastProvider>
         </AuthProvider>
       </ThemeProvider>
     </>
