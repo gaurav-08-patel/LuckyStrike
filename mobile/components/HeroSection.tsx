@@ -11,9 +11,10 @@ type HeroSectionProps = {
   slides: HeroSlide[];
   activeSlide: number;
   onChange: (index: number) => void;
+  onPressHowItWorks?: () => void;
 };
 
-export function HeroSection({ slides, activeSlide, onChange }: HeroSectionProps) {
+export function HeroSection({ slides, activeSlide, onChange, onPressHowItWorks }: HeroSectionProps) {
   const slide = slides[activeSlide] ?? slides[0];
 
   return (
@@ -58,11 +59,9 @@ export function HeroSection({ slides, activeSlide, onChange }: HeroSectionProps)
               </TouchableOpacity>
             </Link>
 
-            <Link href='/campaigns' asChild>
-              <TouchableOpacity style={styles.secondaryButton}>
-                <Text style={styles.secondaryButtonText}>See how it works</Text>
-              </TouchableOpacity>
-            </Link>
+            <TouchableOpacity style={styles.secondaryButton} onPress={onPressHowItWorks}>
+              <Text style={styles.secondaryButtonText}>See how it works</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </View>
