@@ -150,7 +150,7 @@ export function CampaignsSection({ campaigns, tabs, activeTab, onTabChange }: Ca
                        <Text style={styles.registrationPillTime}>{formatCountdown(deadline, now)}</Text>
                      </>
                    ) : (
-                     <Text style={styles.registrationPillText}>{badgeLabel}</Text>
+                     <Text style={[styles.registrationPillText, isExpired && styles.registrationPillTextClosed]}>{badgeLabel}</Text>
                    )}
                  </View>
 
@@ -321,6 +321,9 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2,
     textTransform: 'uppercase',
     textAlign: 'center',
+  },
+  registrationPillTextClosed: {
+    color: '#fff',
   },
   registrationPillTime: {
     color: '#fff',
