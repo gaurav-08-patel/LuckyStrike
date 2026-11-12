@@ -10,7 +10,9 @@ import {
   View,
 } from 'react-native';
 import { AuthModal } from '../../components/AuthModal';
+import { OfflineBanner, OfflineState } from '../../components/OfflineState';
 import { useAuth } from '../../context/AuthContext';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -127,6 +129,7 @@ export default function MyTicketsScreen() {
   const [summary, setSummary] = useState<TicketSummary>({ all: 0, active: 0, won: 0, lost: 0 });
   const [loading, setLoading] = useState(true);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const { isOffline } = useNetworkStatus(true);
 
   useEffect(() => {
     if (!isAuthReady) return;
@@ -275,6 +278,7 @@ export default function MyTicketsScreen() {
   return (
     <>
       <View style={styles.screen}>
+        {isOffline ? <OfflineBanner label='Offline mode' /> : null}
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.headerRow}>
             <Text style={styles.pageTitle}>My Tickets</Text>
@@ -314,12 +318,48 @@ export default function MyTicketsScreen() {
               ))}
             </View>
           ) : groupedTickets.length === 0 ? (
-            <View style={styles.emptyBox}>
-              <Text style={styles.emptyTitle}>No tickets found</Text>
-              <Text style={styles.emptyText}>
-                Try another filter or buy tickets from an active draw.
-              </Text>
-            </View>
+            isOffline ? (
+              <OfflineState
+                title='Tickets unavailable'
+                message='Your ticket history is currently offline. Connect to the internet to refresh your latest tickets.'
+                onRetry={() => {
+                  if (isLoggedIn) {
+                    void (async () => {
+                      setLoading(true);
+                      const token = await AsyncStorage.getItem('luckyStrikeToken');
+                      if (!token) {
+                        setTickets([]);
+                        setLoading(false);
+                        return;
+                      }
+
+                      const query = selectedStatus === 'all' ? '' : `?status=${selectedStatus}`;
+                      const response = await fetch(`${API_BASE_URL}/api/my-tickets${query}`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                      });
+
+                      if (!response.ok) throw new Error('Unable to load tickets.');
+
+                      const data = await response.json();
+                      const nextTickets = Array.isArray(data?.tickets) ? data.tickets : [];
+                      setTickets(nextTickets);
+                      setSummary(data?.summary || { all: 0, active: 0, won: 0, lost: 0 });
+                    })().catch((error) => {
+                      console.warn('Tickets failed to load:', error);
+                      setTickets([]);
+                      setSummary({ all: 0, active: 0, won: 0, lost: 0 });
+                    }).finally(() => setLoading(false));
+                  }
+                }}
+              />
+            ) : (
+              <View style={styles.emptyBox}>
+                <Text style={styles.emptyTitle}>No tickets found</Text>
+                <Text style={styles.emptyText}>
+                  Try another filter or buy tickets from an active draw.
+                </Text>
+              </View>
+            )
           ) : (
             <View style={styles.groupList}>
               {groupedTickets.map((group) => (
