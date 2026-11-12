@@ -67,6 +67,8 @@ export default function WalletScreen() {
     useState<"netbanking">("netbanking");
   const [walletHistory, setWalletHistory] = useState<WalletTransaction[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [isLoadingMoreHistory, setIsLoadingMoreHistory] = useState(false);
+  const [hasMoreHistory, setHasMoreHistory] = useState(false);
   const [isTopupModalOpen, setIsTopupModalOpen] = useState(false);
   const [isProcessingTopup, setIsProcessingTopup] = useState(false);
   const [topupError, setTopupError] = useState("");
@@ -89,26 +91,27 @@ export default function WalletScreen() {
   }, [customAmount, selectedAmount]);
 
   const formattedAmount = formatCurrency(activeAmount);
+  const hasWalletBalance = walletBalance > 0;
 
-  useEffect(() => {
-    if (!isAuthReady) return;
-
-    if (!isLoggedIn || !user) {
-      return;
-    }
-  }, [isAuthReady, isLoggedIn, user]);
-
-  const fetchWalletHistory = async () => {
+  const fetchWalletHistory = async (offset = 0, append = false) => {
     try {
+      if (append) {
+        setIsLoadingMoreHistory(true);
+      } else {
+        setLoadingHistory(true);
+      }
+
       const token = await AsyncStorage.getItem("luckyStrikeToken");
-      if (!token) {
+      if (!token || !isLoggedIn || !user) {
         setWalletHistory([]);
+        setHasMoreHistory(false);
         setLoadingHistory(false);
+        setIsLoadingMoreHistory(false);
         return;
       }
 
       const response = await fetch(
-        `${API_BASE_URL}/api/wallet/transactions?limit=10&offset=0`,
+        `${API_BASE_URL}/api/wallet/transactions?limit=5&offset=${offset}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -122,18 +125,37 @@ export default function WalletScreen() {
       const transactions = Array.isArray(payload?.transactions)
         ? payload.transactions
         : [];
-      setWalletHistory(transactions);
+
+      setWalletHistory((current) =>
+        append ? [...current, ...transactions] : transactions,
+      );
+      setHasMoreHistory(Boolean(payload?.hasMore));
     } catch (error) {
       console.warn("Wallet history unavailable:", error);
-      setWalletHistory([]);
+      if (!append) {
+        setWalletHistory([]);
+      }
+      setHasMoreHistory(false);
     } finally {
+      if (append) {
+        setIsLoadingMoreHistory(false);
+      }
       setLoadingHistory(false);
     }
   };
 
   useEffect(() => {
-    void fetchWalletHistory();
-  }, []);
+    if (!isAuthReady) return;
+    if (!isLoggedIn || !user) {
+      setWalletHistory([]);
+      setLoadingHistory(false);
+      setHasMoreHistory(false);
+      setIsLoadingMoreHistory(false);
+      return;
+    }
+
+    void fetchWalletHistory(0, false);
+  }, [isAuthReady, isLoggedIn, user?.id]);
 
   const handleConfirmTopup = async () => {
     const amount = Number(activeAmount);
@@ -460,58 +482,120 @@ export default function WalletScreen() {
                 </View>
               ) : walletHistory.length === 0 ? (
                 <View style={styles.emptyState}>
-                  <Text style={styles.emptyStateText}>No transactions yet</Text>
+                  <Text style={styles.emptyStateText}>
+                    {hasWalletBalance
+                      ? "Wallet balance is available, but no transaction entries were found yet."
+                      : "No transactions yet"}
+                  </Text>
                 </View>
               ) : (
-                <View style={styles.historyList}>
-                  {walletHistory.map((transaction) => {
-                    const amountValue = Number(transaction.amount || 0);
-                    const balanceAfterValue = Number(
-                      transaction.balance_after || 0,
-                    );
-                    const referenceValue =
-                      transaction.reference_id !== null &&
-                      transaction.reference_type
-                        ? `${transaction.reference_type} #${transaction.reference_id}`
-                        : transaction.reference_type || "N/A";
-                    const displayType =
-                      transaction.type === "topup"
-                        ? "Top-up"
-                        : transaction.type === "prize_credit"
-                          ? "Prize credit"
-                          : transaction.type.replace(/_/g, " ");
+                <>
+                  <View style={styles.historyList}>
+                    {walletHistory.map((transaction) => {
+                      const amountValue = Number(transaction.amount || 0);
+                      const balanceAfterValue = Number(
+                        transaction.balance_after || 0,
+                      );
+                      const isPositive = amountValue >= 0;
+                      const referenceValue =
+                        transaction.reference_id !== null &&
+                        transaction.reference_type
+                          ? `${transaction.reference_type} #${transaction.reference_id}`
+                          : transaction.reference_type || "Manual";
+                      const displayType =
+                        transaction.type === "topup"
+                          ? "Top-up"
+                          : transaction.type === "prize_credit"
+                            ? "Prize credit"
+                            : transaction.type === "withdrawal"
+                              ? "Withdrawal"
+                              : transaction.type === "withdrawal_request"
+                                ? "Withdrawal request"
+                                : transaction.type === "withdrawal_approved"
+                                  ? "Withdrawal approved"
+                                  : transaction.type === "withdrawal_paid"
+                                    ? "Withdrawal paid"
+                                    : transaction.type === "withdrawal_rejected"
+                                      ? "Withdrawal rejected"
+                                      : transaction.type === "withdrawal_cancelled"
+                                        ? "Withdrawal cancelled"
+                                        : transaction.type === "ticket_purchase"
+                                          ? "Ticket purchase"
+                                          : transaction.type.replace(/_/g, " ");
 
-                    return (
-                      <View key={transaction.id} style={styles.historyItem}>
-                        <Text style={styles.historyDate}>
-                          {formatDateTime(transaction.created_at)}
-                        </Text>
-                        <View style={styles.historyMetaRow}>
-                          <Text style={styles.historyType}>{displayType}</Text>
-                          <Text style={styles.historyReference}>
-                            {referenceValue}
+                      const typeToneStyle =
+                        transaction.type === "topup"
+                          ? styles.historyTypeBoxTopup
+                          : transaction.type === "prize_credit"
+                            ? styles.historyTypeBoxPrize
+                            : transaction.type === "withdrawal" ||
+                              transaction.type === "withdrawal_request" ||
+                              transaction.type === "withdrawal_approved" ||
+                              transaction.type === "withdrawal_paid" ||
+                              transaction.type === "withdrawal_rejected" ||
+                              transaction.type === "withdrawal_cancelled"
+                              ? styles.historyTypeBoxWithdrawal
+                              : transaction.type === "ticket_purchase"
+                                ? styles.historyTypeBoxPurchase
+                                : styles.historyTypeBoxDefault;
+
+                      return (
+                        <View key={transaction.id} style={styles.historyItem}>
+                          <View style={styles.historyTopRow}>
+                            <View style={[styles.historyTypeBox, typeToneStyle]}>
+                              <Text style={styles.historyType}>{displayType}</Text>
+                            </View>
+                            <Text
+                              style={[
+                                styles.historyAmount,
+                                isPositive
+                                  ? styles.positiveAmount
+                                  : styles.negativeAmount,
+                              ]}
+                            >
+                              {isPositive ? "+" : "-"}
+                              {formatCurrency(Math.abs(amountValue))}
+                            </Text>
+                          </View>
+
+                          <Text style={styles.historyDate}>
+                            {formatDateTime(transaction.created_at)}
                           </Text>
+
+                          <View style={styles.historyMetaRow}>
+                            <Text style={styles.historyMetaLabel}>Reference</Text>
+                            <Text style={styles.historyReference}>
+                              {referenceValue}
+                            </Text>
+                          </View>
+
+                          <View style={styles.historyMetaRow}>
+                            <Text style={styles.historyMetaLabel}>Balance after</Text>
+                            <Text style={styles.historyBalance}>
+                              {formatCurrency(balanceAfterValue)}
+                            </Text>
+                          </View>
                         </View>
-                        <View style={styles.historyMetaRow}>
-                          <Text style={styles.historyBalance}>
-                            Balance after: {formatCurrency(balanceAfterValue)}
-                          </Text>
-                          <Text
-                            style={[
-                              styles.historyAmount,
-                              amountValue >= 0
-                                ? styles.positiveAmount
-                                : styles.negativeAmount,
-                            ]}
-                          >
-                            {amountValue >= 0 ? "+" : "-"}
-                            {formatCurrency(Math.abs(amountValue))}
-                          </Text>
-                        </View>
-                      </View>
-                    );
-                  })}
-                </View>
+                      );
+                    })}
+                  </View>
+
+                  {hasMoreHistory ? (
+                    <TouchableOpacity
+                      activeOpacity={0.9}
+                      onPress={() => void fetchWalletHistory(walletHistory.length, true)}
+                      disabled={isLoadingMoreHistory}
+                      style={[
+                        styles.showMoreButton,
+                        isLoadingMoreHistory && styles.showMoreButtonDisabled,
+                      ]}
+                    >
+                      <Text style={styles.showMoreButtonText}>
+                        {isLoadingMoreHistory ? "Loading..." : "Show more"}
+                      </Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </>
               )}
             </View>
           )}
@@ -971,43 +1055,111 @@ const styles = StyleSheet.create({
   historyList: {
     gap: 8,
   },
+  showMoreButton: {
+    marginTop: 12,
+    borderWidth: 3,
+    borderColor: "#171310",
+    borderRadius: 12,
+    backgroundColor: "#ff3c8c",
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#171310",
+    shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 4,
+  },
+  showMoreButtonDisabled: {
+    opacity: 0.7,
+  },
+  showMoreButtonText: {
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
+  },
   historyItem: {
     borderWidth: 3,
     borderColor: "#171310",
     borderRadius: 14,
     backgroundColor: "#fff",
     padding: 12,
+    shadowColor: "#171310",
+    shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 4,
+  },
+  historyTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 10,
+  },
+  historyTypeBox: {
+    flex: 1,
+    backgroundColor: "#f9f5f0",
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+  },
+  historyTypeBoxDefault: {
+    backgroundColor: "#f3f2f2",
+  },
+  historyTypeBoxTopup: {
+    backgroundColor: "#fde7f3",
+  },
+  historyTypeBoxPrize: {
+    backgroundColor: "#eafaf3",
+  },
+  historyTypeBoxWithdrawal: {
+    backgroundColor: "#eaf2ff",
+  },
+  historyTypeBoxPurchase: {
+    backgroundColor: "#fff3d8",
   },
   historyDate: {
+    marginTop: 10,
     fontSize: 11,
     fontWeight: "800",
     color: "#171310",
   },
   historyMetaRow: {
-    marginTop: 6,
+    marginTop: 8,
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     gap: 8,
   },
+  historyMetaLabel: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#17131088",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+  },
   historyType: {
-    flex: 1,
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "900",
     color: "#171310",
-    textTransform: "capitalize",
+    textTransform: "uppercase",
+    letterSpacing: 1,
   },
   historyReference: {
     flex: 1,
     fontSize: 10,
     fontWeight: "800",
-    color: "#17131088",
+    color: "#171310",
     textAlign: "right",
   },
   historyBalance: {
     flex: 1,
     fontSize: 10,
     fontWeight: "800",
-    color: "#17131088",
+    color: "#171310",
+    textAlign: "right",
   },
   loginRequiredCard: {
     flex: 1,
