@@ -169,7 +169,7 @@ export default function CampaignsScreen() {
   const [offset, setOffset] = useState(0);
   const [now, setNow] = useState(() => new Date());
   const [pressedCardId, setPressedCardId] = useState<string | null>(null);
-  const { isOffline } = useNetworkStatus(true);
+  const { isOffline } = useNetworkStatus();
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
@@ -332,7 +332,7 @@ export default function CampaignsScreen() {
  
               let badgeLabel = isOffline ? 'Cached data' : 'Registration open';
               if (!isOffline && isExpired) badgeLabel = 'Closed';
-              else if (!isOffline && showCountdown) badgeLabel = 'Offline';
+              else if (!isOffline && showCountdown) badgeLabel = 'Closing in';
               else if (!isOffline && isJustLaunched) badgeLabel = 'Just launched';
 
               const isPressed = pressedCardId === campaign.id;

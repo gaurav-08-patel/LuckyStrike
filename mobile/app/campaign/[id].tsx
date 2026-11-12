@@ -163,7 +163,7 @@ export default function CampaignDetailScreen() {
   const [ticketQuantity, setTicketQuantity] = useState(1);
   const [isBuying, setIsBuying] = useState(false);
   const [purchaseError, setPurchaseError] = useState('');
-  const { isOffline } = useNetworkStatus(true);
+  const { isOffline } = useNetworkStatus();
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);

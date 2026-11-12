@@ -13,6 +13,7 @@ export type Winner = {
 
 type WinnersSectionProps = {
   winners: Winner[];
+  isOffline?: boolean;
 };
 
 const formatDate = (value?: string) => {
@@ -26,7 +27,7 @@ const formatDate = (value?: string) => {
   }).format(date);
 };
 
-export function WinnersSection({ winners }: WinnersSectionProps) {
+export function WinnersSection({ winners, isOffline = false }: WinnersSectionProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
   const cardWidth = 270;
@@ -68,6 +69,14 @@ export function WinnersSection({ winners }: WinnersSectionProps) {
           <Text style={styles.badgeText}>Winners</Text>
         </View>
       </View>
+
+      {isOffline && validWinners.length > 0 ? (
+        <View style={styles.cachedBadgeWrap}>
+          <View style={styles.cachedBadge}>
+            <Text style={styles.cachedBadgeText}>Cached data</Text>
+          </View>
+        </View>
+      ) : null}
 
       {validWinners.length === 0 ? (
         <View style={styles.emptyCard}>
@@ -166,6 +175,30 @@ const styles = StyleSheet.create({
   badgeWrap: {
     alignItems: 'center',
     marginBottom: 12,
+  },
+  cachedBadgeWrap: {
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  cachedBadge: {
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: '#171310',
+    backgroundColor: '#f6d7e0',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    shadowColor: '#171310',
+    shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 4,
+  },
+  cachedBadgeText: {
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 1.3,
+    textTransform: 'uppercase',
+    color: '#171310',
   },
   badge: {
     borderRadius: 999,

@@ -129,7 +129,7 @@ export default function MyTicketsScreen() {
   const [summary, setSummary] = useState<TicketSummary>({ all: 0, active: 0, won: 0, lost: 0 });
   const [loading, setLoading] = useState(true);
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const { isOffline } = useNetworkStatus(true);
+  const { isOffline } = useNetworkStatus();
 
   useEffect(() => {
     if (!isAuthReady) return;

@@ -74,7 +74,7 @@ export default function WalletScreen() {
   const [isTopupModalOpen, setIsTopupModalOpen] = useState(false);
   const [isProcessingTopup, setIsProcessingTopup] = useState(false);
   const [topupError, setTopupError] = useState("");
-  const { isOffline } = useNetworkStatus(true);
+  const { isOffline } = useNetworkStatus();
 
   const walletBalance = Number(user?.walletBalance ?? 0);
   const pendingWithdrawalBalance = Number(user?.pendingWithdrawalAmount ?? 0);

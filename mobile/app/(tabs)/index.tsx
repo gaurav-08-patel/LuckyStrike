@@ -52,6 +52,7 @@ const getApiBaseUrl = () => {
 
 const API_BASE_URL = getApiBaseUrl();
 const CAMPAIGNS_CACHE_KEY = 'lucky-strike-home-campaigns';
+const WINNERS_CACHE_KEY = 'lucky-strike-home-winners';
 
 const readCachedCampaigns = async (): Promise<Campaign[]> => {
   try {
@@ -71,6 +72,27 @@ const saveCachedCampaigns = async (campaigns: Campaign[]) => {
     await AsyncStorage.setItem(CAMPAIGNS_CACHE_KEY, JSON.stringify(campaigns));
   } catch (error) {
     console.warn('Failed to save cached campaigns:', error);
+  }
+};
+
+const readCachedWinners = async (): Promise<Winner[]> => {
+  try {
+    const raw = await AsyncStorage.getItem(WINNERS_CACHE_KEY);
+    if (!raw) return [];
+
+    const parsed = JSON.parse(raw) as Array<Record<string, unknown>>;
+    return Array.isArray(parsed) ? parsed.map(normalizeWinner) : [];
+  } catch (error) {
+    console.warn('Failed to read cached winners:', error);
+    return [];
+  }
+};
+
+const saveCachedWinners = async (winners: Winner[]) => {
+  try {
+    await AsyncStorage.setItem(WINNERS_CACHE_KEY, JSON.stringify(winners));
+  } catch (error) {
+    console.warn('Failed to save cached winners:', error);
   }
 };
 
@@ -161,7 +183,7 @@ export default function HomeScreen() {
   const [winners, setWinners] = useState<Winner[]>([]);
   const [showOfflineFallback, setShowOfflineFallback] = useState(false);
   const [isLoadingCampaigns, setIsLoadingCampaigns] = useState(true);
-  const { isOffline: offlineMode, isConnected } = useNetworkStatus(true);
+  const { isOffline: offlineMode, isConnected } = useNetworkStatus();
   const effectiveOfflineState = offlineMode || showOfflineFallback;
 
   useEffect(() => {
@@ -177,8 +199,13 @@ export default function HomeScreen() {
 
     try {
       const cachedCampaigns = await readCachedCampaigns();
+      const cachedWinners = await readCachedWinners();
+
       if (cachedCampaigns.length > 0) {
         setCampaigns(cachedCampaigns);
+      }
+      if (cachedWinners.length > 0) {
+        setWinners(cachedWinners);
       }
 
       if (offlineMode) {
@@ -209,15 +236,25 @@ export default function HomeScreen() {
           : Array.isArray(winnersData?.winners)
             ? winnersData.winners
             : [];
-        setWinners(winnersList.slice(0, 12).map(normalizeWinner));
+        const nextWinners = winnersList.slice(0, 12).map(normalizeWinner);
+        setWinners(nextWinners);
+        await saveCachedWinners(nextWinners);
+      } else if (cachedWinners.length === 0) {
+        setWinners([]);
       }
     } catch (error) {
       console.warn('Failed to load Lucky Strike mobile home data', error);
       const cachedCampaigns = await readCachedCampaigns();
+      const cachedWinners = await readCachedWinners();
       if (cachedCampaigns.length > 0) {
         setCampaigns(cachedCampaigns);
       } else {
         setCampaigns([]);
+      }
+      if (cachedWinners.length > 0) {
+        setWinners(cachedWinners);
+      } else {
+        setWinners([]);
       }
       setShowOfflineFallback(true);
     } finally {
@@ -278,7 +315,7 @@ export default function HomeScreen() {
           <HowItWorksSection onLayout={(event) => {
             howItWorksYRef.current = event.nativeEvent.layout.y;
           }} />
-          <WinnersSection winners={winners} />
+          <WinnersSection winners={winners} isOffline={effectiveOfflineState} />
         </View>
       </ScrollView>
     </View>

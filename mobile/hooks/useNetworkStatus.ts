@@ -1,7 +1,7 @@
 import NetInfo from '@react-native-community/netinfo';
 import { useEffect, useState } from 'react';
 
-export const FORCE_OFFLINE_FOR_DEVELOPMENT = true;
+export const FORCE_OFFLINE_FOR_DEVELOPMENT = false;
 
 export function useNetworkStatus(forceOfflineForDevelopment = FORCE_OFFLINE_FOR_DEVELOPMENT) {
   const [isConnected, setIsConnected] = useState(!forceOfflineForDevelopment);
