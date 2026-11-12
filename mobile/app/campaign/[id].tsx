@@ -313,9 +313,48 @@ export default function CampaignDetailScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.loadingScreen}>
-        <Text style={styles.eyebrow}>LuckyStrike</Text>
-        <Text style={styles.loadingText}>Loading draw details...</Text>
+      <View style={styles.screen}>
+        <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <View style={styles.headerRow}>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+              <Ionicons name='arrow-back' size={22} color='#171310' />
+            </TouchableOpacity>
+            <View style={styles.skeletonBadge} />
+          </View>
+
+          <View style={styles.skeletonHeroCard}>
+            <View style={styles.skeletonHeroImage} />
+            <View style={styles.skeletonHeroContent}>
+              <View style={styles.skeletonLineTiny} />
+              <View style={styles.skeletonLineLarge} />
+              <View style={styles.skeletonLineMedium} />
+            </View>
+          </View>
+
+          <View style={styles.metaGrid}>
+            {Array.from({ length: 4 }).map((_, index) => (
+              <View key={index} style={styles.skeletonMetaCard}>
+                <View style={styles.skeletonLineTiny} />
+                <View style={styles.skeletonLineShort} />
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.skeletonStatusRow}>
+            <View style={styles.skeletonStatusPill} />
+            <View style={styles.skeletonLineSmall} />
+          </View>
+
+          <View style={styles.skeletonSummaryCard}>
+            <View style={styles.skeletonLineTiny} />
+            <View style={styles.skeletonLineLong} />
+            <View style={styles.skeletonLineMedium} />
+            <View style={styles.skeletonLineMedium} />
+            <View style={styles.skeletonLineMedium} />
+          </View>
+
+          <View style={styles.skeletonPrimaryButton} />
+        </ScrollView>
       </View>
     );
   }
@@ -516,6 +555,122 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#fffaf6',
     paddingHorizontal: 24,
+  },
+  skeletonBadge: {
+    width: 120,
+    height: 42,
+    borderWidth: 3,
+    borderColor: '#171310',
+    backgroundColor: '#efe6dc',
+    shadowColor: '#171310',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 4,
+  },
+  skeletonHeroCard: {
+    borderWidth: 3,
+    borderColor: '#171310',
+    backgroundColor: '#fff',
+    shadowColor: '#171310',
+    shadowOffset: { width: 6, height: 6 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 6,
+    overflow: 'hidden',
+  },
+  skeletonHeroImage: {
+    width: '100%',
+    height: 200,
+    backgroundColor: '#efe8e2',
+  },
+  skeletonHeroContent: {
+    backgroundColor: '#fffaf1',
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    gap: 10,
+  },
+  skeletonLineTiny: {
+    width: '25%',
+    height: 12,
+    backgroundColor: '#e7ddd4',
+  },
+  skeletonLineSmall: {
+    width: '18%',
+    height: 18,
+    backgroundColor: '#e7ddd4',
+  },
+  skeletonLineShort: {
+    width: '45%',
+    height: 16,
+    backgroundColor: '#e7ddd4',
+  },
+  skeletonLineMedium: {
+    width: '65%',
+    height: 18,
+    backgroundColor: '#e7ddd4',
+  },
+  skeletonLineLarge: {
+    width: '80%',
+    height: 28,
+    backgroundColor: '#e7ddd4',
+  },
+  skeletonLineLong: {
+    width: '90%',
+    height: 18,
+    backgroundColor: '#e7ddd4',
+  },
+  skeletonMetaCard: {
+    width: '48%',
+    borderWidth: 3,
+    borderColor: '#171310',
+    backgroundColor: '#fff',
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+    gap: 8,
+    shadowColor: '#171310',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 4,
+  },
+  skeletonStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 16,
+  },
+  skeletonStatusPill: {
+    width: 120,
+    height: 40,
+    backgroundColor: '#e7ddd4',
+    borderWidth: 3,
+    borderColor: '#171310',
+  },
+  skeletonSummaryCard: {
+    marginTop: 18,
+    borderWidth: 3,
+    borderColor: '#171310',
+    backgroundColor: '#fff',
+    padding: 16,
+    gap: 10,
+    shadowColor: '#171310',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 4,
+  },
+  skeletonPrimaryButton: {
+    marginTop: 18,
+    height: 52,
+    borderWidth: 3,
+    borderColor: '#171310',
+    backgroundColor: '#e7ddd4',
+    shadowColor: '#171310',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 4,
   },
   eyebrow: {
     fontSize: 10,
