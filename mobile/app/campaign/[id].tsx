@@ -16,8 +16,10 @@ import {
 } from 'react-native';
 
 import { AuthModal } from '../../components/AuthModal';
+import { OfflineBanner, OfflineState } from '../../components/OfflineState';
 import { toast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 
 const getApiBaseUrl = () => {
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
@@ -161,6 +163,7 @@ export default function CampaignDetailScreen() {
   const [ticketQuantity, setTicketQuantity] = useState(1);
   const [isBuying, setIsBuying] = useState(false);
   const [purchaseError, setPurchaseError] = useState('');
+  const { isOffline } = useNetworkStatus(true);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
@@ -224,6 +227,10 @@ export default function CampaignDetailScreen() {
 
   const handleOpenPurchase = () => {
     if (!isAuthReady) return;
+    if (isOffline) {
+      toast.error('Offline mode', 'Connect to the internet to buy tickets.');
+      return;
+    }
     if (!isLoggedIn) {
       setIsAuthModalOpen(true);
       return;
@@ -243,6 +250,11 @@ export default function CampaignDetailScreen() {
   const handleBuyTickets = async () => {
     if (!campaign || !id) {
       toast.error('Purchase failed', 'Campaign details are unavailable.');
+      return;
+    }
+
+    if (isOffline) {
+      toast.error('Offline mode', 'Connect to the internet before buying tickets.');
       return;
     }
 
@@ -314,6 +326,7 @@ export default function CampaignDetailScreen() {
   if (isLoading) {
     return (
       <View style={styles.screen}>
+        {isOffline ? <OfflineBanner label='Offline mode' /> : null}
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.headerRow}>
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -322,38 +335,52 @@ export default function CampaignDetailScreen() {
             <View style={styles.skeletonBadge} />
           </View>
 
-          <View style={styles.skeletonHeroCard}>
-            <View style={styles.skeletonHeroImage} />
-            <View style={styles.skeletonHeroContent}>
-              <View style={styles.skeletonLineTiny} />
-              <View style={styles.skeletonLineLarge} />
-              <View style={styles.skeletonLineMedium} />
-            </View>
-          </View>
-
-          <View style={styles.metaGrid}>
-            {Array.from({ length: 4 }).map((_, index) => (
-              <View key={index} style={styles.skeletonMetaCard}>
-                <View style={styles.skeletonLineTiny} />
-                <View style={styles.skeletonLineShort} />
+          {isOffline ? (
+            <OfflineState
+              title='Campaign unavailable'
+              message='The draw details are offline right now. Connect to the internet to load the latest campaign info.'
+              onRetry={() => {
+                if (id) {
+                  void fetch(`${API_BASE_URL}/api/draws/${encodeURIComponent(String(id))}`);
+                }
+              }}
+            />
+          ) : (
+            <>
+              <View style={styles.skeletonHeroCard}>
+                <View style={styles.skeletonHeroImage} />
+                <View style={styles.skeletonHeroContent}>
+                  <View style={styles.skeletonLineTiny} />
+                  <View style={styles.skeletonLineLarge} />
+                  <View style={styles.skeletonLineMedium} />
+                </View>
               </View>
-            ))}
-          </View>
 
-          <View style={styles.skeletonStatusRow}>
-            <View style={styles.skeletonStatusPill} />
-            <View style={styles.skeletonLineSmall} />
-          </View>
+              <View style={styles.metaGrid}>
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <View key={index} style={styles.skeletonMetaCard}>
+                    <View style={styles.skeletonLineTiny} />
+                    <View style={styles.skeletonLineShort} />
+                  </View>
+                ))}
+              </View>
 
-          <View style={styles.skeletonSummaryCard}>
-            <View style={styles.skeletonLineTiny} />
-            <View style={styles.skeletonLineLong} />
-            <View style={styles.skeletonLineMedium} />
-            <View style={styles.skeletonLineMedium} />
-            <View style={styles.skeletonLineMedium} />
-          </View>
+              <View style={styles.skeletonStatusRow}>
+                <View style={styles.skeletonStatusPill} />
+                <View style={styles.skeletonLineSmall} />
+              </View>
 
-          <View style={styles.skeletonPrimaryButton} />
+              <View style={styles.skeletonSummaryCard}>
+                <View style={styles.skeletonLineTiny} />
+                <View style={styles.skeletonLineLong} />
+                <View style={styles.skeletonLineMedium} />
+                <View style={styles.skeletonLineMedium} />
+                <View style={styles.skeletonLineMedium} />
+              </View>
+
+              <View style={styles.skeletonPrimaryButton} />
+            </>
+          )}
         </ScrollView>
       </View>
     );
@@ -362,10 +389,11 @@ export default function CampaignDetailScreen() {
   if (!campaign) {
     return (
       <View style={styles.loadingScreen}>
+        {isOffline ? <OfflineBanner label='Offline mode' /> : null}
         <Text style={styles.eyebrow}>LuckyStrike</Text>
-        <Text style={styles.loadingText}>Draw not found.</Text>
+        <Text style={styles.loadingText}>{isOffline ? 'Campaign unavailable offline.' : 'Draw not found.'}</Text>
         <TouchableOpacity style={styles.primaryButton} onPress={() => router.push('/campaigns')}>
-          <Text style={styles.primaryButtonText}>Back to campaigns</Text>
+          <Text style={styles.primaryButtonText}>{isOffline ? 'Back to campaigns' : 'Back to campaigns'}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -373,6 +401,7 @@ export default function CampaignDetailScreen() {
 
   return (
     <View style={styles.screen}>
+      {isOffline ? <OfflineBanner label='Offline mode' /> : null}
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.headerRow}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -440,8 +469,12 @@ export default function CampaignDetailScreen() {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.primaryButton} onPress={handleOpenPurchase} disabled={isExpired || campaign.status !== 'active'}>
-          <Text style={styles.primaryButtonText}>{isExpired || campaign.status !== 'active' ? 'Draw closed' : 'Buy tickets'}</Text>
+        <TouchableOpacity
+          style={[styles.primaryButton, isOffline && styles.primaryButtonDisabled]}
+          onPress={handleOpenPurchase}
+          disabled={isExpired || campaign.status !== 'active' || isOffline}
+        >
+          <Text style={styles.primaryButtonText}>{isOffline ? 'Offline' : isExpired || campaign.status !== 'active' ? 'Draw closed' : 'Buy tickets'}</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -887,6 +920,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 1,
     shadowRadius: 0,
     elevation: 4,
+  },
+  primaryButtonDisabled: {
+    backgroundColor: '#8e8180',
+    opacity: 0.9,
   },
   primaryButtonSmall: {
     flex: 1,
