@@ -1,4 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
+import { Link } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ScrollView,
@@ -297,8 +299,19 @@ export default function MyTicketsScreen() {
           </View>
 
           {loading ? (
-            <View style={styles.emptyBox}>
-              <Text style={styles.emptyTitle}>Loading your tickets...</Text>
+            <View style={styles.skeletonList}>
+              {Array.from({ length: 2 }).map((_, index) => (
+                <View key={index} style={styles.skeletonCard}>
+                  <View style={styles.skeletonHeader} />
+                  <View style={styles.skeletonLineShort} />
+                  <View style={styles.skeletonLineLong} />
+                  <View style={styles.skeletonLineMedium} />
+                  <View style={styles.skeletonTicketRow}>
+                    <View style={styles.skeletonTicketCard} />
+                    <View style={styles.skeletonTicketCard} />
+                  </View>
+                </View>
+              ))}
             </View>
           ) : groupedTickets.length === 0 ? (
             <View style={styles.emptyBox}>
@@ -315,6 +328,14 @@ export default function MyTicketsScreen() {
                     <View style={styles.groupInfo}>
                       <Text style={styles.drawCode}>Draw: {group.drawCode}</Text>
                       <Text style={styles.groupTitle}>{group.title}</Text>
+                      <Link href={`/campaign/${group.drawId}`} asChild>
+                        <TouchableOpacity style={styles.viewDrawLink}>
+                          <View style={styles.viewDrawRow}>
+                            <Ionicons name='link' size={11} color='#ff2d78' />
+                            <Text style={styles.viewDrawText}>View draw</Text>
+                          </View>
+                        </TouchableOpacity>
+                      </Link>
                     </View>
 
                     <View style={styles.groupChips}>
@@ -486,6 +507,56 @@ const styles = StyleSheet.create({
   filterTextActive: {
     color: '#fff',
   },
+  skeletonList: {
+    gap: 12,
+    marginTop: 12,
+  },
+  skeletonCard: {
+    borderWidth: 2,
+    borderColor: '#171310',
+    backgroundColor: '#fff',
+    padding: 12,
+    shadowColor: '#171310',
+    shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 3,
+  },
+  skeletonHeader: {
+    width: '35%',
+    height: 18,
+    backgroundColor: '#efe3da',
+    marginBottom: 12,
+  },
+  skeletonLineShort: {
+    width: '25%',
+    height: 12,
+    backgroundColor: '#efe3da',
+    marginBottom: 8,
+  },
+  skeletonLineLong: {
+    width: '65%',
+    height: 18,
+    backgroundColor: '#efe3da',
+    marginBottom: 8,
+  },
+  skeletonLineMedium: {
+    width: '45%',
+    height: 14,
+    backgroundColor: '#efe3da',
+    marginBottom: 12,
+  },
+  skeletonTicketRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  skeletonTicketCard: {
+    flex: 1,
+    height: 90,
+    backgroundColor: '#f4eae2',
+    borderWidth: 2,
+    borderColor: '#171310',
+  },
   emptyBox: {
     marginTop: 12,
     borderWidth: 1.5,
@@ -543,6 +614,24 @@ const styles = StyleSheet.create({
     color: '#171310',
     letterSpacing: -0.3,
     textTransform: 'uppercase',
+  },
+  viewDrawLink: {
+    marginTop: 6,
+    alignSelf: 'flex-start',
+  },
+  viewDrawRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    textDecorationLine: 'underline',
+  },
+  viewDrawText: {
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    color: '#ff2d78',
+    textDecorationLine: 'underline',
   },
   groupChips: {
     flexDirection: 'row',
