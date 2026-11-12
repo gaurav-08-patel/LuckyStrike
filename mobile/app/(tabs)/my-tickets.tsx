@@ -350,6 +350,7 @@ export default function MyTicketsScreen() {
                         style={styles.ticketListScrollable}
                         contentContainerStyle={styles.ticketListContent}
                         showsVerticalScrollIndicator={false}
+                        nestedScrollEnabled
                       >
                         {group.tickets.map((ticket) => (
                           <View
@@ -648,7 +649,7 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   ticketCardActive: {
-    backgroundColor: '#fffef6',
+    backgroundColor: '#f9ebd7',
   },
   ticketCardWon: {
     backgroundColor: '#cfeee0',
@@ -739,8 +740,8 @@ const styles = StyleSheet.create({
     color: '#882332',
   },
   ticketActive: {
-    backgroundColor: '#fff1b8',
-    color: '#7d5600',
+    backgroundColor: '#f4d9a8',
+    color: '#755100',
   },
   ticketNeutral: {
     backgroundColor: '#eceae7',
