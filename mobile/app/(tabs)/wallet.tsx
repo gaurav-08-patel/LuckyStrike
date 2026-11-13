@@ -248,21 +248,28 @@ export default function WalletScreen() {
 
             <Text style={styles.loginRequiredTitle}>Unlock your wallet</Text>
             <Text style={styles.loginRequiredText}>
-              Sign in to check your balance, add funds, and track every wallet transaction in one place.
+              Sign in to check your balance, add funds, and track every wallet
+              transaction in one place.
             </Text>
 
             <View style={styles.featureList}>
               <View style={styles.featureRow}>
                 <Text style={styles.featureDot}>•</Text>
-                <Text style={styles.featureText}>View balance and payout status</Text>
+                <Text style={styles.featureText}>
+                  View balance and payout status
+                </Text>
               </View>
               <View style={styles.featureRow}>
                 <Text style={styles.featureDot}>•</Text>
-                <Text style={styles.featureText}>Top up instantly with secure payment</Text>
+                <Text style={styles.featureText}>
+                  Top up instantly with secure payment
+                </Text>
               </View>
               <View style={styles.featureRow}>
                 <Text style={styles.featureDot}>•</Text>
-                <Text style={styles.featureText}>Track every transaction in your history</Text>
+                <Text style={styles.featureText}>
+                  Track every transaction in your history
+                </Text>
               </View>
             </View>
 
@@ -271,13 +278,18 @@ export default function WalletScreen() {
                 style={styles.primaryLoginButton}
                 onPress={() => setIsAuthModalOpen(true)}
               >
-                <Text style={styles.primaryLoginButtonText}>Login / Signup</Text>
+                <Text style={styles.primaryLoginButtonText}>
+                  Login / Signup
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
 
-        <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+        />
       </>
     );
   }
@@ -285,410 +297,433 @@ export default function WalletScreen() {
   return (
     <>
       <View style={styles.screen}>
-      {isOffline ? <OfflineBanner label='Offline mode' /> : null}
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.topRow}>
-          <Text style={styles.pageTitle}>Wallet</Text>
+        {isOffline ? <OfflineBanner label="Offline mode" /> : null}
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.topRow}>
+            <Text style={styles.pageTitle}>Wallet</Text>
 
-          <View style={styles.tabBar}>
-            {[
-              { key: "topup", label: "Top up" },
-              { key: "history", label: "Wallet History" },
-            ].map((tab) => {
-              const selected = activeTab === tab.key;
-              return (
-                <TouchableOpacity
-                  key={tab.key}
-                  activeOpacity={0.9}
-                  onPress={() => setActiveTab(tab.key as WalletTab)}
-                  style={[styles.tabButton, selected && styles.tabButtonActive]}
-                >
-                  <Text
-                    style={[styles.tabText, selected && styles.tabTextActive]}
+            <View style={styles.tabBar}>
+              {[
+                { key: "topup", label: "Top up" },
+                { key: "history", label: "Wallet History" },
+              ].map((tab) => {
+                const selected = activeTab === tab.key;
+                return (
+                  <TouchableOpacity
+                    key={tab.key}
+                    activeOpacity={0.9}
+                    onPress={() => setActiveTab(tab.key as WalletTab)}
+                    style={[
+                      styles.tabButton,
+                      selected && styles.tabButtonActive,
+                    ]}
                   >
-                    {tab.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-
-        <View style={styles.balanceCard}>
-          <Text style={styles.balanceLabel}>Wallet balance</Text>
-          <View style={styles.balanceRow}>
-            <Text style={styles.currencyText}>{walletCurrencyCode}</Text>
-            <Text style={styles.balanceText}>
-              {formatCurrency(walletBalance)
-                .replace(walletCurrencyCode, "")
-                .trim()}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.statsRow}>
-          <View style={styles.statBox}>
-            <Text style={styles.statLabel}>Total balance</Text>
-            <Text style={styles.statValue}>
-              {formatCurrency(walletBalance)}
-            </Text>
+                    <Text
+                      style={[styles.tabText, selected && styles.tabTextActive]}
+                    >
+                      {tab.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
 
-          <View style={[styles.statBox, styles.statBoxAlt]}>
-            <Text style={styles.statLabel}>Pending</Text>
-            <Text style={styles.statValue}>
-              {formatCurrency(pendingWithdrawalBalance)}
-            </Text>
+          <View style={styles.balanceCard}>
+            <Text style={styles.balanceLabel}>Wallet balance</Text>
+            <View style={styles.balanceRow}>
+              <Text style={styles.currencyText}>{walletCurrencyCode}</Text>
+              <Text style={styles.balanceText}>
+                {formatCurrency(walletBalance)
+                  .replace(walletCurrencyCode, "")
+                  .trim()}
+              </Text>
+            </View>
           </View>
 
-          <View style={[styles.statBox, styles.statBoxSoft]}>
-            <Text style={styles.statLabel}>Available</Text>
-            <Text style={styles.statValue}>
-              {formatCurrency(availableBalance)}
-            </Text>
+          <View style={styles.statsRow}>
+            <View style={styles.statBox}>
+              <Text style={styles.statLabel}>Total balance</Text>
+              <Text style={styles.statValue}>
+                {formatCurrency(walletBalance)}
+              </Text>
+            </View>
+
+            <View style={[styles.statBox, styles.statBoxAlt]}>
+              <Text style={styles.statLabel}>Pending</Text>
+              <Text style={styles.statValue}>
+                {formatCurrency(pendingWithdrawalBalance)}
+              </Text>
+            </View>
+
+            <View style={[styles.statBox, styles.statBoxSoft]}>
+              <Text style={styles.statLabel}>Available</Text>
+              <Text style={styles.statValue}>
+                {formatCurrency(availableBalance)}
+              </Text>
+            </View>
           </View>
-        </View>
 
-        <View style={styles.panel}>
-          {activeTab === "topup" ? (
-            <View style={styles.topupGrid}>
-              <View style={styles.cardSection}>
-                <Text style={styles.sectionTitle}>Select top-up amount</Text>
+          <View style={styles.panel}>
+            {activeTab === "topup" ? (
+              <View style={styles.topupGrid}>
+                <View style={styles.cardSection}>
+                  <Text style={styles.sectionTitle}>Select top-up amount</Text>
 
-                <View style={styles.amountGrid}>
-                  {presetAmounts.map((amount) => {
-                    const isSelected =
-                      !customAmount && selectedAmount === amount;
-                    return (
-                      <TouchableOpacity
-                        key={amount}
-                        activeOpacity={0.85}
-                        onPress={() => {
-                          setSelectedAmount(amount);
-                          setCustomAmount("");
-                        }}
-                        style={[
-                          styles.amountButton,
-                          isSelected && styles.amountButtonActive,
-                        ]}
-                      >
-                        <Text
+                  <View style={styles.amountGrid}>
+                    {presetAmounts.map((amount) => {
+                      const isSelected =
+                        !customAmount && selectedAmount === amount;
+                      return (
+                        <TouchableOpacity
+                          key={amount}
+                          activeOpacity={0.85}
+                          onPress={() => {
+                            setSelectedAmount(amount);
+                            setCustomAmount("");
+                          }}
                           style={[
-                            styles.amountButtonText,
-                            isSelected && styles.amountButtonTextActive,
+                            styles.amountButton,
+                            isSelected && styles.amountButtonActive,
                           ]}
                         >
-                          {walletCurrencyCode} {amount.toLocaleString("en-IN")}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-
-                <Text style={styles.inputLabel}>
-                  or enter an amount (Min INR 50)
-                </Text>
-                <TextInput
-                  value={customAmount}
-                  onChangeText={(value) => {
-                    setCustomAmount(value);
-                    if (value.trim()) {
-                      setSelectedAmount(50);
-                    }
-                  }}
-                  keyboardType="numeric"
-                  placeholder="Enter amount"
-                  placeholderTextColor="#17131066"
-                  style={styles.input}
-                />
-              </View>
-
-              <View style={styles.cardSection}>
-                <Text style={styles.sectionTitle}>Payment method</Text>
-
-                <TouchableOpacity
-                  activeOpacity={0.9}
-                  onPress={() => setPaymentMethod("netbanking")}
-                  style={[
-                    styles.paymentCard,
-                    paymentMethod === "netbanking" && styles.paymentCardActive,
-                  ]}
-                >
-                  <View style={styles.paymentLeft}>
-                    <Text style={styles.paymentTitle}>
-                      Netbanking / Online Banking
-                    </Text>
-                    <Text style={styles.paymentSubtitle}>
-                      Bank transfer, UPI and secure online payment gateway
-                    </Text>
-                  </View>
-                  <View style={styles.paymentCheckBox}>
-                    <Text style={styles.paymentCheckText}>
-                      {paymentMethod === "netbanking" ? "✓" : "+"}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-
-                <View style={styles.summaryBox}>
-                  <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Available balance</Text>
-                    <Text style={styles.summaryValue}>
-                      {formatCurrency(availableBalance)}
-                    </Text>
-                  </View>
-                  <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Pending withdrawal</Text>
-                    <Text style={styles.summaryValue}>
-                      {formatCurrency(pendingWithdrawalBalance)}
-                    </Text>
-                  </View>
-                  <View style={styles.summaryRowStrong}>
-                    <Text style={styles.summaryLabelStrong}>Top-up</Text>
-                    <Text style={styles.summaryValueStrong}>
-                      {formattedAmount}
-                    </Text>
-                  </View>
-                </View>
-
-                <TouchableOpacity
-                  activeOpacity={0.9}
-                  onPress={() => {
-                    setTopupError("");
-                    setIsTopupModalOpen(true);
-                  }}
-                  style={styles.payButton}
-                >
-                  <Text style={styles.payButtonText}>Pay Now</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ) : (
-            <View style={styles.historyWrap}>
-              <View style={styles.historyHeader}>
-                <Text style={styles.sectionTitle}>Wallet history</Text>
-                <View style={styles.historyBadge}>
-                  <Text style={styles.historyBadgeText}>
-                    {loadingHistory
-                      ? "Loading..."
-                      : `${walletHistory.length} entries`}
-                  </Text>
-                </View>
-              </View>
-
-              {loadingHistory ? (
-                isOffline ? (
-                  <OfflineState
-                    title='Wallet offline'
-                    message='Your wallet is temporarily offline. Connect to the internet to sync the latest balance and transactions.'
-                    onRetry={() => void fetchWalletHistory(0, false)}
-                  />
-                ) : (
-                  <View style={styles.emptyState}>
-                    <Text style={styles.emptyStateText}>
-                      Loading wallet history...
-                    </Text>
-                  </View>
-                )
-              ) : walletHistory.length === 0 ? (
-                isOffline ? (
-                  <OfflineState
-                    title='Wallet offline'
-                    message='You are offline. The wallet will show cached data when available, and new history syncs when the connection is restored.'
-                    onRetry={() => void fetchWalletHistory(0, false)}
-                  />
-                ) : (
-                  <View style={styles.emptyState}>
-                    <Text style={styles.emptyStateText}>
-                      {hasWalletBalance
-                        ? "Wallet balance is available, but no transaction entries were found yet."
-                        : "No transactions yet"}
-                    </Text>
-                  </View>
-                )
-              ) : (
-                <>
-                  <View style={styles.historyList}>
-                    {walletHistory.map((transaction) => {
-                      const amountValue = Number(transaction.amount || 0);
-                      const balanceAfterValue = Number(
-                        transaction.balance_after || 0,
-                      );
-                      const isPositive = amountValue >= 0;
-                      const referenceValue =
-                        transaction.reference_id !== null &&
-                        transaction.reference_type
-                          ? `${transaction.reference_type} #${transaction.reference_id}`
-                          : transaction.reference_type || "Manual";
-                      const displayType =
-                        transaction.type === "topup"
-                          ? "Top-up"
-                          : transaction.type === "prize_credit"
-                            ? "Prize credit"
-                            : transaction.type === "withdrawal"
-                              ? "Withdrawal"
-                              : transaction.type === "withdrawal_request"
-                                ? "Withdrawal request"
-                                : transaction.type === "withdrawal_approved"
-                                  ? "Withdrawal approved"
-                                  : transaction.type === "withdrawal_paid"
-                                    ? "Withdrawal paid"
-                                    : transaction.type === "withdrawal_rejected"
-                                      ? "Withdrawal rejected"
-                                      : transaction.type === "withdrawal_cancelled"
-                                        ? "Withdrawal cancelled"
-                                        : transaction.type === "ticket_purchase"
-                                          ? "Ticket purchase"
-                                          : transaction.type.replace(/_/g, " ");
-
-                      const typeToneStyle =
-                        transaction.type === "topup"
-                          ? styles.historyTypeBoxTopup
-                          : transaction.type === "prize_credit"
-                            ? styles.historyTypeBoxPrize
-                            : transaction.type === "withdrawal" ||
-                              transaction.type === "withdrawal_request" ||
-                              transaction.type === "withdrawal_approved" ||
-                              transaction.type === "withdrawal_paid" ||
-                              transaction.type === "withdrawal_rejected" ||
-                              transaction.type === "withdrawal_cancelled"
-                              ? styles.historyTypeBoxWithdrawal
-                              : transaction.type === "ticket_purchase"
-                                ? styles.historyTypeBoxPurchase
-                                : styles.historyTypeBoxDefault;
-
-                      return (
-                        <View key={transaction.id} style={styles.historyItem}>
-                          <View style={styles.historyTopRow}>
-                            <View style={[styles.historyTypeBox, typeToneStyle]}>
-                              <Text style={styles.historyType}>{displayType}</Text>
-                            </View>
-                            <Text
-                              style={[
-                                styles.historyAmount,
-                                isPositive
-                                  ? styles.positiveAmount
-                                  : styles.negativeAmount,
-                              ]}
-                            >
-                              {isPositive ? "+" : "-"}
-                              {formatCurrency(Math.abs(amountValue))}
-                            </Text>
-                          </View>
-
-                          <Text style={styles.historyDate}>
-                            {formatDateTime(transaction.created_at)}
+                          <Text
+                            style={[
+                              styles.amountButtonText,
+                              isSelected && styles.amountButtonTextActive,
+                            ]}
+                          >
+                            {walletCurrencyCode}{" "}
+                            {amount.toLocaleString("en-IN")}
                           </Text>
-
-                          <View style={styles.historyMetaRow}>
-                            <Text style={styles.historyMetaLabel}>Reference</Text>
-                            <Text style={styles.historyReference}>
-                              {referenceValue}
-                            </Text>
-                          </View>
-
-                          <View style={styles.historyMetaRow}>
-                            <Text style={styles.historyMetaLabel}>Balance after</Text>
-                            <Text style={styles.historyBalance}>
-                              {formatCurrency(balanceAfterValue)}
-                            </Text>
-                          </View>
-                        </View>
+                        </TouchableOpacity>
                       );
                     })}
                   </View>
 
-                  {hasMoreHistory ? (
-                    <TouchableOpacity
-                      activeOpacity={0.9}
-                      onPress={() => void fetchWalletHistory(walletHistory.length, true)}
-                      disabled={isLoadingMoreHistory}
-                      style={[
-                        styles.showMoreButton,
-                        isLoadingMoreHistory && styles.showMoreButtonDisabled,
-                      ]}
-                    >
-                      <Text style={styles.showMoreButtonText}>
-                        {isLoadingMoreHistory ? "Loading..." : "Show more"}
-                      </Text>
-                    </TouchableOpacity>
-                  ) : null}
-                </>
-              )}
-            </View>
-          )}
-        </View>
-      </ScrollView>
+                  <Text style={styles.inputLabel}>
+                    or enter an amount (Min INR 50)
+                  </Text>
+                  <TextInput
+                    value={customAmount}
+                    onChangeText={(value) => {
+                      setCustomAmount(value);
+                      if (value.trim()) {
+                        setSelectedAmount(50);
+                      }
+                    }}
+                    keyboardType="numeric"
+                    placeholder="Enter amount"
+                    placeholderTextColor="#17131066"
+                    style={styles.input}
+                  />
+                </View>
 
-      <Modal
-        transparent
-        visible={isTopupModalOpen}
-        animationType="fade"
-        onRequestClose={() => setIsTopupModalOpen(false)}
-      >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            <View style={styles.modalHeader}>
-              <View>
-                <Text style={styles.modalEyebrow}>Confirm top-up</Text>
-                <Text style={styles.modalAmount}>{formattedAmount}</Text>
+                <View style={styles.cardSection}>
+                  <Text style={styles.sectionTitle}>Payment method</Text>
+
+                  <TouchableOpacity
+                    activeOpacity={0.9}
+                    onPress={() => setPaymentMethod("netbanking")}
+                    style={[
+                      styles.paymentCard,
+                      paymentMethod === "netbanking" &&
+                        styles.paymentCardActive,
+                    ]}
+                  >
+                    <View style={styles.paymentLeft}>
+                      <Text style={styles.paymentTitle}>
+                        Netbanking / Online Banking
+                      </Text>
+                      <Text style={styles.paymentSubtitle}>
+                        Bank transfer, UPI and secure online payment gateway
+                      </Text>
+                    </View>
+                    <View style={styles.paymentCheckBox}>
+                      <Text style={styles.paymentCheckText}>
+                        {paymentMethod === "netbanking" ? "✓" : "+"}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <View style={styles.summaryBox}>
+                    <View style={styles.summaryRow}>
+                      <Text style={styles.summaryLabel}>Available balance</Text>
+                      <Text style={styles.summaryValue}>
+                        {formatCurrency(availableBalance)}
+                      </Text>
+                    </View>
+                    <View style={styles.summaryRow}>
+                      <Text style={styles.summaryLabel}>
+                        Pending withdrawal
+                      </Text>
+                      <Text style={styles.summaryValue}>
+                        {formatCurrency(pendingWithdrawalBalance)}
+                      </Text>
+                    </View>
+                    <View style={styles.summaryRowStrong}>
+                      <Text style={styles.summaryLabelStrong}>Top-up</Text>
+                      <Text style={styles.summaryValueStrong}>
+                        {formattedAmount}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <TouchableOpacity
+                    activeOpacity={0.9}
+                    onPress={() => {
+                      setTopupError("");
+                      setIsTopupModalOpen(true);
+                    }}
+                    style={styles.payButton}
+                  >
+                    <Text style={styles.payButtonText}>Pay Now</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.historyWrap}>
+                <View style={styles.historyHeader}>
+                  <Text style={styles.sectionTitle}>Wallet history</Text>
+                  <View style={styles.historyBadge}>
+                    <Text style={styles.historyBadgeText}>
+                      {loadingHistory
+                        ? "Loading..."
+                        : `${walletHistory.length} entries`}
+                    </Text>
+                  </View>
+                </View>
+
+                {loadingHistory ? (
+                  isOffline ? (
+                    <OfflineState
+                      title="Wallet offline"
+                      message="Your wallet is temporarily offline. Connect to the internet to sync the latest balance and transactions."
+                      onRetry={() => void fetchWalletHistory(0, false)}
+                    />
+                  ) : (
+                    <View style={styles.emptyState}>
+                      <Text style={styles.emptyStateText}>
+                        Loading wallet history...
+                      </Text>
+                    </View>
+                  )
+                ) : walletHistory.length === 0 ? (
+                  isOffline ? (
+                    <OfflineState
+                      title="Wallet offline"
+                      message="You are offline. The wallet will show cached data when available, and new history syncs when the connection is restored."
+                      onRetry={() => void fetchWalletHistory(0, false)}
+                    />
+                  ) : (
+                    <View style={styles.emptyState}>
+                      <Text style={styles.emptyStateText}>
+                        {hasWalletBalance
+                          ? "Wallet balance is available, but no transaction entries were found yet."
+                          : "No transactions yet"}
+                      </Text>
+                    </View>
+                  )
+                ) : (
+                  <>
+                    <View style={styles.historyList}>
+                      {walletHistory.map((transaction) => {
+                        const amountValue = Number(transaction.amount || 0);
+                        const balanceAfterValue = Number(
+                          transaction.balance_after || 0,
+                        );
+                        const isPositive = amountValue >= 0;
+                        const referenceValue =
+                          transaction.reference_id !== null &&
+                          transaction.reference_type
+                            ? `${transaction.reference_type} #${transaction.reference_id}`
+                            : transaction.reference_type || "Manual";
+                        const displayType =
+                          transaction.type === "topup"
+                            ? "Top-up"
+                            : transaction.type === "prize_credit"
+                              ? "Prize credit"
+                              : transaction.type === "withdrawal"
+                                ? "Withdrawal"
+                                : transaction.type === "withdrawal_request"
+                                  ? "Withdrawal request"
+                                  : transaction.type === "withdrawal_approved"
+                                    ? "Withdrawal approved"
+                                    : transaction.type === "withdrawal_paid"
+                                      ? "Withdrawal paid"
+                                      : transaction.type ===
+                                          "withdrawal_rejected"
+                                        ? "Withdrawal rejected"
+                                        : transaction.type ===
+                                            "withdrawal_cancelled"
+                                          ? "Withdrawal cancelled"
+                                          : transaction.type ===
+                                              "ticket_purchase"
+                                            ? "Ticket purchase"
+                                            : transaction.type.replace(
+                                                /_/g,
+                                                " ",
+                                              );
+
+                        const typeToneStyle =
+                          transaction.type === "topup"
+                            ? styles.historyTypeBoxTopup
+                            : transaction.type === "prize_credit"
+                              ? styles.historyTypeBoxPrize
+                              : transaction.type === "withdrawal" ||
+                                  transaction.type === "withdrawal_request" ||
+                                  transaction.type === "withdrawal_approved" ||
+                                  transaction.type === "withdrawal_paid" ||
+                                  transaction.type === "withdrawal_rejected" ||
+                                  transaction.type === "withdrawal_cancelled"
+                                ? styles.historyTypeBoxWithdrawal
+                                : transaction.type === "ticket_purchase"
+                                  ? styles.historyTypeBoxPurchase
+                                  : styles.historyTypeBoxDefault;
+
+                        return (
+                          <View key={transaction.id} style={styles.historyItem}>
+                            <View style={styles.historyTopRow}>
+                              <View
+                                style={[styles.historyTypeBox, typeToneStyle]}
+                              >
+                                <Text style={styles.historyType}>
+                                  {displayType}
+                                </Text>
+                              </View>
+                              <Text
+                                style={[
+                                  styles.historyAmount,
+                                  isPositive
+                                    ? styles.positiveAmount
+                                    : styles.negativeAmount,
+                                ]}
+                              >
+                                {isPositive ? "+" : "-"}
+                                {formatCurrency(Math.abs(amountValue))}
+                              </Text>
+                            </View>
+
+                            <Text style={styles.historyDate}>
+                              {formatDateTime(transaction.created_at)}
+                            </Text>
+
+                            <View style={styles.historyMetaRow}>
+                              <Text style={styles.historyMetaLabel}>
+                                Reference
+                              </Text>
+                              <Text style={styles.historyReference}>
+                                {referenceValue}
+                              </Text>
+                            </View>
+
+                            <View style={styles.historyMetaRow}>
+                              <Text style={styles.historyMetaLabel}>
+                                Balance after
+                              </Text>
+                              <Text style={styles.historyBalance}>
+                                {formatCurrency(balanceAfterValue)}
+                              </Text>
+                            </View>
+                          </View>
+                        );
+                      })}
+                    </View>
+
+                    {hasMoreHistory ? (
+                      <TouchableOpacity
+                        activeOpacity={0.9}
+                        onPress={() =>
+                          void fetchWalletHistory(walletHistory.length, true)
+                        }
+                        disabled={isLoadingMoreHistory}
+                        style={[
+                          styles.showMoreButton,
+                          isLoadingMoreHistory && styles.showMoreButtonDisabled,
+                        ]}
+                      >
+                        <Text style={styles.showMoreButtonText}>
+                          {isLoadingMoreHistory ? "Loading..." : "Show more"}
+                        </Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </>
+                )}
+              </View>
+            )}
+          </View>
+        </ScrollView>
+
+        <Modal
+          transparent
+          visible={isTopupModalOpen}
+          animationType="fade"
+          onRequestClose={() => setIsTopupModalOpen(false)}
+        >
+          <View style={styles.modalBackdrop}>
+            <View style={styles.modalCard}>
+              <View style={styles.modalHeader}>
+                <View>
+                  <Text style={styles.modalEyebrow}>Confirm top-up</Text>
+                  <Text style={styles.modalAmount}>{formattedAmount}</Text>
+                </View>
+
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    setIsTopupModalOpen(false);
+                    setTopupError("");
+                  }}
+                  style={styles.closeButton}
+                >
+                  <Text style={styles.closeButtonText}>×</Text>
+                </TouchableOpacity>
               </View>
 
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => {
-                  setIsTopupModalOpen(false);
-                  setTopupError("");
-                }}
-                style={styles.closeButton}
-              >
-                <Text style={styles.closeButtonText}>×</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.modalNotice}>
-              <Text style={styles.modalNoticeText}>
-                This top-up is only for development purposes. It will be
-                replaced later with a real payment gateway integration.
-              </Text>
-            </View>
-
-            {topupError ? (
-              <Text style={styles.modalError}>{topupError}</Text>
-            ) : null}
-
-            <View style={styles.modalActionRow}>
-              <TouchableOpacity
-                activeOpacity={0.9}
-                onPress={() => {
-                  setIsTopupModalOpen(false);
-                  setTopupError("");
-                }}
-                style={styles.cancelButton}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                activeOpacity={0.9}
-                onPress={() => void handleConfirmTopup()}
-                disabled={isProcessingTopup}
-                style={[
-                  styles.confirmButton,
-                  isProcessingTopup && styles.confirmButtonDisabled,
-                ]}
-              >
-                <Text style={styles.confirmButtonText}>
-                  {isProcessingTopup ? "Processing..." : "Confirm"}
+              <View style={styles.modalNotice}>
+                <Text style={styles.modalNoticeText}>
+                  This top-up is only for development purposes. It will be
+                  replaced later with a real payment gateway integration.
                 </Text>
-              </TouchableOpacity>
+              </View>
+
+              {topupError ? (
+                <Text style={styles.modalError}>{topupError}</Text>
+              ) : null}
+
+              <View style={styles.modalActionRow}>
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() => {
+                    setIsTopupModalOpen(false);
+                    setTopupError("");
+                  }}
+                  style={styles.cancelButton}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() => void handleConfirmTopup()}
+                  disabled={isProcessingTopup}
+                  style={[
+                    styles.confirmButton,
+                    isProcessingTopup && styles.confirmButtonDisabled,
+                  ]}
+                >
+                  <Text style={styles.confirmButtonText}>
+                    {isProcessingTopup ? "Processing..." : "Confirm"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
-    </View>
+        </Modal>
+      </View>
     </>
   );
 }
@@ -720,7 +755,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f1efed",
     borderWidth: 3,
     borderColor: "#171310",
-    borderRadius: 16,
+    borderRadius: 0,
     padding: 4,
     shadowColor: "#171310",
     shadowOffset: { width: 3, height: 3 },
@@ -730,7 +765,7 @@ const styles = StyleSheet.create({
   },
   tabButton: {
     flex: 1,
-    borderRadius: 10,
+    borderRadius: 0,
     paddingVertical: 10,
     alignItems: "center",
     justifyContent: "center",
@@ -754,11 +789,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#ff3c8c",
     borderWidth: 3,
     borderColor: "#171310",
-    borderRadius: 24,
+    borderRadius: 0,
     paddingVertical: 10,
     paddingHorizontal: 16,
     shadowColor: "#171310",
-    shadowOffset: { width: 6, height: 6 },
+    shadowOffset: { width: 5, height: 5 },
     shadowOpacity: 1,
     shadowRadius: 0,
     elevation: 8,
@@ -800,7 +835,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderWidth: 3,
     borderColor: "#171310",
-    borderRadius: 16,
+    borderRadius: 0,
     paddingHorizontal: 8,
     paddingVertical: 8,
     minHeight: 60,
@@ -843,7 +878,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8f8f8",
     borderWidth: 3,
     borderColor: "#171310",
-    borderRadius: 18,
+    borderRadius: 0,
     padding: 12,
   },
   sectionTitle: {
@@ -863,7 +898,7 @@ const styles = StyleSheet.create({
     width: "30%",
     borderWidth: 3,
     borderColor: "#d7d2cf",
-    borderRadius: 14,
+    borderRadius: 0,
     backgroundColor: "#fff",
     paddingVertical: 12,
     alignItems: "center",
@@ -904,7 +939,7 @@ const styles = StyleSheet.create({
     height: 48,
     borderWidth: 3,
     borderColor: "#171310",
-    borderRadius: 14,
+    borderRadius: 0,
     backgroundColor: "#fff",
     paddingHorizontal: 12,
     fontSize: 16,
@@ -918,7 +953,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     borderWidth: 3,
     borderColor: "#d7d2cf",
-    borderRadius: 16,
+    borderRadius: 0,
     backgroundColor: "#fff",
     padding: 12,
   },
@@ -949,7 +984,7 @@ const styles = StyleSheet.create({
   paymentCheckBox: {
     width: 30,
     height: 30,
-    borderRadius: 15,
+    borderRadius: 0,
     borderWidth: 3,
     borderColor: "#171310",
     backgroundColor: "#fff",
@@ -965,7 +1000,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     borderWidth: 3,
     borderColor: "#171310",
-    borderRadius: 14,
+    borderRadius: 0,
     backgroundColor: "#fff7dc",
     padding: 10,
     shadowColor: "#171310",
@@ -1014,7 +1049,7 @@ const styles = StyleSheet.create({
     height: 52,
     borderWidth: 3,
     borderColor: "#171310",
-    borderRadius: 14,
+    borderRadius: 0,
     backgroundColor: "#ff3c8c",
     alignItems: "center",
     justifyContent: "center",
@@ -1042,7 +1077,7 @@ const styles = StyleSheet.create({
   historyBadge: {
     borderWidth: 3,
     borderColor: "#171310",
-    borderRadius: 999,
+    borderRadius: 0,
     backgroundColor: "#f6d857",
     paddingHorizontal: 8,
     paddingVertical: 6,
@@ -1058,7 +1093,7 @@ const styles = StyleSheet.create({
     minHeight: 220,
     borderWidth: 3,
     borderColor: "#171310",
-    borderRadius: 16,
+    borderRadius: 0,
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
@@ -1079,7 +1114,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     borderWidth: 3,
     borderColor: "#171310",
-    borderRadius: 12,
+    borderRadius: 0,
     backgroundColor: "#ff3c8c",
     paddingVertical: 12,
     alignItems: "center",
@@ -1103,7 +1138,7 @@ const styles = StyleSheet.create({
   historyItem: {
     borderWidth: 3,
     borderColor: "#171310",
-    borderRadius: 14,
+    borderRadius: 0,
     backgroundColor: "#fff",
     padding: 12,
     shadowColor: "#171310",
@@ -1121,7 +1156,7 @@ const styles = StyleSheet.create({
   historyTypeBox: {
     flex: 1,
     backgroundColor: "#f9f5f0",
-    borderRadius: 10,
+    borderRadius: 0,
     paddingHorizontal: 8,
     paddingVertical: 6,
   },
@@ -1206,7 +1241,7 @@ const styles = StyleSheet.create({
     marginTop: 18,
     borderWidth: 3,
     borderColor: "#171310",
-    borderRadius: 14,
+    borderRadius: 0,
     backgroundColor: "#ff3c8c",
     paddingHorizontal: 18,
     paddingVertical: 12,
@@ -1227,7 +1262,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#171310",
     borderWidth: 3,
     borderColor: "#171310",
-    borderRadius: 999,
+    borderRadius: 0,
     paddingHorizontal: 14,
     paddingVertical: 8,
     marginBottom: 14,
@@ -1276,7 +1311,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#ff3c8c",
     borderWidth: 3,
     borderColor: "#171310",
-    borderRadius: 16,
+    borderRadius: 0,
     paddingVertical: 14,
     alignItems: "center",
     justifyContent: "center",
@@ -1316,7 +1351,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fffaf7",
     borderWidth: 3,
     borderColor: "#171310",
-    borderRadius: 22,
+    borderRadius: 0,
     padding: 18,
     shadowColor: "#171310",
     shadowOffset: { width: 6, height: 6 },
@@ -1348,7 +1383,7 @@ const styles = StyleSheet.create({
     height: 34,
     borderWidth: 3,
     borderColor: "#171310",
-    borderRadius: 17,
+    borderRadius: 0,
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
@@ -1363,7 +1398,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     borderWidth: 3,
     borderColor: "#171310",
-    borderRadius: 14,
+    borderRadius: 0,
     backgroundColor: "#fff7dc",
     padding: 12,
   },
@@ -1377,7 +1412,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     borderWidth: 2,
     borderColor: "#d03552",
-    borderRadius: 10,
+    borderRadius: 0,
     backgroundColor: "#ffe8ec",
     padding: 10,
     color: "#8d1d2f",
@@ -1393,7 +1428,7 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 3,
     borderColor: "#171310",
-    borderRadius: 12,
+    borderRadius: 0,
     backgroundColor: "#fff",
     paddingVertical: 12,
     alignItems: "center",
@@ -1410,7 +1445,7 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 3,
     borderColor: "#171310",
-    borderRadius: 12,
+    borderRadius: 0,
     backgroundColor: "#ff3c8c",
     paddingVertical: 12,
     alignItems: "center",
