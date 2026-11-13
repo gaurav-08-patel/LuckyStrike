@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useMemo, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Modal,
@@ -74,6 +75,7 @@ export default function WalletScreen() {
   const [isTopupModalOpen, setIsTopupModalOpen] = useState(false);
   const [isProcessingTopup, setIsProcessingTopup] = useState(false);
   const [topupError, setTopupError] = useState("");
+  const fetchInFlightRef = useRef(false);
   const { isOffline } = useNetworkStatus();
 
   const walletBalance = Number(user?.walletBalance ?? 0);
@@ -97,15 +99,23 @@ export default function WalletScreen() {
   const hasWalletBalance = walletBalance > 0;
 
   const fetchWalletHistory = async (offset = 0, append = false) => {
+    if (!append && fetchInFlightRef.current) {
+      return;
+    }
+
     try {
       if (append) {
         setIsLoadingMoreHistory(true);
       } else {
-        setLoadingHistory(true);
+        fetchInFlightRef.current = true;
+        if (walletHistory.length === 0) {
+          setLoadingHistory(true);
+        }
       }
 
       const token = await AsyncStorage.getItem("luckyStrikeToken");
       if (!token || !isLoggedIn || !user) {
+        fetchInFlightRef.current = false;
         setWalletHistory([]);
         setHasMoreHistory(false);
         setLoadingHistory(false);
@@ -135,21 +145,24 @@ export default function WalletScreen() {
       setHasMoreHistory(Boolean(payload?.hasMore));
     } catch (error) {
       console.warn("Wallet history unavailable:", error);
-      if (!append) {
+      if (!append && walletHistory.length === 0) {
         setWalletHistory([]);
       }
       setHasMoreHistory(false);
     } finally {
       if (append) {
         setIsLoadingMoreHistory(false);
+      } else {
+        fetchInFlightRef.current = false;
+        setLoadingHistory(false);
       }
-      setLoadingHistory(false);
     }
   };
 
-  useEffect(() => {
+  const refreshWalletData = useCallback(async () => {
     if (!isAuthReady) return;
     if (!isLoggedIn || !user) {
+      fetchInFlightRef.current = false;
       setWalletHistory([]);
       setLoadingHistory(false);
       setHasMoreHistory(false);
@@ -157,8 +170,34 @@ export default function WalletScreen() {
       return;
     }
 
-    void fetchWalletHistory(0, false);
-  }, [isAuthReady, isLoggedIn, user?.id]);
+    try {
+      const token = await AsyncStorage.getItem("luckyStrikeToken");
+      if (!token) return;
+
+      const meResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (meResponse.ok) {
+        const meData = await meResponse.json();
+        if (meData?.user) {
+          await setUser(meData.user, token);
+        }
+      }
+    } catch (error) {
+      console.warn("Wallet session refresh failed:", error);
+    }
+
+    await fetchWalletHistory(0, false);
+  }, [isAuthReady, isLoggedIn, setUser, user?.id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshWalletData();
+    }, [refreshWalletData]),
+  );
 
   const handleConfirmTopup = async () => {
     const amount = Number(activeAmount);
