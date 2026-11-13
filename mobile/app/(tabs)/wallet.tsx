@@ -76,6 +76,8 @@ export default function WalletScreen() {
   const [isProcessingTopup, setIsProcessingTopup] = useState(false);
   const [topupError, setTopupError] = useState("");
   const fetchInFlightRef = useRef(false);
+  const walletHistoryRef = useRef<WalletTransaction[]>([]);
+  const lastFocusRefreshRef = useRef<string>("");
   const { isOffline } = useNetworkStatus();
 
   const walletBalance = Number(user?.walletBalance ?? 0);
@@ -98,24 +100,11 @@ export default function WalletScreen() {
   const formattedAmount = formatCurrency(activeAmount);
   const hasWalletBalance = walletBalance > 0;
 
-  const fetchWalletHistory = async (offset = 0, append = false) => {
-    if (!append && fetchInFlightRef.current) {
-      return;
-    }
-
-    try {
-      if (append) {
-        setIsLoadingMoreHistory(true);
-      } else {
-        fetchInFlightRef.current = true;
-        if (walletHistory.length === 0) {
-          setLoadingHistory(true);
-        }
-      }
-
-      const token = await AsyncStorage.getItem("luckyStrikeToken");
-      if (!token || !isLoggedIn || !user) {
+  const fetchWalletHistory = useCallback(
+    async (offset = 0, append = false) => {
+      if (!isLoggedIn || !user?.id) {
         fetchInFlightRef.current = false;
+        walletHistoryRef.current = [];
         setWalletHistory([]);
         setHasMoreHistory(false);
         setLoadingHistory(false);
@@ -123,46 +112,76 @@ export default function WalletScreen() {
         return;
       }
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/wallet/transactions?limit=5&offset=${offset}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
+      if (!append && fetchInFlightRef.current) {
+        return;
+      }
+
+      try {
+        if (append) {
+          setIsLoadingMoreHistory(true);
+        } else {
+          fetchInFlightRef.current = true;
+          if (walletHistoryRef.current.length === 0) {
+            setLoadingHistory(true);
+          }
+        }
+
+        const token = await AsyncStorage.getItem("luckyStrikeToken");
+        if (!token) {
+          fetchInFlightRef.current = false;
+          walletHistoryRef.current = [];
+          setWalletHistory([]);
+          setHasMoreHistory(false);
+          setLoadingHistory(false);
+          setIsLoadingMoreHistory(false);
+          return;
+        }
+
+        const response = await fetch(
+          `${API_BASE_URL}/api/wallet/transactions?limit=5&offset=${offset}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           },
-        },
-      );
+        );
 
-      if (!response.ok) throw new Error("Failed to load wallet history");
+        if (!response.ok) throw new Error("Failed to load wallet history");
 
-      const payload = await response.json();
-      const transactions = Array.isArray(payload?.transactions)
-        ? payload.transactions
-        : [];
+        const payload = await response.json();
+        const transactions = Array.isArray(payload?.transactions)
+          ? payload.transactions
+          : [];
 
-      setWalletHistory((current) =>
-        append ? [...current, ...transactions] : transactions,
-      );
-      setHasMoreHistory(Boolean(payload?.hasMore));
-    } catch (error) {
-      console.warn("Wallet history unavailable:", error);
-      if (!append && walletHistory.length === 0) {
-        setWalletHistory([]);
+        setWalletHistory((current) => {
+          const next = append ? [...current, ...transactions] : transactions;
+          walletHistoryRef.current = next;
+          return next;
+        });
+        setHasMoreHistory(Boolean(payload?.hasMore));
+      } catch (error) {
+        console.warn("Wallet history unavailable:", error);
+        if (!append && walletHistoryRef.current.length === 0) {
+          setWalletHistory([]);
+        }
+        setHasMoreHistory(false);
+      } finally {
+        if (append) {
+          setIsLoadingMoreHistory(false);
+        } else {
+          fetchInFlightRef.current = false;
+          setLoadingHistory(false);
+        }
       }
-      setHasMoreHistory(false);
-    } finally {
-      if (append) {
-        setIsLoadingMoreHistory(false);
-      } else {
-        fetchInFlightRef.current = false;
-        setLoadingHistory(false);
-      }
-    }
-  };
+    },
+    [isLoggedIn, user?.id],
+  );
 
   const refreshWalletData = useCallback(async () => {
     if (!isAuthReady) return;
-    if (!isLoggedIn || !user) {
+    if (!isLoggedIn || !user?.id) {
       fetchInFlightRef.current = false;
+      walletHistoryRef.current = [];
       setWalletHistory([]);
       setLoadingHistory(false);
       setHasMoreHistory(false);
@@ -191,12 +210,27 @@ export default function WalletScreen() {
     }
 
     await fetchWalletHistory(0, false);
-  }, [isAuthReady, isLoggedIn, setUser, user?.id]);
+  }, [fetchWalletHistory, isAuthReady, isLoggedIn, user?.id]);
 
   useFocusEffect(
     useCallback(() => {
+      if (!isAuthReady || !isLoggedIn || !user?.id) {
+        lastFocusRefreshRef.current = "";
+        return;
+      }
+
+      const focusKey = `wallet:${user.id}`;
+      if (lastFocusRefreshRef.current === focusKey) {
+        return;
+      }
+
+      lastFocusRefreshRef.current = focusKey;
       void refreshWalletData();
-    }, [refreshWalletData]),
+
+      return () => {
+        lastFocusRefreshRef.current = "";
+      };
+    }, [isAuthReady, isLoggedIn, refreshWalletData, user?.id]),
   );
 
   const handleConfirmTopup = async () => {
