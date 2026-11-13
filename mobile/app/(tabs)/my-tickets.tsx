@@ -85,8 +85,13 @@ const toLocalTime = (utcValue?: string) => {
 
 const formatDate = (value: string) => toLocalTime(value);
 
+const defaultTicketSummary: TicketSummary = { all: 0, active: 0, won: 0, lost: 0 };
+
 const formatPrize = (amount: number) =>
   new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(amount);
+
+const isConnectionFailureMessage = (message: string) =>
+  /Failed to fetch|Network request failed|Failed to connect|ECONNREFUSED|ConnectException|java\.net/i.test(message);
 
 const getDrawStatusStyle = (status: string) => {
   const normalized = status.toLowerCase();
@@ -126,63 +131,76 @@ export default function MyTicketsScreen() {
   const { isLoggedIn, isAuthReady } = useAuth();
   const [selectedStatus, setSelectedStatus] = useState<TicketStatusFilter>('all');
   const [tickets, setTickets] = useState<MyTicketApiItem[]>([]);
-  const [summary, setSummary] = useState<TicketSummary>({ all: 0, active: 0, won: 0, lost: 0 });
+  const [summary, setSummary] = useState<TicketSummary>(defaultTicketSummary);
   const [loading, setLoading] = useState(true);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const { isOffline } = useNetworkStatus();
+
+  const loadTickets = async () => {
+    if (!isLoggedIn) {
+      setTickets([]);
+      setSummary(defaultTicketSummary);
+      setLoading(false);
+      return;
+    }
+
+    if (isOffline) {
+      setTickets([]);
+      setSummary(defaultTicketSummary);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem('luckyStrikeToken');
+      if (!token) {
+        setTickets([]);
+        setSummary(defaultTicketSummary);
+        setLoading(false);
+        return;
+      }
+
+      const query = selectedStatus === 'all' ? '' : `?status=${selectedStatus}`;
+      const response = await fetch(`${API_BASE_URL}/api/my-tickets${query}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body?.message || 'Unable to load tickets.');
+      }
+
+      const data = await response.json();
+      const nextTickets = Array.isArray(data?.tickets) ? data.tickets : [];
+      setTickets(nextTickets);
+      setSummary(data?.summary || defaultTicketSummary);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to load tickets.';
+      console.warn('Tickets failed to load:', message);
+      setTickets([]);
+      setSummary(defaultTicketSummary);
+      if (!isConnectionFailureMessage(message)) {
+        return;
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!isAuthReady) return;
     if (!isLoggedIn) {
       setTickets([]);
+      setSummary(defaultTicketSummary);
       setLoading(false);
       return;
     }
 
-    const fetchTickets = async () => {
-      try {
-        setLoading(true);
-        const token = await AsyncStorage.getItem('luckyStrikeToken');
-        if (!token) {
-          setTickets([]);
-          setLoading(false);
-          return;
-        }
-
-        const query = selectedStatus === 'all' ? '' : `?status=${selectedStatus}`;
-        const response = await fetch(`${API_BASE_URL}/api/my-tickets${query}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Unable to load tickets.');
-        }
-
-        const data = await response.json();
-        const nextTickets = Array.isArray(data?.tickets) ? data.tickets : [];
-        setTickets(nextTickets);
-        setSummary(
-          data?.summary || {
-            all: 0,
-            active: 0,
-            won: 0,
-            lost: 0,
-          },
-        );
-      } catch (error) {
-        console.warn('Tickets failed to load:', error);
-        setTickets([]);
-        setSummary({ all: 0, active: 0, won: 0, lost: 0 });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void fetchTickets();
-  }, [isAuthReady, isLoggedIn, selectedStatus]);
-
+    void loadTickets();
+  }, [isAuthReady, isLoggedIn, selectedStatus, isOffline]);
   const groupedTickets = useMemo<DrawGroup[]>(() => {
     const groups = new Map<number, DrawGroup>();
 
@@ -322,35 +340,7 @@ export default function MyTicketsScreen() {
               <OfflineState
                 title='Tickets unavailable'
                 message='Your ticket history is currently offline. Connect to the internet to refresh your latest tickets.'
-                onRetry={() => {
-                  if (isLoggedIn) {
-                    void (async () => {
-                      setLoading(true);
-                      const token = await AsyncStorage.getItem('luckyStrikeToken');
-                      if (!token) {
-                        setTickets([]);
-                        setLoading(false);
-                        return;
-                      }
-
-                      const query = selectedStatus === 'all' ? '' : `?status=${selectedStatus}`;
-                      const response = await fetch(`${API_BASE_URL}/api/my-tickets${query}`, {
-                        headers: { Authorization: `Bearer ${token}` },
-                      });
-
-                      if (!response.ok) throw new Error('Unable to load tickets.');
-
-                      const data = await response.json();
-                      const nextTickets = Array.isArray(data?.tickets) ? data.tickets : [];
-                      setTickets(nextTickets);
-                      setSummary(data?.summary || { all: 0, active: 0, won: 0, lost: 0 });
-                    })().catch((error) => {
-                      console.warn('Tickets failed to load:', error);
-                      setTickets([]);
-                      setSummary({ all: 0, active: 0, won: 0, lost: 0 });
-                    }).finally(() => setLoading(false));
-                  }
-                }}
+                onRetry={() => { if (isLoggedIn) { void loadTickets(); } }}
               />
             ) : (
               <View style={styles.emptyBox}>
