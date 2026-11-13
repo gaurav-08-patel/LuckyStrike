@@ -423,6 +423,8 @@ router.get("/withdrawals/my-requests", requireAuth, async (req, res) => {
   const userId = req.user?.id;
   const rawStatus = typeof req.query.status === "string" ? req.query.status : "all";
   const statusFilter = rawStatus.trim().toLowerCase();
+  const rawLimit = Number(req.query.limit ?? 10);
+  const rawOffset = Number(req.query.offset ?? 0);
   const validStatuses = new Set([
     "all",
     "pending",
@@ -444,25 +446,49 @@ router.get("/withdrawals/my-requests", requireAuth, async (req, res) => {
     });
   }
 
+  const limit = Number.isFinite(rawLimit) && rawLimit > 0
+    ? Math.min(Math.floor(rawLimit), 100)
+    : 10;
+  const offset = Number.isFinite(rawOffset) && rawOffset >= 0
+    ? Math.floor(rawOffset)
+    : 0;
+
+  const countParams: Array<string | number> = [userId];
+  const dataParams: Array<string | number> = [userId];
+  const whereClauses: string[] = ["wr.user_id = ?"];
+
+  if (statusFilter !== "all") {
+    whereClauses.push("wr.status = ?");
+    countParams.push(statusFilter);
+    dataParams.push(statusFilter);
+  }
+
+  const countQuery = `SELECT COUNT(*) AS total
+    FROM withdrawal_requests wr
+    LEFT JOIN user_bank_accounts uba ON uba.id = wr.bank_account_id
+    WHERE ${whereClauses.join(" AND ")}`;
+
+  const [countRows] = await dbPool.query<RowDataPacket[]>(countQuery, countParams);
+  const total = Number(countRows[0]?.total ?? 0);
+
   let query = `SELECT wr.*,
       uba.account_holder_name, uba.bank_name, uba.account_number,
       uba.iban, uba.ifsc_code, uba.swift_code, uba.branch_name, uba.routing_number, uba.is_default
     FROM withdrawal_requests wr
     LEFT JOIN user_bank_accounts uba ON uba.id = wr.bank_account_id
-    WHERE wr.user_id = ?`;
-  const params: Array<string | number> = [userId];
+    WHERE ${whereClauses.join(" AND ")}`;
 
-  if (statusFilter !== "all") {
-    query += " AND wr.status = ?";
-    params.push(statusFilter);
-  }
+  query += " ORDER BY wr.created_at DESC LIMIT ? OFFSET ?";
+  dataParams.push(limit, offset);
 
-  query += " ORDER BY wr.created_at DESC";
-
-  const [rows] = await dbPool.query<WithdrawalRequestRow[]>(query, params);
+  const [rows] = await dbPool.query<WithdrawalRequestRow[]>(query, dataParams);
 
   return res.status(200).json({
+    total,
     count: rows.length,
+    limit,
+    offset,
+    hasMore: offset + rows.length < total,
     requests: rows.map(serializeWithdrawalRequest),
   });
 });
