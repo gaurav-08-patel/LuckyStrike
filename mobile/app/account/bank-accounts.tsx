@@ -13,7 +13,9 @@ import {
   View,
 } from 'react-native';
 
+import { OfflineBanner, OfflineState } from '../../components/OfflineState';
 import { useAuth } from '../../context/AuthContext';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL ||
@@ -56,23 +58,40 @@ const initialForm: BankAccountForm = {
   isDefault: false,
 };
 
+const isConnectionFailureMessage = (message: string) =>
+  /Failed to fetch|Network request failed|Failed to connect|ECONNREFUSED|ConnectException|java\.net/i.test(
+    message,
+  );
+
 export default function BankAccountsScreen() {
   const router = useRouter();
   const { user, isAuthReady } = useAuth();
+  const { isOffline } = useNetworkStatus();
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showOfflineBanner, setShowOfflineBanner] = useState(false);
   const [form, setForm] = useState<BankAccountForm>(initialForm);
 
   const token = useMemo(() => AsyncStorage.getItem('luckyStrikeToken'), []);
+  const isScreenOffline = isOffline || showOfflineBanner;
 
   const fetchAccounts = async () => {
     if (!user?.id) return;
 
+    if (isOffline || showOfflineBanner) {
+      setAccounts([]);
+      setError(null);
+      setLoading(false);
+      setShowOfflineBanner(true);
+      return;
+    }
+
     setLoading(true);
     setError(null);
+    setShowOfflineBanner(false);
 
     try {
       const storedToken = await token;
@@ -89,17 +108,38 @@ export default function BankAccountsScreen() {
 
       const data = await response.json();
       setAccounts(Array.isArray(data?.bankAccounts) ? data.bankAccounts : []);
+      setShowOfflineBanner(false);
     } catch (err: any) {
-      setError(err?.message || 'Unable to load bank accounts.');
+      const message = err?.message || 'Unable to load bank accounts.';
+      if (isConnectionFailureMessage(message)) {
+        setAccounts([]);
+        setError(null);
+        setShowOfflineBanner(true);
+        return;
+      }
+
+      setError(message);
+      setShowOfflineBanner(false);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    if (!user?.id) {
+      setAccounts([]);
+      setError(null);
+      return;
+    }
+
+    if (isOffline) {
+      setShowOfflineBanner(true);
+      return;
+    }
+
     void fetchAccounts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [user?.id, isOffline]);
 
   const handleChange = (field: keyof BankAccountForm, value: string | boolean) => {
     setForm((current) => ({ ...current, [field]: value }));
@@ -113,6 +153,12 @@ export default function BankAccountsScreen() {
   const submitBankAccount = async () => {
     if (!user?.id) {
       setError('You must be logged in');
+      return;
+    }
+
+    if (isOffline || showOfflineBanner) {
+      setError(null);
+      setShowOfflineBanner(true);
       return;
     }
 
@@ -136,6 +182,7 @@ export default function BankAccountsScreen() {
 
     setSaving(true);
     setError(null);
+    setShowOfflineBanner(false);
 
     try {
       const storedToken = await token;
@@ -157,7 +204,15 @@ export default function BankAccountsScreen() {
       resetForm();
       await fetchAccounts();
     } catch (err: any) {
-      setError(err?.message || 'Unable to save bank account.');
+      const message = err?.message || 'Unable to save bank account.';
+      if (isConnectionFailureMessage(message)) {
+        setError(null);
+        setShowOfflineBanner(true);
+        return;
+      }
+
+      setError(message);
+      setShowOfflineBanner(false);
     } finally {
       setSaving(false);
     }
@@ -180,6 +235,12 @@ export default function BankAccountsScreen() {
 
   const setDefaultAccount = async (account: BankAccount) => {
     if (!user?.id) return;
+
+    if (isOffline || showOfflineBanner) {
+      setError(null);
+      setShowOfflineBanner(true);
+      return;
+    }
 
     try {
       const storedToken = await token;
@@ -212,7 +273,15 @@ export default function BankAccountsScreen() {
 
       await fetchAccounts();
     } catch (err: any) {
-      setError(err?.message || 'Unable to set default bank account.');
+      const message = err?.message || 'Unable to set default bank account.';
+      if (isConnectionFailureMessage(message)) {
+        setError(null);
+        setShowOfflineBanner(true);
+        return;
+      }
+
+      setError(message);
+      setShowOfflineBanner(false);
     }
   };
 
@@ -227,6 +296,7 @@ export default function BankAccountsScreen() {
   if (!user) {
     return (
       <ScrollView style={styles.screen} contentContainerStyle={styles.contentContainer}>
+        {isScreenOffline ? <OfflineBanner label='Offline mode' /> : null}
         <View style={styles.topRow}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Ionicons name='arrow-back' size={22} color='#171310' />
@@ -242,184 +312,220 @@ export default function BankAccountsScreen() {
   }
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.contentContainer}>
-      <View style={styles.topRow}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name='arrow-back' size={22} color='#171310' />
-        </TouchableOpacity>
-        <Text style={styles.heading}>Bank accounts</Text>
-      </View>
-
-      <View style={styles.formCard}>
-        <View style={styles.cardHeaderRow}>
-          <Text style={styles.sectionTitle}>{editingId ? 'Edit bank account' : 'Add bank account'}</Text>
-          {editingId ? (
-            <TouchableOpacity activeOpacity={0.9} onPress={resetForm} style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          ) : null}
+    <>
+      {isScreenOffline ? <OfflineBanner label='Offline mode' /> : null}
+      <ScrollView style={styles.screen} contentContainerStyle={styles.contentContainer}>
+        <View style={styles.topRow}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <Ionicons name='arrow-back' size={22} color='#171310' />
+          </TouchableOpacity>
+          <Text style={styles.heading}>Bank accounts</Text>
         </View>
 
-        {error ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        ) : null}
-
-        <View style={styles.fieldGroup}>
-          <View style={styles.fieldWrap}>
-            <Text style={styles.label}>Account holder name</Text>
-            <TextInput
-              value={form.accountHolderName}
-              onChangeText={(value) => handleChange('accountHolderName', value)}
-              style={styles.input}
-              placeholder='Account holder name'
-            />
+        <View style={styles.formCard}>
+          <View style={styles.cardHeaderRow}>
+            <Text style={styles.sectionTitle}>{editingId ? 'Edit bank account' : 'Add bank account'}</Text>
+            {editingId ? (
+              <TouchableOpacity activeOpacity={0.9} onPress={resetForm} style={styles.secondaryButton}>
+                <Text style={styles.secondaryButtonText}>Cancel</Text>
+              </TouchableOpacity>
+            ) : null}
           </View>
 
-          <View style={styles.fieldWrap}>
-            <Text style={styles.label}>Bank name</Text>
-            <TextInput
-              value={form.bankName}
-              onChangeText={(value) => handleChange('bankName', value)}
-              style={styles.input}
-              placeholder='Bank name'
-            />
-          </View>
+          {error ? (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          ) : null}
 
-          <View style={styles.fieldWrap}>
-            <Text style={styles.label}>Branch name</Text>
-            <TextInput
-              value={form.branchName}
-              onChangeText={(value) => handleChange('branchName', value)}
-              style={styles.input}
-              placeholder='Branch name'
-            />
-          </View>
+          <View style={styles.fieldGroup}>
+            <View style={styles.fieldWrap}>
+              <Text style={styles.label}>Account holder name</Text>
+              <TextInput
+                value={form.accountHolderName}
+                onChangeText={(value) => handleChange('accountHolderName', value)}
+                style={styles.input}
+                placeholder='Account holder name'
+              />
+            </View>
 
-          <View style={styles.fieldWrap}>
-            <Text style={styles.label}>Account number</Text>
-            <TextInput
-              value={form.accountNumber}
-              onChangeText={(value) => handleChange('accountNumber', value)}
-              style={styles.input}
-              placeholder='Account number'
-            />
-          </View>
+            <View style={styles.fieldWrap}>
+              <Text style={styles.label}>Bank name</Text>
+              <TextInput
+                value={form.bankName}
+                onChangeText={(value) => handleChange('bankName', value)}
+                style={styles.input}
+                placeholder='Bank name'
+              />
+            </View>
 
-          <View style={styles.fieldWrap}>
-            <Text style={styles.label}>IFSC code</Text>
-            <TextInput
-              value={form.ifscCode}
-              onChangeText={(value) => handleChange('ifscCode', value)}
-              style={styles.input}
-              placeholder='IFSC code'
-            />
-          </View>
+            <View style={styles.fieldWrap}>
+              <Text style={styles.label}>Branch name</Text>
+              <TextInput
+                value={form.branchName}
+                onChangeText={(value) => handleChange('branchName', value)}
+                style={styles.input}
+                placeholder='Branch name'
+              />
+            </View>
 
-          <View style={styles.fieldWrap}>
-            <Text style={styles.label}>SWIFT code</Text>
-            <TextInput
-              value={form.swiftCode}
-              onChangeText={(value) => handleChange('swiftCode', value)}
-              style={styles.input}
-              placeholder='SWIFT code'
-            />
-          </View>
+            <View style={styles.fieldWrap}>
+              <Text style={styles.label}>Account number</Text>
+              <TextInput
+                value={form.accountNumber}
+                onChangeText={(value) => handleChange('accountNumber', value)}
+                style={styles.input}
+                placeholder='Account number'
+              />
+            </View>
 
-          <View style={styles.fieldWrap}>
-            <Text style={styles.label}>IBAN</Text>
-            <TextInput
-              value={form.iban}
-              onChangeText={(value) => handleChange('iban', value)}
-              style={styles.input}
-              placeholder='IBAN (optional)'
-            />
-          </View>
+            <View style={styles.fieldWrap}>
+              <Text style={styles.label}>IFSC code</Text>
+              <TextInput
+                value={form.ifscCode}
+                onChangeText={(value) => handleChange('ifscCode', value)}
+                style={styles.input}
+                placeholder='IFSC code'
+              />
+            </View>
 
-          <View style={styles.fieldWrap}>
-            <Text style={styles.label}>Routing number</Text>
-            <TextInput
-              value={form.routingNumber}
-              onChangeText={(value) => handleChange('routingNumber', value)}
-              style={styles.input}
-              placeholder='Routing number (optional)'
-            />
+            <View style={styles.fieldWrap}>
+              <Text style={styles.label}>SWIFT code</Text>
+              <TextInput
+                value={form.swiftCode}
+                onChangeText={(value) => handleChange('swiftCode', value)}
+                style={styles.input}
+                placeholder='SWIFT code'
+              />
+            </View>
+
+            <View style={styles.fieldWrap}>
+              <Text style={styles.label}>IBAN</Text>
+              <TextInput
+                value={form.iban}
+                onChangeText={(value) => handleChange('iban', value)}
+                style={styles.input}
+                placeholder='IBAN (optional)'
+              />
+            </View>
+
+            <View style={styles.fieldWrap}>
+              <Text style={styles.label}>Routing number</Text>
+              <TextInput
+                value={form.routingNumber}
+                onChangeText={(value) => handleChange('routingNumber', value)}
+                style={styles.input}
+                placeholder='Routing number (optional)'
+              />
+            </View>
+
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => handleChange('isDefault', !form.isDefault)}
+              style={styles.toggleButton}
+            >
+              <View style={styles.checkboxRow}>
+                <View style={[styles.checkboxBox, form.isDefault && styles.checkboxBoxChecked]}>
+                  {form.isDefault ? <Text style={styles.checkboxMark}>✓</Text> : null}
+                </View>
+                <Text style={styles.toggleText}>Set as default account</Text>
+              </View>
+            </TouchableOpacity>
           </View>
 
           <TouchableOpacity
             activeOpacity={0.9}
-            onPress={() => handleChange('isDefault', !form.isDefault)}
-            style={styles.toggleButton}
+            onPress={() => void submitBankAccount()}
+            disabled={saving || isScreenOffline}
+            style={[styles.primaryButton, isScreenOffline && styles.primaryButtonDisabled]}
           >
-            <View style={styles.checkboxRow}>
-              <View style={[styles.checkboxBox, form.isDefault && styles.checkboxBoxChecked]}>
-                {form.isDefault ? <Text style={styles.checkboxMark}>✓</Text> : null}
-              </View>
-              <Text style={styles.toggleText}>Set as default account</Text>
-            </View>
+            <Text style={styles.primaryButtonText}>
+              {saving ? (editingId ? 'Updating...' : 'Saving...') : editingId ? 'Update bank account' : 'Save bank account'}
+            </Text>
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={() => void submitBankAccount()}
-          disabled={saving}
-          style={styles.primaryButton}
-        >
-          <Text style={styles.primaryButtonText}>{saving ? (editingId ? 'Updating...' : 'Saving...') : (editingId ? 'Update bank account' : 'Save bank account')}</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.listCard}>
+          <Text style={styles.sectionTitle}>Saved accounts</Text>
 
-      <View style={styles.listCard}>
-        <Text style={styles.sectionTitle}>Saved accounts</Text>
-
-        {loading ? (
-          <Text style={styles.metaText}>Loading bank accounts...</Text>
-        ) : accounts.length === 0 ? (
-          <Text style={styles.metaText}>No bank accounts saved yet.</Text>
-        ) : (
-          <View style={styles.listWrap}>
-            {accounts.map((account) => (
-              <View key={account.id} style={[styles.accountItem, account.isDefault && styles.accountItemDefault]}>
-                <View style={styles.accountHeaderRow}>
-                  <View style={styles.accountHeaderTextWrap}>
-                    <Text style={styles.accountBank}>{account.accountHolderName}</Text>
-                    <Text style={styles.accountBankSub}>{account.bankName}</Text>
-                  </View>
-                  {account.isDefault ? (
-                    <View style={styles.defaultBadge}>
-                      <Text style={styles.defaultBadgeText}>Default</Text>
+          {isScreenOffline ? (
+            <OfflineState
+              title='Bank accounts offline'
+              message='You are offline. Connect to the internet to view or update your saved bank accounts.'
+              onRetry={() => {
+                setShowOfflineBanner(false);
+                void fetchAccounts();
+              }}
+            />
+          ) : loading ? (
+            <Text style={styles.metaText}>Loading bank accounts...</Text>
+          ) : accounts.length === 0 ? (
+            <Text style={styles.metaText}>No bank accounts saved yet.</Text>
+          ) : (
+            <View style={styles.listWrap}>
+              {accounts.map((account) => (
+                <View key={account.id} style={[styles.accountItem, account.isDefault && styles.accountItemDefault]}>
+                  <View style={styles.accountHeaderRow}>
+                    <View style={styles.accountHeaderTextWrap}>
+                      <Text style={styles.accountBank}>{account.accountHolderName}</Text>
+                      <Text style={styles.accountBankSub}>{account.bankName}</Text>
                     </View>
-                  ) : null}
-                </View>
+                    {account.isDefault ? (
+                      <View style={styles.defaultBadge}>
+                        <Text style={styles.defaultBadgeText}>Default</Text>
+                      </View>
+                    ) : null}
+                  </View>
 
-                <View style={styles.accountMetaBlock}>
-                  <Text style={styles.accountText}><Text style={styles.accountTextBold}>Account no:</Text> {account.accountNumber}</Text>
-                  {account.branchName ? <Text style={styles.accountText}><Text style={styles.accountTextBold}>Branch:</Text> {account.branchName}</Text> : null}
-                  {account.ifscCode ? <Text style={styles.accountText}><Text style={styles.accountTextBold}>IFSC:</Text> {account.ifscCode}</Text> : null}
-                  {account.swiftCode ? <Text style={styles.accountText}><Text style={styles.accountTextBold}>SWIFT:</Text> {account.swiftCode}</Text> : null}
-                  {account.iban ? <Text style={styles.accountText}><Text style={styles.accountTextBold}>IBAN:</Text> {account.iban}</Text> : null}
-                  {account.routingNumber ? <Text style={styles.accountText}><Text style={styles.accountTextBold}>Routing:</Text> {account.routingNumber}</Text> : null}
-                </View>
+                  <View style={styles.accountMetaBlock}>
+                    <Text style={styles.accountText}>
+                      <Text style={styles.accountTextBold}>Account no:</Text> {account.accountNumber}
+                    </Text>
+                    {account.branchName ? (
+                      <Text style={styles.accountText}>
+                        <Text style={styles.accountTextBold}>Branch:</Text> {account.branchName}
+                      </Text>
+                    ) : null}
+                    {account.ifscCode ? (
+                      <Text style={styles.accountText}>
+                        <Text style={styles.accountTextBold}>IFSC:</Text> {account.ifscCode}
+                      </Text>
+                    ) : null}
+                    {account.swiftCode ? (
+                      <Text style={styles.accountText}>
+                        <Text style={styles.accountTextBold}>SWIFT:</Text> {account.swiftCode}
+                      </Text>
+                    ) : null}
+                    {account.iban ? (
+                      <Text style={styles.accountText}>
+                        <Text style={styles.accountTextBold}>IBAN:</Text> {account.iban}
+                      </Text>
+                    ) : null}
+                    {account.routingNumber ? (
+                      <Text style={styles.accountText}>
+                        <Text style={styles.accountTextBold}>Routing:</Text> {account.routingNumber}
+                      </Text>
+                    ) : null}
+                  </View>
 
-                <View style={styles.actionRow}>
-                  <TouchableOpacity activeOpacity={0.9} onPress={() => startEditing(account)} style={styles.secondaryButtonSmall}>
-                    <Text style={styles.secondaryButtonText}>Edit</Text>
-                  </TouchableOpacity>
-
-                  {!account.isDefault ? (
-                    <TouchableOpacity activeOpacity={0.9} onPress={() => void setDefaultAccount(account)} style={styles.primaryButtonSmall}>
-                      <Text style={styles.primaryButtonText}>Set default</Text>
+                  <View style={styles.actionRow}>
+                    <TouchableOpacity activeOpacity={0.9} onPress={() => startEditing(account)} style={styles.secondaryButtonSmall}>
+                      <Text style={styles.secondaryButtonText}>Edit</Text>
                     </TouchableOpacity>
-                  ) : null}
+
+                    {!account.isDefault ? (
+                      <TouchableOpacity activeOpacity={0.9} onPress={() => void setDefaultAccount(account)} style={styles.primaryButtonSmall}>
+                        <Text style={styles.primaryButtonText}>Set default</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
                 </View>
-              </View>
-            ))}
-          </View>
-        )}
-      </View>
-    </ScrollView>
+              ))}
+            </View>
+          )}
+        </View>
+      </ScrollView>
+    </>
   );
 }
 
@@ -615,6 +721,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 1,
     shadowRadius: 0,
     elevation: 4,
+  },
+  primaryButtonDisabled: {
+    opacity: 0.5,
   },
   primaryButtonSmall: {
     backgroundColor: '#ff3d8c',
