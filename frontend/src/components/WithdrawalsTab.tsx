@@ -66,6 +66,8 @@ export default function WithdrawalsTab() {
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [requests, setRequests] = useState<WithdrawalRequest[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMoreRequests, setHasMoreRequests] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState<WithdrawalForm>(initialForm);
   const [error, setError] = useState<string | null>(null);
@@ -101,17 +103,21 @@ export default function WithdrawalsTab() {
     }
   };
 
-  const fetchRequests = async () => {
+  const fetchRequests = async (nextOffset = 0, append = false) => {
     if (!user?.id) {
       return;
     }
 
-    setLoading(true);
+    if (append) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
     setError(null);
 
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/withdrawals/my-requests`,
+        `${API_BASE_URL}/api/withdrawals/my-requests?limit=5&offset=${nextOffset}`,
         {
           headers: {
             Authorization: token ? `Bearer ${token}` : "",
@@ -125,16 +131,23 @@ export default function WithdrawalsTab() {
       }
 
       const data = await response.json();
-      setRequests(Array.isArray(data?.requests) ? data.requests : []);
+      const nextRequests = Array.isArray(data?.requests) ? data.requests : [];
+      setRequests((current) => (append ? [...current, ...nextRequests] : nextRequests));
+      setHasMoreRequests(Boolean(data?.hasMore));
     } catch (err: any) {
       setError(err?.message || "Unable to load withdrawal history.");
     } finally {
-      setLoading(false);
+      if (append) {
+        setLoadingMore(false);
+      } else {
+        setLoading(false);
+      }
     }
   };
 
+
   const loadData = async () => {
-    await Promise.all([fetchBankAccounts(), fetchRequests()]);
+    await Promise.all([fetchBankAccounts(), fetchRequests(0, false)]);
   };
 
   useEffect(() => {
@@ -455,6 +468,18 @@ export default function WithdrawalsTab() {
                   </tbody>
                 </table>
               </div>
+              {hasMoreRequests ? (
+                <div className="mt-4 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => void fetchRequests(requests.length, true)}
+                    disabled={loadingMore}
+                    className="rounded-full border border-pink-200 bg-pink-50 px-4 py-2 text-[10px] font-black uppercase tracking-[0.08em] text-pink-700 transition hover:bg-pink-100 disabled:cursor-not-allowed disabled:opacity-60 sm:text-xs"
+                  >
+                    {loadingMore ? "Loading..." : "Show more"}
+                  </button>
+                </div>
+              ) : null}
             </>
           )}
         </div>
