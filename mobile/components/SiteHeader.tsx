@@ -1,6 +1,6 @@
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { AuthModal } from './AuthModal';
 import { useAuth } from '../context/AuthContext';
@@ -10,8 +10,8 @@ export function SiteHeader() {
   const { isLoggedIn, user } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
-  const accountLabel = user?.firstName ? user.firstName : 'Account';
   const accountInitial = (user?.firstName?.[0] ?? user?.lastName?.[0] ?? 'A').toUpperCase();
+  const avatarSource = user?.profileImage ? { uri: user.profileImage } : null;
 
   return (
     <>
@@ -28,10 +28,13 @@ export function SiteHeader() {
           <TouchableOpacity activeOpacity={0.96} onPress={() => router.push('/(tabs)/account')}>
             <View style={styles.accountButtonShadow}>
               <View style={styles.accountButton}>
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>{accountInitial}</Text>
-                </View>
-                <Text style={styles.accountText} numberOfLines={1}>{accountLabel}</Text>
+                {avatarSource ? (
+                  <Image source={avatarSource} style={styles.avatarImage} resizeMode='cover' />
+                ) : (
+                  <View style={styles.avatarFallback}>
+                    <Text style={styles.avatarText}>{accountInitial}</Text>
+                  </View>
+                )}
               </View>
             </View>
           </TouchableOpacity>
@@ -103,48 +106,46 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   accountButtonShadow: {
-    backgroundColor: '#171310',
+    backgroundColor: '#ff3d8c',
     borderRadius: 999,
     shadowColor: '#171310',
-    shadowOffset: { width: 5, height: 5 },
+    shadowOffset: { width: 4, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 0,
-    elevation: 12,
+    elevation: 8,
     marginRight: 4,
     marginBottom: 4,
   },
   accountButton: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'center',
     backgroundColor: '#f3f4f6',
-    borderWidth: 3,
-    borderColor: '#171310',
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    borderWidth: 2,
+    borderColor: '#ff3d8c',
+    paddingHorizontal: 0,
+    paddingVertical: 0,
     borderRadius: 999,
-    maxWidth: 170,
+    width: 42,
+    height: 42,
+    overflow: 'hidden',
   },
-  avatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+  avatarFallback: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: '#171310',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  avatarImage: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
   },
   avatarText: {
     color: '#fff',
     fontSize: 11,
     fontWeight: '900',
     textTransform: 'uppercase',
-  },
-  accountText: {
-    color: '#171310',
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-    maxWidth: 110,
   },
 });
