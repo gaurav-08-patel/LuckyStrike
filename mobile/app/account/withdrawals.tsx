@@ -13,7 +13,9 @@ import {
   View,
 } from 'react-native';
 
+import { OfflineBanner, OfflineState } from '../../components/OfflineState';
 import { useAuth } from '../../context/AuthContext';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL ||
@@ -82,32 +84,23 @@ const formatDisplayDate = (value?: string | null) => {
 const getStatusTone = (status?: string) => {
   const normalized = (status || '').toLowerCase();
 
-  if (normalized === 'paid') {
-    return { badge: styles.badgePaid, text: styles.badgeTextPaid };
-  }
-
-  if (normalized === 'approved') {
-    return { badge: styles.badgeApproved, text: styles.badgeTextApproved };
-  }
-
-  if (normalized === 'rejected') {
-    return { badge: styles.badgeRejected, text: styles.badgeTextRejected };
-  }
-
-  if (normalized === 'cancelled') {
-    return { badge: styles.badgeCancelled, text: styles.badgeTextCancelled };
-  }
-
-  if (normalized === 'under_review') {
-    return { badge: styles.badgeUnderReview, text: styles.badgeTextUnderReview };
-  }
-
+  if (normalized === 'paid') return { badge: styles.badgePaid, text: styles.badgeTextPaid };
+  if (normalized === 'approved') return { badge: styles.badgeApproved, text: styles.badgeTextApproved };
+  if (normalized === 'rejected') return { badge: styles.badgeRejected, text: styles.badgeTextRejected };
+  if (normalized === 'cancelled') return { badge: styles.badgeCancelled, text: styles.badgeTextCancelled };
+  if (normalized === 'under_review') return { badge: styles.badgeUnderReview, text: styles.badgeTextUnderReview };
   return { badge: styles.badgePending, text: styles.badgeTextPending };
 };
+
+const isConnectionFailureMessage = (message: string) =>
+  /Failed to fetch|Network request failed|Failed to connect|ECONNREFUSED|ConnectException|java\.net/i.test(
+    message,
+  );
 
 export default function WithdrawalsScreen() {
   const router = useRouter();
   const { user, isAuthReady } = useAuth();
+  const { isOffline } = useNetworkStatus();
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [requests, setRequests] = useState<WithdrawalRequest[]>([]);
   const [loading, setLoading] = useState(false);
@@ -116,12 +109,22 @@ export default function WithdrawalsScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [showBankAccountMenu, setShowBankAccountMenu] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showOfflineBanner, setShowOfflineBanner] = useState(false);
   const [form, setForm] = useState({ bankAccountId: '', amount: '', note: '' });
 
   const token = useMemo(() => AsyncStorage.getItem('luckyStrikeToken'), []);
+  const isScreenOffline = isOffline || showOfflineBanner;
 
   const fetchRequests = async (nextOffset = 0, append = false) => {
     if (!user?.id) return;
+
+    if (isOffline || showOfflineBanner) {
+      setShowOfflineBanner(true);
+      setError(null);
+      setLoading(false);
+      setLoadingMore(false);
+      return;
+    }
 
     if (append) {
       setLoadingMore(true);
@@ -129,6 +132,7 @@ export default function WithdrawalsScreen() {
       setLoading(true);
     }
     setError(null);
+    setShowOfflineBanner(false);
 
     try {
       const storedToken = await token;
@@ -147,8 +151,16 @@ export default function WithdrawalsScreen() {
       const nextRequests = Array.isArray(requestsData?.requests) ? requestsData.requests : [];
       setRequests((current) => (append ? [...current, ...nextRequests] : nextRequests));
       setHasMoreRequests(Boolean(requestsData?.hasMore));
+      setShowOfflineBanner(false);
     } catch (err: any) {
-      setError(err?.message || 'Unable to load withdrawal data.');
+      const message = err?.message || 'Unable to load withdrawal data.';
+      if (isConnectionFailureMessage(message)) {
+        setShowOfflineBanner(true);
+        setError(null);
+        return;
+      }
+      setError(message);
+      setShowOfflineBanner(false);
     } finally {
       if (append) {
         setLoadingMore(false);
@@ -161,7 +173,17 @@ export default function WithdrawalsScreen() {
   const loadData = async () => {
     if (!user?.id) return;
 
+    if (isOffline || showOfflineBanner) {
+      setShowOfflineBanner(true);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
     const storedToken = await token;
+    setLoading(true);
+    setError(null);
+    setShowOfflineBanner(false);
 
     try {
       const [accountsResponse, requestsResponse] = await Promise.all([
@@ -192,20 +214,46 @@ export default function WithdrawalsScreen() {
       const initialRequests = Array.isArray(requestsData?.requests) ? requestsData.requests : [];
       setRequests(initialRequests);
       setHasMoreRequests(Boolean(requestsData?.hasMore));
+      setShowOfflineBanner(false);
     } catch (err: any) {
-      setError(err?.message || 'Unable to load withdrawal data.');
+      const message = err?.message || 'Unable to load withdrawal data.';
+      if (isConnectionFailureMessage(message)) {
+        setShowOfflineBanner(true);
+        setError(null);
+        return;
+      }
+      setError(message);
+      setShowOfflineBanner(false);
     } finally {
       setLoading(false);
     }
   };
+
   useEffect(() => {
+    if (!user?.id) {
+      setBankAccounts([]);
+      setRequests([]);
+      setHasMoreRequests(false);
+      return;
+    }
+
+    if (isOffline) {
+      setShowOfflineBanner(true);
+      return;
+    }
+
     void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [user?.id, isOffline]);
 
   const submitWithdrawal = async () => {
     if (!user?.id) {
       setError('Please log in to submit a withdrawal request.');
+      return;
+    }
+
+    if (isOffline || showOfflineBanner) {
+      setShowOfflineBanner(true);
+      setError(null);
       return;
     }
 
@@ -224,6 +272,7 @@ export default function WithdrawalsScreen() {
 
     setSubmitting(true);
     setError(null);
+    setShowOfflineBanner(false);
 
     try {
       const storedToken = await token;
@@ -242,9 +291,18 @@ export default function WithdrawalsScreen() {
       }
 
       setForm({ bankAccountId: '', amount: '', note: '' });
+      setShowOfflineBanner(false);
       await loadData();
     } catch (err: any) {
-      setError(err?.message || 'Unable to submit withdrawal request.');
+      const message = err?.message || 'Unable to submit withdrawal request.';
+      if (isConnectionFailureMessage(message)) {
+        setShowOfflineBanner(true);
+        setError(null);
+        return;
+      }
+
+      setError(message);
+      setShowOfflineBanner(false);
     } finally {
       setSubmitting(false);
     }
@@ -260,6 +318,27 @@ export default function WithdrawalsScreen() {
 
   if (!user) {
     return (
+      <>
+        {isScreenOffline ? <OfflineBanner label='Offline mode' /> : null}
+        <ScrollView style={styles.screen} contentContainerStyle={styles.contentContainer}>
+          <View style={styles.topRow}>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+              <Ionicons name='arrow-back' size={22} color='#171310' />
+            </TouchableOpacity>
+            <Text style={styles.heading}>Withdrawals</Text>
+          </View>
+
+          <View style={styles.emptyCard}>
+            <Text style={styles.emptyText}>Please log in to submit a withdrawal.</Text>
+          </View>
+        </ScrollView>
+      </>
+    );
+  }
+
+  return (
+    <>
+      {isScreenOffline ? <OfflineBanner label='Offline mode' /> : null}
       <ScrollView style={styles.screen} contentContainerStyle={styles.contentContainer}>
         <View style={styles.topRow}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -268,180 +347,175 @@ export default function WithdrawalsScreen() {
           <Text style={styles.heading}>Withdrawals</Text>
         </View>
 
-        <View style={styles.emptyCard}>
-          <Text style={styles.emptyText}>Please log in to submit a withdrawal.</Text>
-        </View>
-      </ScrollView>
-    );
-  }
+        <View style={styles.formCard}>
+          <Text style={styles.sectionTitle}>Request withdrawal</Text>
 
-  return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.contentContainer}>
-      <View style={styles.topRow}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name='arrow-back' size={22} color='#171310' />
-        </TouchableOpacity>
-        <Text style={styles.heading}>Withdrawals</Text>
-      </View>
+          {error ? (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          ) : null}
 
-      <View style={styles.formCard}>
-        <Text style={styles.sectionTitle}>Request withdrawal</Text>
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Choose saved bank account</Text>
 
-        {error ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>{error}</Text>
+            {bankAccounts.length === 0 ? (
+              <Text style={styles.metaText}>No saved accounts yet. Add one in Bank Accounts first.</Text>
+            ) : (
+              <View style={styles.selectWrap}>
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() => setShowBankAccountMenu((current) => !current)}
+                  style={styles.dropdownButton}
+                >
+                  <Text style={styles.dropdownText} numberOfLines={1}>
+                    {(() => {
+                      const selected = bankAccounts.find((account) => String(account.id) === form.bankAccountId);
+                      if (!selected) return 'Select bank account';
+                      return `${selected.bankName} •••• ${selected.accountNumber.slice(-4)}`;
+                    })()}
+                  </Text>
+                  <Text style={styles.dropdownChevron}>{showBankAccountMenu ? '▴' : '▾'}</Text>
+                </TouchableOpacity>
+
+                {showBankAccountMenu ? (
+                  <View style={styles.dropdownMenu}>
+                    {bankAccounts.map((account) => {
+                      const selected = form.bankAccountId === String(account.id);
+                      return (
+                        <TouchableOpacity
+                          key={account.id}
+                          activeOpacity={0.9}
+                          onPress={() => {
+                            setForm((current) => ({ ...current, bankAccountId: String(account.id) }));
+                            setShowBankAccountMenu(false);
+                          }}
+                          style={[styles.dropdownItem, selected && styles.dropdownItemSelected]}
+                        >
+                          <Text style={styles.dropdownItemTitle}>{account.bankName}</Text>
+                          <Text style={styles.dropdownItemMeta}>{account.accountHolderName}</Text>
+                          <Text style={styles.dropdownItemMeta}>Account no: •••• {account.accountNumber.slice(-4)}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                ) : null}
+              </View>
+            )}
+
+            <View style={styles.fieldWrap}>
+              <Text style={styles.label}>Amount</Text>
+              <TextInput
+                value={form.amount}
+                onChangeText={(value) => setForm((current) => ({ ...current, amount: value }))}
+                placeholder='Enter amount'
+                keyboardType='numeric'
+                style={styles.input}
+              />
+            </View>
+
+            <View style={styles.fieldWrap}>
+              <Text style={styles.label}>Note (optional)</Text>
+              <TextInput
+                value={form.note}
+                onChangeText={(value) => setForm((current) => ({ ...current, note: value }))}
+                placeholder='Optional note for your withdrawal'
+                multiline
+                style={[styles.input, styles.textArea]}
+              />
+            </View>
+
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => void submitWithdrawal()}
+              disabled={submitting || loading || bankAccounts.length === 0 || isScreenOffline}
+              style={[styles.primaryButton, isScreenOffline && styles.primaryButtonDisabled]}
+            >
+              <Text style={styles.primaryButtonText}>{submitting ? 'Submitting...' : 'Submit request'}</Text>
+            </TouchableOpacity>
           </View>
-        ) : null}
+        </View>
 
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Choose saved bank account</Text>
+        <View style={styles.listCard}>
+          <Text style={styles.sectionTitle}>Withdrawal history</Text>
 
-          {bankAccounts.length === 0 ? (
-            <Text style={styles.metaText}>No saved accounts yet. Add one in Bank Accounts first.</Text>
+          {isScreenOffline ? (
+            <OfflineState
+              title='Withdrawals offline'
+              message='You are offline. Connect to the internet to view your withdrawal history and submit a request.'
+              onRetry={() => {
+                setShowOfflineBanner(false);
+                void loadData();
+              }}
+            />
+          ) : loading ? (
+            <Text style={styles.metaText}>Loading withdrawals...</Text>
+          ) : requests.length === 0 ? (
+            <Text style={styles.metaText}>No withdrawals yet.</Text>
           ) : (
-            <View style={styles.selectWrap}>
-              <TouchableOpacity
-                activeOpacity={0.9}
-                onPress={() => setShowBankAccountMenu((current) => !current)}
-                style={styles.dropdownButton}
-              >
-                <Text style={styles.dropdownText} numberOfLines={1}>
-                  {(() => {
-                    const selected = bankAccounts.find((account) => String(account.id) === form.bankAccountId);
-                    if (!selected) return 'Select bank account';
-                    return `${selected.bankName} •••• ${selected.accountNumber.slice(-4)}`;
-                  })()}
-                </Text>
-                <Text style={styles.dropdownChevron}>{showBankAccountMenu ? '▴' : '▾'}</Text>
-              </TouchableOpacity>
+            <View style={styles.listWrap}>
+              {requests.map((request) => {
+                const statusTone = getStatusTone(request.status);
+                const account = request.bankAccount;
 
-              {showBankAccountMenu ? (
-                <View style={styles.dropdownMenu}>
-                  {bankAccounts.map((account) => {
-                    const selected = form.bankAccountId === String(account.id);
-                    return (
-                      <TouchableOpacity
-                        key={account.id}
-                        activeOpacity={0.9}
-                        onPress={() => {
-                          setForm((current) => ({ ...current, bankAccountId: String(account.id) }));
-                          setShowBankAccountMenu(false);
-                        }}
-                        style={[styles.dropdownItem, selected && styles.dropdownItemSelected]}
-                      >
-                        <Text style={styles.dropdownItemTitle}>{account.bankName}</Text>
-                        <Text style={styles.dropdownItemMeta}>{account.accountHolderName}</Text>
-                        <Text style={styles.dropdownItemMeta}>Account no: •••• {account.accountNumber.slice(-4)}</Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
+                return (
+                  <View key={request.id} style={styles.requestCard}>
+                    <View style={styles.requestHeader}>
+                      <View>
+                        <Text style={styles.amountText}>₹{Number(request.amount).toLocaleString('en-IN')}</Text>
+                        <Text style={styles.requestDate}>Requested: {formatDisplayDate(request.createdAt)}</Text>
+                      </View>
+
+                      <View style={[styles.statusBadge, statusTone.badge]}>
+                        <Text style={[styles.statusText, statusTone.text]}>{normalizeStatus(request.status)}</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.divider} />
+
+                    <Text style={styles.requestBank}>{account?.bankName || 'Bank account'}</Text>
+                    {account?.accountHolderName ? (
+                      <Text style={styles.requestMeta}>Account holder: {account.accountHolderName}</Text>
+                    ) : null}
+                    {account?.accountNumber ? (
+                      <Text style={styles.requestMeta}>Account no: •••• {account.accountNumber.slice(-4)}</Text>
+                    ) : null}
+                    {account?.ifscCode ? <Text style={styles.requestMeta}>IFSC: {account.ifscCode}</Text> : null}
+                    {account?.branchName ? <Text style={styles.requestMeta}>Branch: {account.branchName}</Text> : null}
+                    {request.requestNote ? <Text style={styles.requestMeta}>Note: {request.requestNote}</Text> : null}
+                    {request.reviewedAt ? (
+                      <Text style={styles.requestMeta}>Reviewed: {formatDisplayDate(request.reviewedAt)}</Text>
+                    ) : null}
+                    {request.adminNote ? <Text style={styles.requestMeta}>Admin note: {request.adminNote}</Text> : null}
+                    {request.rejectionReason ? (
+                      <View style={styles.rejectionReasonBox}>
+                        <Text style={styles.rejectionReasonLabel}>Rejection reason:</Text>
+                        <Text style={styles.rejectionReasonText}>{request.rejectionReason}</Text>
+                      </View>
+                    ) : null}
+                    {request.paidAt ? <Text style={styles.requestMeta}>Paid: {formatDisplayDate(request.paidAt)}</Text> : null}
+                    {request.paymentReference ? (
+                      <Text style={styles.requestMeta}>Payment ref: {request.paymentReference}</Text>
+                    ) : null}
+                  </View>
+                );
+              })}
+
+              {hasMoreRequests ? (
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  disabled={loadingMore || isScreenOffline}
+                  onPress={() => void fetchRequests(requests.length, true)}
+                  style={[styles.showMoreButton, isScreenOffline && styles.showMoreButtonDisabled]}
+                >
+                  <Text style={styles.showMoreButtonText}>{loadingMore ? 'Loading...' : 'Show more'}</Text>
+                </TouchableOpacity>
               ) : null}
             </View>
           )}
-
-          <View style={styles.fieldWrap}>
-            <Text style={styles.label}>Amount</Text>
-            <TextInput
-              value={form.amount}
-              onChangeText={(value) => setForm((current) => ({ ...current, amount: value }))}
-              placeholder='Enter amount'
-              keyboardType='numeric'
-              style={styles.input}
-            />
-          </View>
-
-          <View style={styles.fieldWrap}>
-            <Text style={styles.label}>Note (optional)</Text>
-            <TextInput
-              value={form.note}
-              onChangeText={(value) => setForm((current) => ({ ...current, note: value }))}
-              placeholder='Optional note for your withdrawal'
-              multiline
-              style={[styles.input, styles.textArea]}
-            />
-          </View>
-
-          <TouchableOpacity
-            activeOpacity={0.9}
-            onPress={() => void submitWithdrawal()}
-            disabled={submitting || loading || bankAccounts.length === 0}
-            style={styles.primaryButton}
-          >
-            <Text style={styles.primaryButtonText}>{submitting ? 'Submitting...' : 'Submit request'}</Text>
-          </TouchableOpacity>
         </View>
-      </View>
-
-      <View style={styles.listCard}>
-        <Text style={styles.sectionTitle}>Withdrawal history</Text>
-
-        {loading ? (
-          <Text style={styles.metaText}>Loading withdrawals...</Text>
-        ) : requests.length === 0 ? (
-          <Text style={styles.metaText}>No withdrawals yet.</Text>
-        ) : (
-          <View style={styles.listWrap}>
-            {requests.map((request) => {
-              const statusTone = getStatusTone(request.status);
-              const account = request.bankAccount;
-
-              return (
-                <View key={request.id} style={styles.requestCard}>
-                  <View style={styles.requestHeader}>
-                    <View>
-                      <Text style={styles.amountText}>₹{Number(request.amount).toLocaleString('en-IN')}</Text>
-                      <Text style={styles.requestDate}>Requested: {formatDisplayDate(request.createdAt)}</Text>
-                    </View>
-
-                    <View style={[styles.statusBadge, statusTone.badge]}>
-                      <Text style={[styles.statusText, statusTone.text]}>{normalizeStatus(request.status)}</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.divider} />
-
-                  <Text style={styles.requestBank}>{account?.bankName || 'Bank account'}</Text>
-                  {account?.accountHolderName ? (
-                    <Text style={styles.requestMeta}>Account holder: {account.accountHolderName}</Text>
-                  ) : null}
-                  {account?.accountNumber ? (
-                    <Text style={styles.requestMeta}>Account no: •••• {account.accountNumber.slice(-4)}</Text>
-                  ) : null}
-                  {account?.ifscCode ? <Text style={styles.requestMeta}>IFSC: {account.ifscCode}</Text> : null}
-                  {account?.branchName ? <Text style={styles.requestMeta}>Branch: {account.branchName}</Text> : null}
-                  {request.requestNote ? <Text style={styles.requestMeta}>Note: {request.requestNote}</Text> : null}
-                  {request.reviewedAt ? (
-                    <Text style={styles.requestMeta}>Reviewed: {formatDisplayDate(request.reviewedAt)}</Text>
-                  ) : null}
-                  {request.adminNote ? <Text style={styles.requestMeta}>Admin note: {request.adminNote}</Text> : null}
-                  {request.rejectionReason ? (
-                    <View style={styles.rejectionReasonBox}>
-                      <Text style={styles.rejectionReasonLabel}>Rejection reason:</Text>
-                      <Text style={styles.rejectionReasonText}>{request.rejectionReason}</Text>
-                    </View>
-                  ) : null}
-                  {request.paidAt ? <Text style={styles.requestMeta}>Paid: {formatDisplayDate(request.paidAt)}</Text> : null}
-                  {request.paymentReference ? (
-                    <Text style={styles.requestMeta}>Payment ref: {request.paymentReference}</Text>
-                  ) : null}
-                </View>
-              );
-            })}
-          {hasMoreRequests ? (
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() => void fetchRequests(requests.length, true)}
-              disabled={loadingMore}
-              style={styles.showMoreButton}
-            >
-              <Text style={styles.showMoreButtonText}>{loadingMore ? 'Loading...' : 'Show more'}</Text>
-            </TouchableOpacity>
-          ) : null}
-        </View>
-      )}
-    </View>
-  </ScrollView>
+      </ScrollView>
+    </>
   );
 }
 
@@ -632,6 +706,9 @@ const styles = StyleSheet.create({
     shadowRadius: 0,
     elevation: 4,
   },
+  primaryButtonDisabled: {
+    opacity: 0.5,
+  },
   primaryButtonText: {
     textAlign: 'center',
     fontSize: 12,
@@ -671,6 +748,9 @@ const styles = StyleSheet.create({
     borderColor: '#ff9ac0',
     borderRadius: 0,
     alignItems: 'center',
+  },
+  showMoreButtonDisabled: {
+    opacity: 0.5,
   },
   showMoreButtonText: {
     fontSize: 12,
