@@ -17,8 +17,11 @@ import {
   View,
 } from 'react-native';
 
+import { toast } from '../../components/Toast';
+import { OfflineBanner } from '../../components/OfflineState';
 import { useAuth } from '../../context/AuthContext';
 import { countries } from '../../data/countries';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 
 const genderOptions = [
   { label: 'Male', value: 'male' },
@@ -38,6 +41,7 @@ const formatValue = (value?: string | null) => {
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, isAuthReady, setUser } = useAuth();
+  const { isOffline } = useNetworkStatus();
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
@@ -102,6 +106,13 @@ export default function ProfileScreen() {
       return;
     }
 
+    if (isOffline) {
+      const message = 'You are offline. Please reconnect to the internet to update your profile.';
+      setError(message);
+      toast.error('Offline', message);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -143,7 +154,12 @@ export default function ProfileScreen() {
 
       setEditing(false);
     } catch (err: any) {
-      setError(err?.message || 'Failed to update profile');
+      const message =
+        err?.message === 'Failed to fetch'
+          ? 'Network issue while updating profile. Please check your connection and try again.'
+          : err?.message || 'Failed to update profile';
+      setError(message);
+      toast.error('Update failed', message);
     } finally {
       setLoading(false);
     }
@@ -151,6 +167,13 @@ export default function ProfileScreen() {
 
   const uploadAvatar = async () => {
     if (!user?.id || !avatarFile) {
+      return;
+    }
+
+    if (isOffline) {
+      const message = 'You are offline. Please reconnect to the internet before uploading a profile photo.';
+      setError(message);
+      toast.error('Offline', message);
       return;
     }
 
@@ -202,13 +225,25 @@ export default function ProfileScreen() {
       setAvatarUri(nextUrl || user?.profileImage || null);
       setEditing(false);
     } catch (err: any) {
-      setError(err?.message || 'Failed to upload avatar');
+      const message =
+        err?.message === 'Failed to fetch'
+          ? 'Network issue while uploading your avatar. Please reconnect to the internet and try again.'
+          : err?.message || 'Failed to upload avatar';
+      setError(message);
+      toast.error('Upload failed', message);
     } finally {
       setAvatarUploading(false);
     }
   };
 
   const pickAvatar = async () => {
+    if (isOffline) {
+      const message = 'You are offline. Please reconnect to the internet before changing your profile photo.';
+      setError(message);
+      toast.error('Offline', message);
+      return;
+    }
+
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (!permissionResult.granted) {
@@ -268,6 +303,7 @@ export default function ProfileScreen() {
 
   return (
     <>
+      {isOffline ? <OfflineBanner label='Offline mode' /> : null}
       <ScrollView style={styles.screen} contentContainerStyle={styles.contentContainer}>
         <View style={styles.topRow}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
