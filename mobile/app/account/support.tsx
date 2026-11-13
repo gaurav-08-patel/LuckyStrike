@@ -31,7 +31,6 @@ export default function SupportScreen() {
     setIsSubmitting(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1200));
       setSubject('');
       setMessage('');
       toast.success('Submitted successfully', 'Your support request has been sent.');
