@@ -5,7 +5,6 @@ import { useEffect } from 'react';
 import { StatusBar } from 'react-native';
 import 'react-native-reanimated';
 
-import '../global.css';
 import { AuthProvider } from '../context/AuthContext';
 import { ToastProvider } from '../components/Toast';
 
