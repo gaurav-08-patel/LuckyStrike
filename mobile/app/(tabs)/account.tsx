@@ -1,6 +1,7 @@
 import { Link, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AuthModal } from '../../components/AuthModal';
 import { useAuth } from '../../context/AuthContext';
@@ -15,6 +16,7 @@ const accountSections = [
 export default function AccountScreen() {
   const router = useRouter();
   const { user, isLoggedIn, logoutUser } = useAuth();
+  const insets = useSafeAreaInsets();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
@@ -34,7 +36,10 @@ export default function AccountScreen() {
 
   return (
     <>
-      <ScrollView style={styles.screen} contentContainerStyle={[styles.contentContainer, { flexGrow: 1 }]}>
+      <ScrollView
+        style={[styles.screen, { paddingTop: insets.top }]}
+        contentContainerStyle={[styles.contentContainer, { flexGrow: 1 }]}
+      >
         <View style={styles.shellCard}>
           <Text style={styles.eyebrow}>My account</Text>
 
@@ -151,14 +156,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5efe8',
     paddingHorizontal: 16,
-    paddingTop: 8,
   },
   contentContainer: {
     paddingBottom: 110,
     flexGrow: 1,
   },
   shellCard: {
-    marginTop: 8,
     backgroundColor: '#fffaf5',
     borderWidth: 2,
     borderColor: '#171310',

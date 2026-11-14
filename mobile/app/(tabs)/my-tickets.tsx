@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthModal } from '../../components/AuthModal';
 import { OfflineBanner, OfflineState } from '../../components/OfflineState';
 import { useAuth } from '../../context/AuthContext';
@@ -129,6 +130,7 @@ const getTicketCardTone = (status: string) => {
 
 export default function MyTicketsScreen() {
   const { isLoggedIn, isAuthReady } = useAuth();
+  const insets = useSafeAreaInsets();
   const [selectedStatus, setSelectedStatus] = useState<TicketStatusFilter>('all');
   const [tickets, setTickets] = useState<MyTicketApiItem[]>([]);
   const [summary, setSummary] = useState<TicketSummary>(defaultTicketSummary);
@@ -201,6 +203,8 @@ export default function MyTicketsScreen() {
 
     void loadTickets();
   }, [isAuthReady, isLoggedIn, selectedStatus, isOffline]);
+  const rootScreenStyle = [styles.screen, { paddingTop: insets.top }];
+
   const groupedTickets = useMemo<DrawGroup[]>(() => {
     const groups = new Map<number, DrawGroup>();
 
@@ -242,7 +246,7 @@ export default function MyTicketsScreen() {
 
   if (!isAuthReady) {
     return (
-      <View style={styles.screen}>
+      <View style={rootScreenStyle}>
         <View style={styles.loginContainer}>
           <Text style={styles.loadingText}>Loading your tickets...</Text>
         </View>
@@ -253,7 +257,7 @@ export default function MyTicketsScreen() {
   if (!isLoggedIn) {
     return (
       <>
-        <View style={styles.screen}>
+        <View style={rootScreenStyle}>
           <View style={styles.lockCard}>
             <View style={styles.lockBadge}>
               <Text style={styles.lockBadgeText}>Locked</Text>
@@ -295,7 +299,7 @@ export default function MyTicketsScreen() {
 
   return (
     <>
-      <View style={styles.screen}>
+      <View style={rootScreenStyle}>
         {isOffline ? <OfflineBanner label='Offline mode' /> : null}
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.headerRow}>
@@ -490,11 +494,9 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 14,
-    paddingTop: 12,
     paddingBottom: 110,
   },
   headerRow: {
-    paddingTop: 8,
     paddingBottom: 10,
   },
   pageTitle: {

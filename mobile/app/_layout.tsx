@@ -3,6 +3,7 @@ import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { StatusBar } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
 import { AuthProvider } from '../context/AuthContext';
@@ -44,21 +45,23 @@ function RootLayoutNav() {
   return (
     <>
       <StatusBar barStyle='dark-content' backgroundColor='#F8F9FA' />
-      <ThemeProvider value={DefaultTheme}>
-        <AuthProvider>
-          <ToastProvider>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: '#F8F9FA' },
-              }}
-            >
-              <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
-              <Stack.Screen name='modal' options={{ presentation: 'modal' }} />
-            </Stack>
-          </ToastProvider>
-        </AuthProvider>
-      </ThemeProvider>
+      <SafeAreaProvider>
+        <ThemeProvider value={DefaultTheme}>
+          <AuthProvider>
+            <ToastProvider>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: '#F8F9FA' },
+                }}
+              >
+                <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
+                <Stack.Screen name='modal' options={{ presentation: 'modal' }} />
+              </Stack>
+            </ToastProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
     </>
   );
 }

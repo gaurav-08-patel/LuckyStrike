@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ActivityIndicator,
   ScrollView,
@@ -15,6 +16,7 @@ import { toast } from '../../components/Toast';
 
 export default function SupportScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,7 +42,7 @@ export default function SupportScreen() {
   };
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.contentContainer}>
+    <ScrollView style={[styles.screen, { paddingTop: insets.top }]} contentContainerStyle={styles.contentContainer}>
       <View style={styles.topRow}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name='arrow-back' size={22} color='#171310' />
@@ -108,7 +110,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   contentContainer: {
-    paddingTop: 16,
     paddingBottom: 32,
   },
   topRow: {

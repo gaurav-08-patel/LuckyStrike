@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { OfflineBanner, OfflineState } from '../../components/OfflineState';
 import { useAuth } from '../../context/AuthContext';
@@ -66,6 +67,7 @@ const isConnectionFailureMessage = (message: string) =>
 export default function BankAccountsScreen() {
   const router = useRouter();
   const { user, isAuthReady } = useAuth();
+  const insets = useSafeAreaInsets();
   const { isOffline } = useNetworkStatus();
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [loading, setLoading] = useState(false);
@@ -295,7 +297,7 @@ export default function BankAccountsScreen() {
 
   if (!user) {
     return (
-      <ScrollView style={styles.screen} contentContainerStyle={styles.contentContainer}>
+      <ScrollView style={[styles.screen, { paddingTop: insets.top }]} contentContainerStyle={styles.contentContainer}>
         {isScreenOffline ? <OfflineBanner label='Offline mode' /> : null}
         <View style={styles.topRow}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -314,7 +316,7 @@ export default function BankAccountsScreen() {
   return (
     <>
       {isScreenOffline ? <OfflineBanner label='Offline mode' /> : null}
-      <ScrollView style={styles.screen} contentContainerStyle={styles.contentContainer}>
+      <ScrollView style={[styles.screen, { paddingTop: insets.top }]} contentContainerStyle={styles.contentContainer}>
         <View style={styles.topRow}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Ionicons name='arrow-back' size={22} color='#171310' />
@@ -536,7 +538,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   contentContainer: {
-    paddingTop: 16,
     paddingBottom: 32,
   },
   loadingScreen: {

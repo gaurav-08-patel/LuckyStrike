@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AuthModal } from "../../components/AuthModal";
 import { OfflineBanner, OfflineState } from "../../components/OfflineState";
 import { useAuth } from "../../context/AuthContext";
@@ -62,6 +63,7 @@ const formatDateTime = (value?: string) => {
 
 export default function WalletScreen() {
   const { user, isAuthReady, isLoggedIn, setUser } = useAuth();
+  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<WalletTab>("topup");
   const [selectedAmount, setSelectedAmount] = useState<number>(50);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -300,9 +302,11 @@ export default function WalletScreen() {
     }
   };
 
+  const rootScreenStyle = [styles.screen, { paddingTop: insets.top }];
+
   if (!isAuthReady) {
     return (
-      <View style={styles.screen}>
+      <View style={rootScreenStyle}>
         <View style={styles.loginRequiredCard}>
           <Text style={styles.loginRequiredTitle}>Loading...</Text>
         </View>
@@ -313,7 +317,7 @@ export default function WalletScreen() {
   if (!isLoggedIn || !user) {
     return (
       <>
-        <View style={styles.screen}>
+        <View style={rootScreenStyle}>
           <View style={styles.loginRequiredCard}>
             <View style={styles.lockBadge}>
               <Text style={styles.lockBadgeText}>Locked</Text>
@@ -369,7 +373,7 @@ export default function WalletScreen() {
 
   return (
     <>
-      <View style={styles.screen}>
+      <View style={rootScreenStyle}>
         {isOffline ? <OfflineBanner label="Offline mode" /> : null}
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -808,7 +812,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 14,
-    paddingTop: 12,
     paddingBottom: 110,
   },
   topRow: {
