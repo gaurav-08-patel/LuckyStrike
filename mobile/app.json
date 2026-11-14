@@ -30,15 +30,7 @@
       "output": "server"
     },
     "plugins": [
-      "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/luckystrike_splash_screen_1242x2688.png",
-          "resizeMode": "contain",
-          "backgroundColor": "#F5EFE8"
-        }
-      ]
+      "expo-router"
     ],
     "experiments": {
       "typedRoutes": true
