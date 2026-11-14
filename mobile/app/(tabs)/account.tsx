@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   contentContainer: {
-    paddingBottom: 24,
+    paddingBottom: 110,
     flexGrow: 1,
   },
   shellCard: {

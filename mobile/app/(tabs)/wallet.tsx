@@ -809,7 +809,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 14,
     paddingTop: 12,
-    paddingBottom: 36,
+    paddingBottom: 110,
   },
   topRow: {
     flexDirection: "column",

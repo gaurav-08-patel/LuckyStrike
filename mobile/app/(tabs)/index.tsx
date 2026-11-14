@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fffaf6',
   },
   container: {
-    paddingBottom: 40,
+    paddingBottom: 110,
     backgroundColor: '#fffaf6',
   },
   offlineBanner: {
