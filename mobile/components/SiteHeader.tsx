@@ -1,6 +1,7 @@
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AuthModal } from './AuthModal';
 import { useAuth } from '../context/AuthContext';
@@ -8,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 export function SiteHeader() {
   const router = useRouter();
   const { isLoggedIn, user } = useAuth();
+  const insets = useSafeAreaInsets();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   const accountInitial = (user?.firstName?.[0] ?? user?.lastName?.[0] ?? 'A').toUpperCase();
@@ -15,7 +17,7 @@ export function SiteHeader() {
 
   return (
     <>
-      <View style={styles.headerShell}>
+      <View style={[styles.headerShell, { paddingTop: insets.top }]}>
         <Link href='/' asChild>
           <TouchableOpacity>
             <Text style={styles.brand}>
@@ -60,7 +62,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 18,
     paddingBottom: 12,
     backgroundColor: 'rgba(255,255,255,0.85)',
     borderBottomWidth: 2,
@@ -81,28 +82,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#171310',
     borderRadius: 999,
     shadowColor: '#171310',
-    shadowOffset: { width: 5, height: 5 },
+    shadowOffset: { width: 3, height: 3 },
     shadowOpacity: 1,
     shadowRadius: 0,
-    elevation: 12,
-    marginRight: 4,
-    marginBottom: 4,
+    elevation: 8,
+    marginRight: 2,
+    marginBottom: 2,
   },
   loginButton: {
     backgroundColor: '#ff3d8c',
-    borderWidth: 3,
+    borderWidth: 2,
     borderColor: '#171310',
-    paddingHorizontal: 18,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 999,
     justifyContent: 'center',
     alignItems: 'center',
   },
   loginText: {
     color: '#fff',
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: '900',
-    letterSpacing: 2,
+    letterSpacing: 1.2,
     textTransform: 'uppercase',
   },
   accountButtonShadow: {
