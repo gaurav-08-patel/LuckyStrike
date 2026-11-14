@@ -4,7 +4,7 @@
     "slug": "luckystrike",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/luckystrike_app_icon_1024x1024.png",
     "scheme": "mobile",
     "userInterfaceStyle": "light",
     "ios": {
@@ -17,27 +17,26 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#F5EFE8",
+        "foregroundImage": "./assets/images/luckystrike_adaptive_foreground_1024x1024.png",
+        "backgroundImage": "./assets/images/luckystrike_adaptive_background_1024x1024.png"
       },
       "usesCleartextTraffic": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.anonymous.luckystrike"
     },
     "web": {
       "bundler": "metro",
-      "output": "server",
-      "favicon": "./assets/images/favicon.png"
+      "output": "server"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/luckystrike_splash_screen_1242x2688.png",
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#F5EFE8"
         }
       ]
     ],
