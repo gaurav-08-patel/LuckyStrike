@@ -1,3 +1,4 @@
+import { Link } from 'expo-router';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -155,9 +156,11 @@ export function WinnersSection({ winners, isOffline = false }: WinnersSectionPro
           </View>
 
           <View style={styles.footerRow}>
-            <TouchableOpacity style={styles.seeAllButton}>
-              <Text style={styles.seeAllText}>See all winners</Text>
-            </TouchableOpacity>
+            <Link href='/winners' asChild>
+              <TouchableOpacity style={styles.seeAllButton}>
+                <Text style={styles.seeAllText}>See all winners</Text>
+              </TouchableOpacity>
+            </Link>
           </View>
         </>
       )}
