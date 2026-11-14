@@ -1,4 +1,5 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type OfflineStateProps = {
   title?: string;
@@ -28,8 +29,10 @@ export function OfflineState({
 }
 
 export function OfflineBanner({ label = 'Offline mode' }: { label?: string }) {
+  const insets = useSafeAreaInsets();
+
   return (
-    <View style={styles.banner}>
+    <View style={[styles.banner, { paddingTop: insets.top + 8 }]}> 
       <Text style={styles.bannerText}>{label}</Text>
     </View>
   );
@@ -41,7 +44,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 3,
     borderBottomColor: '#171310',
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingBottom: 8,
+    justifyContent: 'center',
   },
   bannerText: {
     color: '#fff',
